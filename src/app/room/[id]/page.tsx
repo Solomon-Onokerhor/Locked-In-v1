@@ -1,0 +1,346 @@
+'use client';
+
+import { useAuth } from '@/components/AuthProvider';
+import { Sidebar } from '@/components/Sidebar';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Room, RoomMember } from '@/types';
+import {
+    AlertCircle, ArrowLeft, BookOpen, Calendar, CheckCircle, Clock, CreditCard, DollarSign, ExternalLink, Lock, MapPin, MessageSquare, MoreVertical, Shield, Share2, Trash2, Users, Video, UserPlus
+} from 'lucide-react';
+import Link from 'next/link';
+import { Chat } from '@/components/Chat';
+
+export default function RoomPage() {
+    const { id: roomId } = useParams();
+    const { session, profile, loading: authLoading, refreshProfile } = useAuth();
+    const router = useRouter();
+
+    const [room, setRoom] = useState<Room | null>(null);
+    const [membership, setMembership] = useState<RoomMember | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [lockingIn, setLockingIn] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    useEffect(() => {
+        if (!authLoading && !session) router.push('/auth');
+    }, [authLoading, session, router]);
+
+    useEffect(() => {
+        if (session && roomId) {
+            fetchRoomData();
+            checkMembership();
+        }
+    }, [session, roomId]);
+
+    const fetchRoomData = async () => {
+        const { data, error } = await supabase
+            .from('rooms')
+            .select(`
+                room_id, room_type, session_mode, title, description, image_url,
+                created_by, date_time, duration_minutes, physical_location, 
+                location_note, max_members, is_paid, price, commission_rate, 
+                status, tags, course_code, created_at
+            `)
+            .eq('room_id', roomId)
+            .single();
+
+        if (data) setRoom(data as Room);
+        setLoading(false);
+    };
+
+    const checkMembership = async () => {
+        const { data } = await supabase
+            .from('room_members')
+            .select('*')
+            .eq('room_id', roomId)
+            .eq('user_id', session?.user.id)
+            .single();
+
+        if (data) setMembership(data as RoomMember);
+    };
+
+    const handleLockIn = async () => {
+        if (!session || !room) return;
+        setLockingIn(true);
+        setError(null);
+
+        try {
+            // Use the atomic join RPC
+            const { data, error: rpcError } = await supabase.rpc('join_room_atomic', {
+                p_room_id: roomId,
+                p_user_id: session.user.id
+            });
+
+            if (rpcError) throw rpcError;
+            if (data && !data.success) throw new Error(data.error);
+
+            await checkMembership();
+            // Refresh profile to update stats (Focus Time, Buddy Count, etc.)
+            await refreshProfile();
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to lock in');
+        } finally {
+            setLockingIn(false);
+        }
+    };
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const handleDeleteRoom = async () => {
+        if (!room) return;
+
+        setIsDeleting(true);
+        try {
+            const { error: deleteError } = await supabase
+                .from('rooms')
+                .delete()
+                .eq('room_id', room.room_id);
+
+            if (deleteError) throw deleteError;
+            router.push('/');
+        } catch (err: unknown) {
+            console.error('Failed to delete room:', err);
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
+    const handleShare = () => {
+        const text = `🚀 Lock in to my study session on Locked In!\n\n📚 Topic: ${room?.title}${room?.course_code ? `\n🔢 Course: ${room.course_code}` : ''}\n⏰ Time: ${new Date(room?.date_time || '').toLocaleString()}\n\nLock in here: ${window.location.host}/room/${roomId}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
+    if (loading || !session || !room) {
+        return (
+            <div className="min-h-screen bg-brand-primary flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent" />
+            </div>
+        );
+    }
+
+    const isCreator = room.created_by === session.user.id;
+    const isAdmin = profile?.role === 'admin';
+    const canDelete = isCreator || isAdmin;
+
+    const sessionDate = new Date(room.date_time);
+    const sessionStatus = sessionDate > new Date() ? 'upcoming' : (new Date(sessionDate.getTime() + room.duration_minutes * 60000) > new Date() ? 'live' : 'ended');
+
+    return (
+        <div className="min-h-screen bg-brand-primary">
+            <Sidebar />
+
+            <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10">
+                {/* Back Button */}
+                <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-6 group">
+                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    Back to Dashboard
+                </Link>
+
+                {/* Header Section */}
+                <section className="mb-8 relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 md:p-10 shadow-2xl">
+                    {room.image_url ? (
+                        <>
+                            <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay transition-transform duration-1000 hover:scale-105" style={{ backgroundImage: `url('${room.image_url}')` }}></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-brand-primary via-brand-primary/80 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-brand-primary/50 to-transparent"></div>
+                        </>
+                    ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/5 to-blue-900/10 opacity-50"></div>
+                    )}
+
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="flex-1">
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${room.room_type === 'Study' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' : 'bg-amber-500/20 border-amber-500/30 text-amber-300'}`}>
+                                    {room.room_type} Room
+                                </span>
+                                {room.is_paid && (
+                                    <span className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-1.5 rounded-full text-xs font-black uppercase backdrop-blur-md">
+                                        Coming Soon
+                                    </span>
+                                )}
+                                {room.course_code && (
+                                    <span className="bg-white/10 border border-white/20 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase backdrop-blur-md">
+                                        {room.course_code}
+                                    </span>
+                                )}
+                            </div>
+                            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+                                {room.title}
+                            </h1>
+                            <p className="text-gray-300 mt-4 text-base md:text-lg max-w-2xl leading-relaxed drop-shadow-md font-medium">
+                                {room.description || 'No description provided for this session.'}
+                            </p>
+                        </div>
+
+                        {canDelete && (
+                            <div className="flex gap-2">
+                                {!showDeleteConfirm ? (
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        disabled={isDeleting}
+                                        className="p-3 bg-red-500/20 border border-red-500/30 text-white hover:bg-red-500 hover:text-white rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 backdrop-blur-md shadow-lg"
+                                        title={isAdmin && !isCreator ? "Delete Session (Admin)" : "Delete Session"}
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                        <span className="hidden sm:inline font-bold text-sm">Delete</span>
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-2 animate-fade-in">
+                                        <button
+                                            onClick={handleDeleteRoom}
+                                            disabled={isDeleting}
+                                            className="px-4 py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg flex items-center gap-2"
+                                        >
+                                            {isDeleting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                            Confirm Delete?
+                                        </button>
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(false)}
+                                            disabled={isDeleting}
+                                            className="px-4 py-3 bg-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/20 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-8 flex flex-wrap gap-4 md:gap-8 pb-6 border-b border-white/5">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Time & Date</span>
+                            <span className="flex items-center gap-2 text-white font-bold">
+                                <Calendar className="w-4 h-4 text-brand-accent" />
+                                {sessionDate.toLocaleDateString()} at {sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Duration</span>
+                            <span className="flex items-center gap-2 text-white font-bold">
+                                <Clock className="w-4 h-4 text-brand-accent" />
+                                {room.duration_minutes} Minutes
+                            </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Capacity</span>
+                            <span className="flex items-center gap-2 text-white font-bold">
+                                <Users className="w-4 h-4 text-brand-accent" />
+                                {room.max_members} Max Members
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Sub-Header / Location Info */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div className="lg:col-span-2 flex flex-col md:flex-row md:items-center p-5 bg-white/[0.03] border border-white/[0.06] rounded-2xl gap-4">
+                        {room.session_mode === 'in_person' ? (
+                            <div className="flex flex-col">
+                                <span className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-emerald-400" />
+                                    <span className="font-bold text-gray-300">{room.physical_location}</span>
+                                </span>
+                                {room.location_note && (
+                                    <span className="text-xs text-gray-500 ml-6 italic">{room.location_note}</span>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="flex items-center gap-2">
+                                <Video className="w-4 h-4 text-blue-400" />
+                                <span className="font-bold text-gray-300">Virtual Session</span>
+                            </span>
+                        )}
+                        <span className="hidden md:block h-8 w-[1px] bg-white/10 mx-2"></span>
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${sessionStatus === 'live' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-600'}`}></div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                                Session is {sessionStatus}
+                            </span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleShare}
+                        className="flex items-center justify-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-6 py-4 rounded-2xl font-bold transition-all"
+                    >
+                        <Share2 className="w-5 h-5" />
+                        Share Session
+                    </button>
+                </section>
+
+                {/* Join / Access Section */}
+                {!membership ? (
+                    <section className="glass-card p-8 mb-8">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center">
+                                <Lock className="w-7 h-7 text-brand-accent" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-extrabold text-white">Lock in to this Room</h2>
+                                <p className="text-gray-500 text-sm">
+                                    {room.is_paid ? `Pay GHS ${room.price} to lock in to this session` : 'Free to lock in — start learning now'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg flex items-center gap-2 mb-4">
+                                <AlertCircle className="w-4 h-4" /> {error}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleLockIn}
+                            disabled={lockingIn}
+                            className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {lockingIn ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : room.is_paid ? (
+                                <><CreditCard className="w-5 h-5" /> Pay & Lock In</>
+                            ) : (
+                                <><CheckCircle className="w-5 h-5" /> Lock In Now</>
+                            )}
+                        </button>
+                    </section>
+                ) : (
+                    <section className="space-y-6">
+                        <div className="glass-card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <CheckCircle className="w-6 h-6 text-green-400" />
+                                <div>
+                                    <h3 className="text-green-400 font-bold">You are a confirmed member</h3>
+                                </div>
+                            </div>
+
+                            {room.session_mode === 'virtual' && room.meeting_link && sessionStatus === 'live' ? (
+                                <a
+                                    href={room.meeting_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                                >
+                                    <Video className="w-4 h-4" />
+                                    Lock In to Video Call
+                                </a>
+                            ) : room.session_mode === 'virtual' && sessionStatus === 'upcoming' ? (
+                                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-gray-400">
+                                    Link available when live
+                                </div>
+                            ) : null}
+                        </div>
+
+                        <Chat roomId={room.room_id} userProfile={profile} />
+                    </section>
+                )}
+            </main>
+        </div>
+    );
+}
