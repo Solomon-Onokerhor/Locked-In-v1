@@ -99,32 +99,22 @@ export default function ResourcesClient() {
         await supabase.rpc('toggle_resource_vote', { p_resource_id: resourceId, p_vote_type: type });
     };
 
-    const handleDownload = async (resourceId: string, url: string) => {
+    const handleDownload = async (resourceId: string) => {
         if (!session) return;
 
-        // 1. Open the file IMMEDIATELY to bypass aggressive popup blockers (mobile/Safari)
-        // Browsers require window.open to be called directly in the call stack of a user gesture.
-        const win = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!win) {
-            alert('Please allow popups for this site to download resources.');
-            return;
-        }
-
-        // 2. Optimistic UI update
+        // 1. Optimistic UI update
         setResources((prev) =>
             prev.map((r) =>
                 r.resource_id === resourceId ? { ...r, download_count: (r.download_count || 0) + 1 } : r
             )
         );
 
-        // 3. Server update (background)
+        // 2. Server update (background)
         try {
             const { error } = await supabase.rpc('record_resource_download', { p_resource_id: resourceId });
             if (error) throw error;
         } catch (err) {
             console.error('Failed to record download:', err);
-            // We don't revert the optimistic count here to avoid "jumping" UI, 
-            // the server will reconcile on the next refresh.
         }
     };
 
@@ -364,28 +354,30 @@ export default function ResourcesClient() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => {
-                                                const shareUrl = `${window.location.origin}/resources?id=${resource.resource_id}`;
-                                                const text = `🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${shareUrl}\n\nLevel up your grades here! 🏔️`;
-                                                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                                            }}
+                                            <a
+                                                href={`https://wa.me/?text=${encodeURIComponent(`🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${window.location.origin}/resources?id=${resource.resource_id}\n\nLevel up your grades here! 🏔️`)}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="p-2.5 text-emerald-400 hover:bg-emerald-400/10 rounded-xl transition-all border border-transparent hover:border-emerald-400/20"
                                                 title="Share to WhatsApp"
                                             >
                                                 <Share2 className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => handleDownload(resource.resource_id, resource.file_url)}
+                                            </a>
+                                            <a
+                                                href={resource.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={() => handleDownload(resource.resource_id)}
                                                 className="flex items-center gap-2 bg-brand-accent/10 hover:bg-brand-accent text-brand-accent hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all border border-brand-accent/20 hover:border-brand-accent shadow-sm"
                                             >
                                                 <Download className="w-3.5 h-3.5" /> GET
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ))
-                    )
-                    }
+                    )}
                 </div >
             </main >
         </div >
