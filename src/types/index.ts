@@ -85,5 +85,6 @@ export interface Resource {
     thumbs_up: number;
     thumbs_down: number;
     download_count: number;
+    thumbnail_url?: string;
     created_at: string;
 }

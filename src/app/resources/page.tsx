@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { Resource } from '@/types';
 import {
     Library, FileText, Video, Download, ThumbsUp, ThumbsDown,
-    Search, Plus, ShieldCheck
+    Search, Plus, ShieldCheck, Share2
 } from 'lucide-react';
 
 export default function ResourcesPage() {
@@ -23,6 +23,7 @@ export default function ResourcesPage() {
     const [uploadTitle, setUploadTitle] = useState('');
     const [uploadDesc, setUploadDesc] = useState('');
     const [uploadUrl, setUploadUrl] = useState('');
+    const [uploadThumbnailUrl, setUploadThumbnailUrl] = useState('');
     const [uploadType, setUploadType] = useState<'PDF' | 'PPT' | 'DOCX' | 'Video'>('PDF');
     const [uploading, setUploading] = useState(false);
 
@@ -123,6 +124,7 @@ export default function ResourcesPage() {
                 title: uploadTitle,
                 description: uploadDesc,
                 file_url: uploadUrl,
+                thumbnail_url: uploadThumbnailUrl,
                 resource_type: uploadType,
                 uploaded_by: session.user.id,
                 tags: [],
@@ -134,6 +136,7 @@ export default function ResourcesPage() {
             setUploadTitle('');
             setUploadDesc('');
             setUploadUrl('');
+            setUploadThumbnailUrl('');
             await fetchResources();
         } catch {
             console.error('Error uploading resource');
@@ -207,9 +210,14 @@ export default function ResourcesPage() {
                             <textarea rows={2} placeholder="Description" value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 resize-none"
                             />
-                            <input type="url" required placeholder="File URL (e.g., Google Drive link)" value={uploadUrl} onChange={(e) => setUploadUrl(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
-                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <input type="url" required placeholder="File URL (e.g., Google Drive link)" value={uploadUrl} onChange={(e) => setUploadUrl(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                />
+                                <input type="url" placeholder="Thumbnail URL (Optional Image)" value={uploadThumbnailUrl} onChange={(e) => setUploadThumbnailUrl(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                />
+                            </div>
                             <button type="submit" disabled={uploading}
                                 className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all disabled:opacity-50"
                             >
@@ -240,52 +248,73 @@ export default function ResourcesPage() {
                         </div>
                     ) : (
                         filteredResources.map((resource) => (
-                            <div key={resource.resource_id} className="glass-card p-6 flex flex-col">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        {getIcon(resource.resource_type)}
-                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{resource.resource_type}</span>
+                            {
+                                resource.thumbnail_url ? (
+                                    <div className="relative h-40 mb-4 rounded-xl overflow-hidden border border-white/5">
+                                        <img
+                                            src={resource.thumbnail_url}
+                                            alt={resource.title}
+                                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                                        />
+                                        <div className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                                            {getIcon(resource.resource_type)}
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            {getIcon(resource.resource_type)}
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{resource.resource_type}</span>
+                                        </div>
+                                    </div>
+                                )
+                            }
 
-                                <h3 className="text-lg font-extrabold text-white mb-2">{resource.title}</h3>
-                                <p className="text-sm text-gray-400 mb-4 line-clamp-2">{resource.description || 'No description.'}</p>
+                            < h3 className = "text-lg font-extrabold text-white mb-1 leading-tight" > { resource.title }</h3>
+                <p className="text-xs text-gray-500 mb-4 line-clamp-2 font-medium">{resource.description || 'No description.'}</p>
 
-                                <div className="mt-auto flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => handleVote(resource.resource_id, 'up')}
-                                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'up'
-                                                    ? 'text-green-400 font-bold'
-                                                    : 'text-gray-400 hover:text-green-400'
-                                                }`}
-                                        >
-                                            <ThumbsUp className={`w-4 h-4 ${userVotes[resource.resource_id] === 'up' ? 'fill-green-400/20' : ''}`} /> {resource.thumbs_up}
-                                        </button>
-                                        <button onClick={() => handleVote(resource.resource_id, 'down')}
-                                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'down'
-                                                    ? 'text-red-400 font-bold'
-                                                    : 'text-gray-400 hover:text-red-400'
-                                                }`}
-                                        >
-                                            <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                                            {resource.download_count || 0} Downloads
-                                        </span>
-                                        <button onClick={() => handleDownload(resource.resource_id, resource.file_url)}
-                                            className="flex items-center gap-2 text-brand-accent hover:text-brand-accent-hover text-sm font-bold transition-colors"
-                                        >
-                                            <Download className="w-4 h-4" /> Get
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
+                <div className="mt-auto flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => handleVote(resource.resource_id, 'up')}
+                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'up'
+                                ? 'text-green-400 font-bold'
+                                : 'text-gray-400 hover:text-green-400'
+                                }`}
+                        >
+                            <ThumbsUp className={`w-4 h-4 ${userVotes[resource.resource_id] === 'up' ? 'fill-green-400/20' : ''}`} /> {resource.thumbs_up}
+                        </button>
+                        <button onClick={() => handleVote(resource.resource_id, 'down')}
+                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'down'
+                                ? 'text-red-400 font-bold'
+                                : 'text-gray-400 hover:text-red-400'
+                                }`}
+                        >
+                            <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => {
+                            const text = `🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${window.location.origin}/resources\n\nLevel up your grades here! 🏔️`;
+                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                        }}
+                            className="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all"
+                            title="Share to WhatsApp"
+                        >
+                            <Share2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDownload(resource.resource_id, resource.file_url)}
+                            className="flex items-center gap-2 text-brand-accent hover:text-brand-accent-hover text-sm font-bold transition-colors ml-1"
+                        >
+                            <Download className="w-4 h-4" /> Get
+                        </button>
+                    </div>
                 </div>
-            </main>
         </div>
+    ))
+                    )
+}
+                </div >
+            </main >
+        </div >
     );
 }
