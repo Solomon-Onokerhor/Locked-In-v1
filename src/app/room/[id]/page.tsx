@@ -142,38 +142,39 @@ export default function RoomPage() {
                 </Link>
 
                 {/* Header Section */}
-                <section className="mb-8 relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 md:p-10 shadow-2xl">
+                <section className="mb-8 relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-5 md:p-12 shadow-2xl min-h-[300px] flex items-end">
                     {room.image_url ? (
                         <>
-                            <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay transition-transform duration-1000 hover:scale-105" style={{ backgroundImage: `url('${room.image_url}')` }}></div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-brand-primary via-brand-primary/80 to-transparent"></div>
-                            <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-brand-primary/50 to-transparent"></div>
+                            <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-1000 hover:scale-105" style={{ backgroundImage: `url('${room.image_url}')` }}></div>
+                            {/* Subtle dark overlay for text readability without washing out the image */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-brand-primary via-brand-primary/40 to-transparent opacity-90"></div>
+                            <div className="absolute inset-0 bg-black/20"></div>
                         </>
                     ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/5 to-blue-900/10 opacity-50"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/10 to-blue-900/20 opacity-50"></div>
                     )}
 
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
                         <div className="flex-1">
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${room.room_type === 'Study' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' : 'bg-amber-500/20 border-amber-500/30 text-amber-300'}`}>
-                                    {room.room_type} Room
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${room.room_type === 'Study' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' : 'bg-amber-500/20 border-amber-500/30 text-amber-300'}`}>
+                                    {room.room_type}
                                 </span>
                                 {room.is_paid && (
-                                    <span className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-1.5 rounded-full text-xs font-black uppercase backdrop-blur-md">
+                                    <span className="bg-green-500/20 border border-green-500/30 text-green-300 px-3 py-1 rounded-md text-[10px] font-black uppercase backdrop-blur-md">
                                         Coming Soon
                                     </span>
                                 )}
                                 {room.course_code && (
-                                    <span className="bg-white/10 border border-white/20 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase backdrop-blur-md">
+                                    <span className="bg-white/10 border border-white/20 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase backdrop-blur-md">
                                         {room.course_code}
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+                            <h1 className="text-2xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
                                 {room.title}
                             </h1>
-                            <p className="text-gray-300 mt-4 text-base md:text-lg max-w-2xl leading-relaxed drop-shadow-md font-medium">
+                            <p className="text-gray-100 mt-2 text-sm md:text-lg max-w-2xl leading-snug drop-shadow-md font-semibold opacity-90">
                                 {room.description || 'No description provided for this session.'}
                             </p>
                         </div>
