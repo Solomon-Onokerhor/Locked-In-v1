@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { Send, Clock, MessageCircle } from 'lucide-react';
+import { Send, Check, Clock, MessageCircle } from 'lucide-react';
 
 interface ChatMessage {
     message_id: string;
@@ -227,7 +227,11 @@ export function Chat({ roomId, userProfile }: ChatProps) {
 
                                     {/* Timestamp */}
                                     <span className={`text-[10px] text-gray-600 mt-1 flex items-center gap-1 ${own ? 'mr-1' : 'ml-1'}`}>
-                                        <Clock className="w-2.5 h-2.5" />
+                                        {own ? (
+                                            <Check className="w-2.5 h-2.5 text-blue-400/80" />
+                                        ) : (
+                                            <Clock className="w-2.5 h-2.5" />
+                                        )}
                                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
