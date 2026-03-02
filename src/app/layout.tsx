@@ -8,6 +8,28 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
     title: "Locked In — Campus Study & Skill Connect",
     description: "Lock in to study sessions and skill rooms. Connect with students, share resources, and level up together.",
+    openGraph: {
+        title: "Locked In — Campus Study & Skill Connect",
+        description: "The ultimate UMaT study platform. Lock in, level up, and connect with students.",
+        url: "https://locked-in-v1.vercel.app",
+        siteName: "Locked In",
+        images: [
+            {
+                url: "/og-image.png", // User should add this to public folder
+                width: 1200,
+                height: 630,
+                alt: "Locked In Preview",
+            },
+        ],
+        locale: "en_US",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Locked In — Campus Study & Skill Connect",
+        description: "The ultimate UMaT study platform. Lock in, level up, and connect with students.",
+        images: ["/og-image.png"],
+    },
 };
 
 export const dynamic = 'force-dynamic';

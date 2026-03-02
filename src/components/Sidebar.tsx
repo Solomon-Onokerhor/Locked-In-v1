@@ -139,7 +139,8 @@ export function Sidebar() {
                     {/* Invite Friends / Viral Growth */}
                     <button
                         onClick={() => {
-                            const text = `🔥 Check out Locked In - The ultimate UMaT study platform!\n\nLock in to study rooms, download resources, and level up your grades.\n\nSign up here: ${window.location.host}`;
+                            const shareUrl = window.location.origin;
+                            const text = `🔥 Check out Locked In - The ultimate UMaT study platform!\n\nLock in to study rooms, download resources, and level up your grades.\n\nJoin the community here: ${shareUrl}`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                         }}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-all border border-emerald-500/20 mt-4 animate-pulse group"
