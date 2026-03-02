@@ -346,6 +346,10 @@ export default function ResourcesClient() {
                                             >
                                                 <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
                                             </button>
+                                            <div className="flex items-center gap-1.5 text-gray-500 text-sm ml-1 border-l border-white/10 pl-4">
+                                                <Download className="w-3.5 h-3.5" />
+                                                <span className="font-medium">{resource.download_count || 0}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <button onClick={() => {
