@@ -41,7 +41,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                 room_id, room_type, session_mode, title, description, image_url,
                 created_by, date_time, duration_minutes, physical_location, 
                 location_note, max_members, is_paid, price, commission_rate, 
-                status, tags, course_code, created_at
+                status, tags, course_code, created_at, whatsapp_group_link, meeting_link
             `)
             .eq('room_id', roomId)
             .single();
@@ -320,6 +320,19 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                     Link available when live
                                 </div>
                             ) : null}
+
+                            {/* WhatsApp Connector Button */}
+                            {room.whatsapp_group_link && (
+                                <a
+                                    href={room.whatsapp_group_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]"
+                                >
+                                    <Share2 className="w-4 h-4 text-white" />
+                                    Join WhatsApp Group
+                                </a>
+                            )}
                         </div>
 
                         <Chat roomId={room.room_id} userProfile={profile} />

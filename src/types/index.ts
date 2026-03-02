@@ -43,6 +43,7 @@ export interface Room {
     faculty?: string;
     course_code?: string;
     created_at: string;
+    whatsapp_group_link?: string | null;
 }
 
 export interface RoomMember {

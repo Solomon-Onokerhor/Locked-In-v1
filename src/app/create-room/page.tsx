@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2 } from 'lucide-react';
+import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2 } from 'lucide-react';
 
 export default function CreateRoomPage() {
     const { session, profile, loading } = useAuth();
@@ -25,6 +25,7 @@ export default function CreateRoomPage() {
     const [isPaid, setIsPaid] = useState(false);
     const [price, setPrice] = useState(0);
     const [thumbnail, setThumbnail] = useState<File | null>(null);
+    const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export default function CreateRoomPage() {
                     price: 0,
                     commission_rate: 0.1,
                     course_code: roomType === 'Study' ? courseCode : null,
+                    whatsapp_group_link: whatsappGroupLink || null,
                     status: 'active',
                 }])
                 .select()
@@ -305,13 +307,27 @@ export default function CreateRoomPage() {
                         </div>
 
                         {/* Capacity */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                <Users className="w-3 h-3" /> Max Members
-                            </label>
-                            <input type="number" min={2} max={100} value={maxMembers} onChange={(e) => setMaxMembers(Number(e.target.value))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                                    <Users className="w-3 h-3" /> Max Members
+                                </label>
+                                <input type="number" min={2} max={100} value={maxMembers} onChange={(e) => setMaxMembers(Number(e.target.value))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1 text-emerald-400">
+                                    <Share2 className="w-3 h-3 text-emerald-400" /> WhatsApp Group Link (Optional)
+                                </label>
+                                <input
+                                    type="url"
+                                    placeholder="https://chat.whatsapp.com/..."
+                                    value={whatsappGroupLink}
+                                    onChange={(e) => setWhatsappGroupLink(e.target.value)}
+                                    className="w-full bg-white/5 border border-emerald-500/20 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-gray-600"
+                                />
+                            </div>
                         </div>
 
                         {/* Pricing */}
