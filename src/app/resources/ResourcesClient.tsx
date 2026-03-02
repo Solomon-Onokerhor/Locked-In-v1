@@ -364,7 +364,8 @@ export default function ResourcesClient() {
                                                 <Share2 className="w-4 h-4" />
                                             </a>
                                             <a
-                                                href={resource.file_url}
+                                                href={`${resource.file_url}${resource.file_url.includes('?') ? '&' : '?'}download=`}
+                                                download={resource.title}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={() => handleDownload(resource.resource_id)}
