@@ -24,6 +24,8 @@ export default function ResourcesPage() {
     const [uploadDesc, setUploadDesc] = useState('');
     const [uploadUrl, setUploadUrl] = useState('');
     const [uploadThumbnailUrl, setUploadThumbnailUrl] = useState('');
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [uploadType, setUploadType] = useState<'PDF' | 'PPT' | 'DOCX' | 'Video'>('PDF');
     const [uploading, setUploading] = useState(false);
 
@@ -120,11 +122,32 @@ export default function ResourcesPage() {
         setUploading(true);
 
         try {
+            let finalThumbnailUrl = uploadThumbnailUrl;
+
+            // If a file is selected, upload it first
+            if (thumbnailFile) {
+                const fileExt = thumbnailFile.name.split('.').pop();
+                const fileName = `${Date.now()}_thumb_${Math.random().toString(36).slice(2)}.${fileExt}`;
+                const filePath = `resources/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('room_thumbnails')
+                    .upload(filePath, thumbnailFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('room_thumbnails')
+                    .getPublicUrl(filePath);
+
+                finalThumbnailUrl = publicUrl;
+            }
+
             const { error } = await supabase.from('resources').insert([{
                 title: uploadTitle,
                 description: uploadDesc,
                 file_url: uploadUrl,
-                thumbnail_url: uploadThumbnailUrl,
+                thumbnail_url: finalThumbnailUrl,
                 resource_type: uploadType,
                 uploaded_by: session.user.id,
                 tags: [],
@@ -137,9 +160,11 @@ export default function ResourcesPage() {
             setUploadDesc('');
             setUploadUrl('');
             setUploadThumbnailUrl('');
+            setThumbnailFile(null);
+            setThumbnailPreview(null);
             await fetchResources();
-        } catch {
-            console.error('Error uploading resource');
+        } catch (err) {
+            console.error('Error uploading resource:', err);
         } finally {
             setUploading(false);
         }
@@ -214,10 +239,40 @@ export default function ResourcesPage() {
                                 <input type="url" required placeholder="File URL (e.g., Google Drive link)" value={uploadUrl} onChange={(e) => setUploadUrl(e.target.value)}
                                     className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
                                 />
-                                <input type="url" placeholder="Thumbnail URL (Optional Image)" value={uploadThumbnailUrl} onChange={(e) => setUploadThumbnailUrl(e.target.value)}
-                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
-                                />
+                                <div className="flex gap-2">
+                                    <input type="url" placeholder="Thumbnail URL" value={uploadThumbnailUrl} onChange={(e) => setUploadThumbnailUrl(e.target.value)}
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                    />
+                                    <label className="cursor-pointer bg-white/5 border border-white/10 rounded-xl px-4 flex items-center justify-center hover:bg-white/10 transition-all">
+                                        <Plus className="w-5 h-5 text-gray-400" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setThumbnailFile(file);
+                                                    setThumbnailPreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                </div>
                             </div>
+
+                            {thumbnailPreview && (
+                                <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-white/10">
+                                    <img src={thumbnailPreview} alt="Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}
+                                        className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white hover:bg-red-500"
+                                    >
+                                        <ShieldCheck className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
                             <button type="submit" disabled={uploading}
                                 className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all disabled:opacity-50"
                             >

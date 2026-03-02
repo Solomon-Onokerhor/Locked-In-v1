@@ -51,6 +51,8 @@ export default function AdminPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState('');
     const [uploadError, setUploadError] = useState('');
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
     // Resources list
     const [resources, setResources] = useState<Resource[]>([]);
@@ -165,11 +167,31 @@ export default function AdminPage() {
             // Get public URL
             const { data: urlData } = supabase.storage.from('resources').getPublicUrl(filePath);
 
+            let thumbnailUrl = null;
+            if (thumbnailFile) {
+                const thumbExt = thumbnailFile.name.split('.').pop();
+                const thumbName = `${Date.now()}_thumb_${Math.random().toString(36).slice(2)}.${thumbExt}`;
+                const thumbPath = `resources/${thumbName}`;
+
+                const { error: thumbError } = await supabase.storage
+                    .from('room_thumbnails')
+                    .upload(thumbPath, thumbnailFile);
+
+                if (thumbError) throw thumbError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('room_thumbnails')
+                    .getPublicUrl(thumbPath);
+
+                thumbnailUrl = publicUrl;
+            }
+
             // Insert into resources table
             const { error: dbError } = await supabase.from('resources').insert([{
                 title: uploadTitle.trim(),
                 description: uploadDesc.trim() || null,
                 file_url: urlData.publicUrl,
+                thumbnail_url: thumbnailUrl,
                 resource_type: uploadType,
                 uploaded_by: profile.id,
                 tags: [],
@@ -181,6 +203,8 @@ export default function AdminPage() {
             setUploadTitle('');
             setUploadDesc('');
             setSelectedFile(null);
+            setThumbnailFile(null);
+            setThumbnailPreview(null);
             setUploadType('PDF');
             fetchResources();
             fetchStats();
@@ -527,6 +551,39 @@ export default function AdminPage() {
                                         className="hidden"
                                         accept=".pdf,.ppt,.pptx,.doc,.docx,.mp4,.webm"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1.5 block">Thumbnail (Optional)</label>
+                                    <div className="flex gap-2">
+                                        <label
+                                            htmlFor="thumb-upload"
+                                            className="flex-1 flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] border-dashed rounded-xl px-4 py-3 text-sm cursor-pointer hover:border-blue-500/30 transition-colors"
+                                        >
+                                            <Shield className="w-4 h-4 text-gray-500" />
+                                            <span className={thumbnailFile ? 'text-white' : 'text-gray-600'}>
+                                                {thumbnailFile ? thumbnailFile.name : 'Choose image'}
+                                            </span>
+                                        </label>
+                                        <input
+                                            id="thumb-upload"
+                                            type="file"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setThumbnailFile(file);
+                                                    setThumbnailPreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                            className="hidden"
+                                            accept="image/*"
+                                        />
+                                        {thumbnailPreview && (
+                                            <div className="w-11 h-11 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+                                                <img src={thumbnailPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
