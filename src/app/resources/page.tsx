@@ -248,8 +248,8 @@ export default function ResourcesPage() {
                         </div>
                     ) : (
                         filteredResources.map((resource) => (
-                            {
-                                resource.thumbnail_url ? (
+                            <div key={resource.resource_id} className="glass-card p-6 flex flex-col">
+                                {resource.thumbnail_url ? (
                                     <div className="relative h-40 mb-4 rounded-xl overflow-hidden border border-white/5">
                                         <img
                                             src={resource.thumbnail_url}
@@ -267,52 +267,51 @@ export default function ResourcesPage() {
                                             <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{resource.resource_type}</span>
                                         </div>
                                     </div>
-                                )
-                            }
+                                )}
 
-                            < h3 className = "text-lg font-extrabold text-white mb-1 leading-tight" > { resource.title }</h3>
-                <p className="text-xs text-gray-500 mb-4 line-clamp-2 font-medium">{resource.description || 'No description.'}</p>
+                                <h3 className="text-lg font-extrabold text-white mb-1 leading-tight">{resource.title}</h3>
+                                <p className="text-xs text-gray-500 mb-4 line-clamp-2 font-medium">{resource.description || 'No description.'}</p>
 
-                <div className="mt-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => handleVote(resource.resource_id, 'up')}
-                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'up'
-                                ? 'text-green-400 font-bold'
-                                : 'text-gray-400 hover:text-green-400'
-                                }`}
-                        >
-                            <ThumbsUp className={`w-4 h-4 ${userVotes[resource.resource_id] === 'up' ? 'fill-green-400/20' : ''}`} /> {resource.thumbs_up}
-                        </button>
-                        <button onClick={() => handleVote(resource.resource_id, 'down')}
-                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'down'
-                                ? 'text-red-400 font-bold'
-                                : 'text-gray-400 hover:text-red-400'
-                                }`}
-                        >
-                            <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => {
-                            const text = `🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${window.location.origin}/resources\n\nLevel up your grades here! 🏔️`;
-                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                        }}
-                            className="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all"
-                            title="Share to WhatsApp"
-                        >
-                            <Share2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDownload(resource.resource_id, resource.file_url)}
-                            className="flex items-center gap-2 text-brand-accent hover:text-brand-accent-hover text-sm font-bold transition-colors ml-1"
-                        >
-                            <Download className="w-4 h-4" /> Get
-                        </button>
-                    </div>
-                </div>
-        </div>
-    ))
+                                <div className="mt-auto flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => handleVote(resource.resource_id, 'up')}
+                                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'up'
+                                                ? 'text-green-400 font-bold'
+                                                : 'text-gray-400 hover:text-green-400'
+                                                }`}
+                                        >
+                                            <ThumbsUp className={`w-4 h-4 ${userVotes[resource.resource_id] === 'up' ? 'fill-green-400/20' : ''}`} /> {resource.thumbs_up}
+                                        </button>
+                                        <button onClick={() => handleVote(resource.resource_id, 'down')}
+                                            className={`flex items-center gap-1 transition-colors text-sm ${userVotes[resource.resource_id] === 'down'
+                                                ? 'text-red-400 font-bold'
+                                                : 'text-gray-400 hover:text-red-400'
+                                                }`}
+                                        >
+                                            <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => {
+                                            const text = `🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${window.location.origin}/resources\n\nLevel up your grades here! 🏔️`;
+                                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                        }}
+                                            className="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all"
+                                            title="Share to WhatsApp"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => handleDownload(resource.resource_id, resource.file_url)}
+                                            className="flex items-center gap-2 text-brand-accent hover:text-brand-accent-hover text-sm font-bold transition-colors ml-1"
+                                        >
+                                            <Download className="w-4 h-4" /> Get
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
                     )
-}
+                    }
                 </div >
             </main >
         </div >
