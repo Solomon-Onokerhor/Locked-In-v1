@@ -102,18 +102,30 @@ export default function ResourcesClient() {
     const handleDownload = async (resourceId: string, url: string) => {
         if (!session) return;
 
-        // Optimistic update
+        // 1. Open the file IMMEDIATELY to bypass aggressive popup blockers (mobile/Safari)
+        // Browsers require window.open to be called directly in the call stack of a user gesture.
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win) {
+            alert('Please allow popups for this site to download resources.');
+            return;
+        }
+
+        // 2. Optimistic UI update
         setResources((prev) =>
             prev.map((r) =>
                 r.resource_id === resourceId ? { ...r, download_count: (r.download_count || 0) + 1 } : r
             )
         );
 
-        // Server update
-        await supabase.rpc('record_resource_download', { p_resource_id: resourceId });
-
-        // Open file strictly after recording starts
-        window.open(url, '_blank', 'noopener,noreferrer');
+        // 3. Server update (background)
+        try {
+            const { error } = await supabase.rpc('record_resource_download', { p_resource_id: resourceId });
+            if (error) throw error;
+        } catch (err) {
+            console.error('Failed to record download:', err);
+            // We don't revert the optimistic count here to avoid "jumping" UI, 
+            // the server will reconcile on the next refresh.
+        }
     };
 
     const handleUpload = async (e: React.FormEvent) => {
