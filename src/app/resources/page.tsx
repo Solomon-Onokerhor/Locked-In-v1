@@ -305,13 +305,12 @@ export default function ResourcesPage() {
                         filteredResources.map((resource) => (
                             <div key={resource.resource_id} className="glass-card flex flex-col group overflow-hidden">
                                 {resource.thumbnail_url ? (
-                                    <div className="relative h-52 border-b border-white/5 bg-black/20 overflow-hidden">
+                                    <div className="relative h-48 md:h-60 border-b border-white/5 bg-[#0a0f1e] overflow-hidden flex items-center justify-center p-2">
                                         <img
                                             src={resource.thumbnail_url}
                                             alt={resource.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105 shadow-2xl"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         <div className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-10">
                                             {getIcon(resource.resource_type)}
                                         </div>
