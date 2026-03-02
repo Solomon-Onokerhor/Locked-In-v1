@@ -305,13 +305,13 @@ export default function ResourcesPage() {
                         filteredResources.map((resource) => (
                             <div key={resource.resource_id} className="glass-card p-6 flex flex-col">
                                 {resource.thumbnail_url ? (
-                                    <div className="relative h-40 mb-4 rounded-xl overflow-hidden border border-white/5">
+                                    <div className="relative h-56 mb-4 rounded-xl overflow-hidden border border-white/5 bg-white/5">
                                         <img
                                             src={resource.thumbnail_url}
                                             alt={resource.title}
                                             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                                         />
-                                        <div className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                                        <div className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-xl">
                                             {getIcon(resource.resource_type)}
                                         </div>
                                     </div>
