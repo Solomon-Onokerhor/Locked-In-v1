@@ -148,33 +148,49 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/10 to-blue-900/20 opacity-50"></div>
                     )}
 
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
+                    <div className="relative z-10 flex flex-col justify-end gap-6 w-full">
                         <div className="flex-1">
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${room.room_type === 'Study' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' : 'bg-amber-500/20 border-amber-500/30 text-amber-300'}`}>
-                                    {room.room_type}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm ${room.room_type === 'Study' ? 'bg-blue-500/30 border-blue-500/40 text-blue-100' : 'bg-amber-500/30 border-amber-500/40 text-amber-100'}`}>
+                                    {room.room_type} Session
                                 </span>
-                                {room.is_paid && (
-                                    <span className="bg-green-500/20 border border-green-500/30 text-green-300 px-3 py-1 rounded-md text-[10px] font-black uppercase backdrop-blur-md">
-                                        Coming Soon
-                                    </span>
-                                )}
                                 {room.course_code && (
-                                    <span className="bg-white/10 border border-white/20 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase backdrop-blur-md">
+                                    <span className="bg-white/20 border border-white/30 text-white px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-sm">
                                         {room.course_code}
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-2xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                            <h1 className="text-3xl md:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] mb-3">
                                 {room.title}
                             </h1>
-                            <p className="text-gray-100 mt-2 text-sm md:text-lg max-w-2xl leading-snug drop-shadow-md font-semibold opacity-90">
+                            <p className="text-gray-100 text-sm md:text-xl max-w-3xl leading-snug drop-shadow-md font-medium opacity-95 mb-8">
                                 {room.description || 'No description provided for this session.'}
                             </p>
+
+                            <div className="flex flex-wrap gap-y-3 gap-x-6 items-center pt-6 border-t border-white/10">
+                                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/5">
+                                    <Calendar className="w-3.5 h-3.5 text-brand-accent" />
+                                    <span className="text-xs md:text-sm font-bold text-white whitespace-nowrap">
+                                        {sessionDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} @ {sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/5">
+                                    <Clock className="w-3.5 h-3.5 text-brand-accent" />
+                                    <span className="text-xs md:text-sm font-bold text-white whitespace-nowrap">
+                                        {room.duration_minutes}m
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/5">
+                                    <Users className="w-3.5 h-3.5 text-brand-accent" />
+                                    <span className="text-xs md:text-sm font-bold text-white whitespace-nowrap">
+                                        {room.max_members} Slots
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         {canDelete && (
-                            <div className="flex gap-2">
+                            <div className="absolute top-0 right-0 md:relative md:top-auto md:right-auto self-start flex gap-2">
                                 {!showDeleteConfirm ? (
                                     <button
                                         onClick={() => setShowDeleteConfirm(true)}
@@ -193,43 +209,19 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                             className="px-4 py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg flex items-center gap-2"
                                         >
                                             {isDeleting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                            Confirm Delete?
+                                            Confirm?
                                         </button>
                                         <button
                                             onClick={() => setShowDeleteConfirm(false)}
                                             disabled={isDeleting}
-                                            className="px-4 py-3 bg-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/20 transition-all"
+                                            className="p-4 bg-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/20 transition-all"
                                         >
-                                            Cancel
+                                            <ArrowLeft className="w-4 h-4" />
                                         </button>
                                     </div>
                                 )}
                             </div>
                         )}
-                    </div>
-
-                    <div className="mt-8 flex flex-wrap gap-4 md:gap-8 pb-6 border-b border-white/5 w-full">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Time & Date</span>
-                            <span className="flex items-center gap-2 text-white font-bold">
-                                <Calendar className="w-4 h-4 text-brand-accent" />
-                                {sessionDate.toLocaleDateString()} at {sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Duration</span>
-                            <span className="flex items-center gap-2 text-white font-bold">
-                                <Clock className="w-4 h-4 text-brand-accent" />
-                                {room.duration_minutes} Minutes
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Capacity</span>
-                            <span className="flex items-center gap-2 text-white font-bold">
-                                <Users className="w-4 h-4 text-brand-accent" />
-                                {room.max_members} Max Members
-                            </span>
-                        </div>
                     </div>
                 </section>
 
