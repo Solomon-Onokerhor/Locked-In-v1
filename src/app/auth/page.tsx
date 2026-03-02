@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { BookOpen, LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { BookOpen, LogIn, UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage() {
     const { session, loading } = useAuth();
@@ -16,6 +16,7 @@ export default function AuthPage() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
 
 
@@ -126,9 +127,16 @@ export default function AuthPage() {
                         <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Password</label>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
-                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 focus:bg-white/[0.08]"
+                            <input type={showPassword ? "text" : "password"} required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-12 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 focus:bg-white/[0.08]"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
 
