@@ -27,14 +27,17 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [members, setMembers] = useState<(RoomMember & { profiles: Profile | null })[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!authLoading && !session) router.push('/auth');
-    }, [authLoading, session, router]);
+    // Removal of mandatory redirect to allow preview mode
+    // useEffect(() => {
+    //     if (!authLoading && !session) router.push('/auth');
+    // }, [authLoading, session, router]);
 
     useEffect(() => {
-        if (session && roomId) {
+        if (roomId) {
             fetchRoomData();
-            checkMembership();
+            if (session) {
+                checkMembership();
+            }
             fetchMembers();
         }
     }, [session, roomId]);
@@ -128,7 +131,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    if (loading || !session || !room) {
+    if (loading || !room) {
         return (
             <div className="min-h-screen bg-brand-primary flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent" />
@@ -136,7 +139,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         );
     }
 
-    const isCreator = room.created_by === session.user.id;
+    const isCreator = session ? room.created_by === session.user.id : false;
     const isAdmin = profile?.role === 'admin';
     const canDelete = isCreator || isAdmin;
 
@@ -152,6 +155,26 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     Back to Dashboard
                 </Link>
+
+                {!session && (
+                    <div className="mb-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-between gap-4 animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Users className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-bold text-sm">Scholars Preview Mode</h4>
+                                <p className="text-gray-500 text-xs">You are viewing this room as a guest. Sign in to join the session and chat.</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/auth"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                        >
+                            Sign In to Join
+                        </Link>
+                    </div>
+                )}
 
                 <section className="mb-8 relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-5 md:p-12 shadow-2xl min-h-[300px] flex items-end">
                     {room.image_url ? (
@@ -284,9 +307,13 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                 <Lock className="w-7 h-7 text-brand-accent" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-extrabold text-white">Lock in to this Room</h2>
+                                <h2 className="text-xl font-extrabold text-white">
+                                    {session ? 'Lock in to this Room' : 'Join the Scholars'}
+                                </h2>
                                 <p className="text-gray-500 text-sm">
-                                    {room.is_paid ? `Pay GHS ${room.price} to lock in to this session` : 'Free to lock in — start learning now'}
+                                    {!session
+                                        ? 'Create an account to join this study session and access resources.'
+                                        : (room.is_paid ? `Pay GHS ${room.price} to lock in to this session` : 'Free to lock in — start learning now')}
                                 </p>
                             </div>
                         </div>
@@ -297,19 +324,28 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                             </div>
                         )}
 
-                        <button
-                            onClick={handleLockIn}
-                            disabled={lockingIn}
-                            className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {lockingIn ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : room.is_paid ? (
-                                <><CreditCard className="w-5 h-5" /> Pay & Lock In</>
-                            ) : (
-                                <><CheckCircle className="w-5 h-5" /> Lock In Now</>
-                            )}
-                        </button>
+                        {session ? (
+                            <button
+                                onClick={handleLockIn}
+                                disabled={lockingIn}
+                                className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {lockingIn ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : room.is_paid ? (
+                                    <><CreditCard className="w-5 h-5" /> Pay & Lock In</>
+                                ) : (
+                                    <><CheckCircle className="w-5 h-5" /> Lock In Now</>
+                                )}
+                            </button>
+                        ) : (
+                            <Link
+                                href="/auth"
+                                className="inline-flex items-center gap-2 bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98]"
+                            >
+                                <Zap className="w-5 h-5" /> Create Account to Join
+                            </Link>
+                        )}
                     </section>
                 ) : (
                     <section className="space-y-6">
@@ -385,7 +421,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                                         >
                                                             <p className="text-xs font-bold text-white truncate group-hover:text-brand-accent transition-colors">
                                                                 {member.profiles?.name || 'Scholar'}
-                                                                {member.user_id === session.user.id && ' (You)'}
+                                                                {session && member.user_id === session.user.id && ' (You)'}
                                                             </p>
                                                             {member.profiles?.is_verified && (
                                                                 <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>

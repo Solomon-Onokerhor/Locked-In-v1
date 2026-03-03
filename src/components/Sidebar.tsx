@@ -150,42 +150,54 @@ export function Sidebar() {
                     </button>
                 </nav>
 
-                {/* User Profile */}
+                {/* User Profile / Auth Action */}
                 <div className="mt-auto pt-6 border-t border-white/10">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
-                            <User className="w-5 h-5 text-brand-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1">
-                                <p className="text-sm font-bold text-white truncate">{profile?.name || 'Student'}</p>
-                                {profile?.is_verified && (
-                                    <div className="flex-shrink-0" title={profile?.badge_label || 'Verified Student'}>
-                                        <div className="bg-blue-500 rounded-full p-0.5">
-                                            <Check className="w-2 h-2 text-white" strokeWidth={4} />
-                                        </div>
+                    {profile ? (
+                        <>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
+                                    <User className="w-5 h-5 text-brand-accent" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1">
+                                        <p className="text-sm font-bold text-white truncate">{profile?.name || 'Student'}</p>
+                                        {profile?.is_verified && (
+                                            <div className="flex-shrink-0" title={profile?.badge_label || 'Verified Student'}>
+                                                <div className="bg-blue-500 rounded-full p-0.5">
+                                                    <Check className="w-2 h-2 text-white" strokeWidth={4} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{profile?.role || 'student'}</p>
+                                        {profile?.badge_label && (
+                                            <>
+                                                <span className="text-[10px] text-gray-700">•</span>
+                                                <span className="text-[9px] text-brand-accent font-black uppercase tracking-tighter bg-brand-accent/5 px-1 rounded">{profile.badge_label}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{profile?.role || 'student'}</p>
-                                {profile?.badge_label && (
-                                    <>
-                                        <span className="text-[10px] text-gray-700">•</span>
-                                        <span className="text-[9px] text-brand-accent font-black uppercase tracking-tighter bg-brand-accent/5 px-1 rounded">{profile.badge_label}</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={signOut}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/5 transition-all"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        <span className="font-medium">Sign Out</span>
-                    </button>
+                            <button
+                                onClick={signOut}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/5 transition-all"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span className="font-medium">Sign Out</span>
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            href="/auth"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold transition-all shadow-lg shadow-brand-accent/20 active:scale-95"
+                        >
+                            <LogOut className="w-5 h-5 rotate-180" />
+                            Sign In / Join
+                        </Link>
+                    )}
                 </div>
             </aside>
         </>

@@ -18,12 +18,13 @@ export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState<'all' | 'study' | 'skill' | 'my_rooms' | 'upcoming'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
-        if (!loading && !session) router.push('/auth');
-    }, [loading, session, router]);
+    // Removal of mandatory redirect to allow preview mode
+    // useEffect(() => {
+    //     if (!loading && !session) router.push('/auth');
+    // }, [loading, session, router]);
 
     useEffect(() => {
-        if (session) fetchRooms();
+        fetchRooms();
     }, [session]);
 
     const fetchRooms = async () => {
