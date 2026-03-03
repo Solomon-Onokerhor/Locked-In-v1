@@ -12,7 +12,7 @@ import {
     AlertCircle, ChevronDown, Search, Home
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'rooms' | 'upload';
+type Tab = 'overview' | 'users' | 'approvals' | 'rooms' | 'upload';
 
 interface Stats {
     totalUsers: number;
@@ -38,6 +38,8 @@ export default function AdminPage() {
     const [roomSearch, setRoomSearch] = useState('');
     const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
     const [isDeletingRoom, setIsDeletingRoom] = useState(false);
+    const [pendingRooms, setPendingRooms] = useState<Room[]>([]);
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
     // Resources
     const [resourceToDelete, setResourceToDelete] = useState<string | null>(null);
@@ -96,6 +98,20 @@ export default function AdminPage() {
         if (data) setRooms(data as Room[]);
     }, []);
 
+    const fetchPendingRooms = useCallback(async () => {
+        const { data } = await supabase
+            .from('rooms')
+            .select(`
+                room_id, room_type, session_mode, title, description, 
+                created_by, date_time, duration_minutes, physical_location, 
+                location_note, max_members, is_paid, price, commission_rate, 
+                status, tags, created_at
+            `)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        if (data) setPendingRooms(data as Room[]);
+    }, []);
+
     const fetchResources = useCallback(async () => {
         const { data } = await supabase.from('resources').select('*').order('created_at', { ascending: false });
         if (data) setResources(data);
@@ -106,15 +122,39 @@ export default function AdminPage() {
             fetchStats();
             fetchUsers();
             fetchRooms();
+            fetchPendingRooms();
             fetchResources();
         }
-    }, [profile, fetchStats, fetchUsers, fetchRooms, fetchResources]);
+    }, [profile, fetchStats, fetchUsers, fetchRooms, fetchPendingRooms, fetchResources]);
 
     // Role change
     const handleRoleChange = async (userId: string, newRole: string) => {
         await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
         fetchUsers();
         fetchStats();
+    };
+
+    // Approval Actions
+    const handleApprove = async (roomId: string) => {
+        setProcessingId(roomId);
+        const { error } = await supabase.rpc('approve_room', { p_room_id: roomId });
+        if (!error) {
+            fetchPendingRooms();
+            fetchRooms();
+            fetchStats();
+        }
+        setProcessingId(null);
+    };
+
+    const handleReject = async (roomId: string) => {
+        setProcessingId(roomId);
+        const { error } = await supabase.rpc('reject_room', { p_room_id: roomId });
+        if (!error) {
+            fetchPendingRooms();
+            fetchRooms();
+            fetchStats();
+        }
+        setProcessingId(null);
     };
 
     // Delete room
@@ -237,9 +277,10 @@ export default function AdminPage() {
         );
     }
 
-    const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
         { key: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
         { key: 'users', label: 'Users', icon: <Users className="w-4 h-4" /> },
+        { key: 'approvals', label: 'Approvals', icon: <CheckCircle className="w-4 h-4" />, badge: pendingRooms.length },
         { key: 'rooms', label: 'Rooms', icon: <Home className="w-4 h-4" /> },
         { key: 'upload', label: 'Upload', icon: <Upload className="w-4 h-4" /> },
     ];
@@ -274,6 +315,11 @@ export default function AdminPage() {
                         >
                             {tab.icon}
                             {tab.label}
+                            {tab.badge !== undefined && tab.badge > 0 && (
+                                <span className="ml-2 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                    {tab.badge}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -410,6 +456,77 @@ export default function AdminPage() {
                                 <p className="text-center text-gray-600 py-8 text-sm">No users found</p>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {/* ═══ APPROVALS TAB ═══ */}
+                {activeTab === 'approvals' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <CheckCircle className="w-5 h-5 text-emerald-400" />
+                                Pending Approvals
+                            </h3>
+                            <span className="text-xs text-gray-500 font-medium">{pendingRooms.length} rooms waiting</span>
+                        </div>
+
+                        {pendingRooms.length === 0 ? (
+                            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-12 text-center">
+                                <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle className="w-8 h-8 text-emerald-400 opacity-50" />
+                                </div>
+                                <h4 className="text-white font-bold text-lg mb-1">All Caught Up!</h4>
+                                <p className="text-gray-500 text-sm">There are no pending rooms to approve at the moment.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {pendingRooms.map((room) => (
+                                    <div key={room.room_id} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden flex flex-col group hover:border-white/10 transition-all">
+                                        <div className="p-5 flex-1">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${room.room_type === 'Study'
+                                                    ? 'bg-blue-500/10 text-blue-400'
+                                                    : 'bg-amber-500/10 text-amber-400'
+                                                    }`}>
+                                                    {room.room_type}
+                                                </span>
+                                                <span className="text-gray-600 text-[10px] uppercase font-black">{new Date(room.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <h4 className="text-lg font-bold text-white mb-2 leading-tight">{room.title}</h4>
+                                            <p className="text-gray-500 text-xs mb-4 line-clamp-3 leading-relaxed">{room.description || 'No description provided'}</p>
+
+                                            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/5 mt-auto">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Date</span>
+                                                    <span className="text-xs text-gray-300 font-medium">{new Date(room.date_time).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Duration</span>
+                                                    <span className="text-xs text-gray-300 font-medium">{room.duration_minutes} mins</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white/[0.02] border-t border-white/5 p-4 flex gap-3">
+                                            <button
+                                                onClick={() => handleReject(room.room_id)}
+                                                disabled={processingId !== null}
+                                                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all disabled:opacity-50"
+                                            >
+                                                {processingId === room.room_id ? 'Wait...' : 'Reject'}
+                                            </button>
+                                            <button
+                                                onClick={() => handleApprove(room.room_id)}
+                                                disabled={processingId !== null}
+                                                className="flex-2 py-2.5 px-6 rounded-xl text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
+                                            >
+                                                {processingId === room.room_id ? 'Approving...' : 'Approve Room'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
