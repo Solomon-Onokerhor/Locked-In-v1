@@ -101,7 +101,7 @@ export default function CreateRoomPage() {
                     commission_rate: 0.1,
                     course_code: roomType === 'Study' ? courseCode : null,
                     whatsapp_group_link: whatsappGroupLink || null,
-                    status: 'active',
+                    status: 'pending',
                 }])
                 .select()
                 .single();
