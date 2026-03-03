@@ -41,6 +41,25 @@ export default function CreateRoomPage() {
         setError(null);
 
         try {
+            // --- INPUT VALIDATION ---
+            if (title.length < 5 || title.length > 100) {
+                throw new Error('Title must be between 5 and 100 characters');
+            }
+            if (description && description.length > 1000) {
+                throw new Error('Description cannot exceed 1000 characters');
+            }
+
+            const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+
+            if (sessionMode === 'virtual' && (!meetingLink || !urlRegex.test(meetingLink))) {
+                throw new Error('Please enter a valid meeting URL (e.g., Zoom/Google Meet)');
+            }
+
+            if (whatsappGroupLink && !urlRegex.test(whatsappGroupLink)) {
+                throw new Error('Please enter a valid WhatsApp Group link');
+            }
+            // ------------------------
+
             let image_url = null;
 
             if (thumbnail) {
@@ -96,12 +115,16 @@ export default function CreateRoomPage() {
                     role_in_room: 'creator',
                     has_access_to_resources: true,
                 }]);
-                router.push(`/room/${newRoom.room_id}`);
+
+                // --- SUCCESS COOLDOWN ---
+                setError('Room created successfully! Redirecting...');
+                setTimeout(() => {
+                    router.push(`/room/${newRoom.room_id}`);
+                }, 1500);
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to create room');
-        } finally {
-            setCreating(false);
+            setCreating(false); // Enable button on error
         }
     };
 

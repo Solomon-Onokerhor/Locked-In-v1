@@ -7,10 +7,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
 import {
-    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video
+    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { Chat } from '@/components/Chat';
+import type { Profile } from '@/types';
 
 export default function RoomPageClient({ roomId }: { roomId: string }) {
     const { session, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -22,6 +23,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [lockingIn, setLockingIn] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [members, setMembers] = useState<(RoomMember & { profiles: Profile | null })[]>([]);
 
     useEffect(() => {
         if (!authLoading && !session) router.push('/auth');
@@ -31,6 +33,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         if (session && roomId) {
             fetchRoomData();
             checkMembership();
+            fetchMembers();
         }
     }, [session, roomId]);
 
@@ -61,6 +64,16 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         if (data) setMembership(data as RoomMember);
     };
 
+    const fetchMembers = async () => {
+        const { data } = await supabase
+            .from('room_members')
+            .select('*, profiles(*)')
+            .eq('room_id', roomId)
+            .order('joined_at', { ascending: true });
+
+        if (data) setMembers(data as any);
+    };
+
     const handleLockIn = async () => {
         if (!session || !room) return;
         setLockingIn(true);
@@ -76,6 +89,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             if (data && !data.success) throw new Error(data.error);
 
             await checkMembership();
+            await fetchMembers();
             await refreshProfile();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to lock in');
@@ -335,7 +349,59 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                             )}
                         </div>
 
-                        <Chat roomId={room.room_id} userProfile={profile} />
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                            <div className="lg:col-span-3">
+                                <Chat roomId={room.room_id} userProfile={profile} />
+                            </div>
+
+                            <aside className="lg:col-span-1">
+                                <div className="glass-card p-5 sticky top-8">
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <Users className="w-4 h-4 text-brand-accent" />
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-white">Scholars Locked In</h3>
+                                        <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-[10px] font-bold text-gray-400">
+                                            {members.length}/{room.max_members}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {members.map((member) => (
+                                            <div key={member.id} className="flex items-center gap-3 group">
+                                                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:border-brand-accent/50 transition-colors">
+                                                    {member.profiles?.name?.charAt(0).toUpperCase() || '?'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <p className="text-xs font-bold text-white truncate">
+                                                            {member.profiles?.name || 'Scholar'}
+                                                            {member.user_id === session.user.id && ' (You)'}
+                                                        </p>
+                                                        {member.profiles?.is_verified && (
+                                                            <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>
+                                                                <Check className="w-1.5 h-1.5 text-white" strokeWidth={5} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">
+                                                            {member.role_in_room === 'creator' ? 'Host' : 'Member'}
+                                                        </p>
+                                                        {member.profiles?.badge_label && (
+                                                            <>
+                                                                <span className="text-gray-700">•</span>
+                                                                <span className="text-[8px] text-brand-accent font-black uppercase px-1 rounded bg-brand-accent/5">
+                                                                    {member.profiles.badge_label}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
                     </section>
                 )}
             </main>

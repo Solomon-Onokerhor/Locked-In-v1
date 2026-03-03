@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { Send, Check, Clock, MessageCircle } from 'lucide-react';
+import { Send, Check, Clock, MessageCircle, ChevronDown } from 'lucide-react';
 
 interface ChatMessage {
     message_id: string;
@@ -12,6 +12,14 @@ interface ChatMessage {
     text: string;
     timestamp: string;
     sender_name?: string;
+    sender_is_verified?: boolean;
+    sender_badge_label?: string;
+}
+
+interface SenderInfo {
+    name: string;
+    is_verified: boolean;
+    badge_label?: string;
 }
 
 interface ChatProps {
@@ -23,35 +31,49 @@ export function Chat({ roomId, userProfile }: ChatProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const [senderNames, setSenderNames] = useState<Record<string, string>>({});
-    const namesRef = useRef<Record<string, string>>({});
+    const [senderInfo, setSenderInfo] = useState<Record<string, SenderInfo>>({});
+    const senderRef = useRef<Record<string, SenderInfo>>({});
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [isFocused, setIsFocused] = useState(true);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const lastMessageTime = useRef<number>(0);
 
     // Keep ref in sync with state
     useEffect(() => {
-        namesRef.current = senderNames;
-    }, [senderNames]);
+        senderRef.current = senderInfo;
+    }, [senderInfo]);
 
-    // Resolve a sender name using ref (stable, no stale closure)
-    const resolveSenderName = useCallback(async (senderId: string): Promise<string> => {
-        if (namesRef.current[senderId]) return namesRef.current[senderId];
+    // Resolve a sender info using ref (stable, no stale closure)
+    const resolveSenderInfo = useCallback(async (senderId: string): Promise<SenderInfo> => {
+        if (senderRef.current[senderId]) return senderRef.current[senderId];
         if (senderId === userProfile?.id) {
-            const name = userProfile?.name || 'You';
-            setSenderNames(prev => ({ ...prev, [senderId]: name }));
-            return name;
+            const info = {
+                name: userProfile?.name || 'You',
+                is_verified: userProfile?.is_verified || false,
+                badge_label: userProfile?.badge_label
+            };
+            setSenderInfo(prev => ({ ...prev, [senderId]: info }));
+            return info;
         }
 
         try {
             const { data } = await supabase
                 .from('profiles')
-                .select('name')
+                .select('name, is_verified, badge_label')
                 .eq('id', senderId)
                 .single();
-            const name = data?.name || 'Unknown';
-            setSenderNames(prev => ({ ...prev, [senderId]: name }));
-            return name;
+            const info = {
+                name: data?.name || 'Unknown',
+                is_verified: data?.is_verified || false,
+                badge_label: data?.badge_label
+            };
+            setSenderInfo(prev => ({ ...prev, [senderId]: info }));
+            return info;
         } catch {
-            return 'Unknown';
+            const unknown = { name: 'Unknown', is_verified: false };
+            return unknown;
         }
     }, [userProfile]);
 
@@ -64,33 +86,52 @@ export function Chat({ roomId, userProfile }: ChatProps) {
             .order('timestamp', { ascending: true });
 
         if (data) {
-            // Resolve all unique sender names
+            // Resolve all unique sender info
             const uniqueSenderIds = [...new Set(data.map(m => m.sender_id))];
-            const nameMap: Record<string, string> = {};
+            const infoMap: Record<string, SenderInfo> = {};
 
             for (const id of uniqueSenderIds) {
                 if (id === userProfile?.id) {
-                    nameMap[id] = userProfile?.name || 'You';
+                    infoMap[id] = {
+                        name: userProfile?.name || 'You',
+                        is_verified: userProfile?.is_verified || false,
+                        badge_label: userProfile?.badge_label
+                    };
                 } else {
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('name')
+                        .select('name, is_verified, badge_label')
                         .eq('id', id)
                         .single();
-                    nameMap[id] = profile?.name || 'Unknown';
+                    infoMap[id] = {
+                        name: profile?.name || 'Unknown',
+                        is_verified: profile?.is_verified || false,
+                        badge_label: profile?.badge_label
+                    };
                 }
             }
 
-            setSenderNames(prev => ({ ...prev, ...nameMap }));
+            setSenderInfo(prev => ({ ...prev, ...infoMap }));
             setMessages(data.map(m => ({
                 ...m,
-                sender_name: nameMap[m.sender_id] || 'Unknown'
+                sender_name: infoMap[m.sender_id]?.name || 'Unknown',
+                sender_is_verified: infoMap[m.sender_id]?.is_verified,
+                sender_badge_label: infoMap[m.sender_id]?.badge_label
             })));
         }
     }, [roomId, userProfile]);
 
     useEffect(() => {
         fetchMessages();
+
+        const handleFocus = () => {
+            setIsFocused(true);
+            setUnreadCount(0);
+        };
+        const handleBlur = () => setIsFocused(false);
+
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('blur', handleBlur);
 
         const channel = supabase
             .channel(`room-chat:${roomId}`)
@@ -104,26 +145,93 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                 },
                 async (payload) => {
                     const newMsg = payload.new as ChatMessage;
-                    const name = await resolveSenderName(newMsg.sender_id);
-                    newMsg.sender_name = name;
+                    const info = await resolveSenderInfo(newMsg.sender_id);
+                    newMsg.sender_name = info.name;
+                    newMsg.sender_is_verified = info.is_verified;
+                    newMsg.sender_badge_label = info.badge_label;
+
                     setMessages((prev) => [...prev, newMsg]);
+
+                    const isOwn = newMsg.sender_id === userProfile?.id;
+                    if (!isOwn) {
+                        // Play sound
+                        try {
+                            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+                            audio.volume = 0.5;
+                            audio.play().catch(() => { });
+                        } catch (e) { }
+
+                        // Handle focus/scroll notifications
+                        if (!isFocused) {
+                            setUnreadCount(prev => prev + 1);
+                        } else if (!isAtBottom) {
+                            setUnreadCount(prev => prev + 1);
+                        }
+                    }
                 }
             )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
+            window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('blur', handleBlur);
         };
-    }, [roomId, fetchMessages, resolveSenderName]);
+    }, [roomId, fetchMessages, resolveSenderInfo, isFocused, isAtBottom, userProfile?.id]);
 
-    // Auto-scroll to bottom
+    // Handle Tab Title Flashing
     useEffect(() => {
+        if (unreadCount > 0 && !isFocused) {
+            const originalTitle = document.title;
+            const interval = setInterval(() => {
+                document.title = document.title === originalTitle
+                    ? `(${unreadCount}) New Message!`
+                    : originalTitle;
+            }, 1000);
+
+            return () => {
+                clearInterval(interval);
+                document.title = originalTitle;
+            };
+        }
+    }, [unreadCount, isFocused]);
+
+    const handleScroll = () => {
+        if (!chatContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+        const atBottom = scrollHeight - scrollTop - clientHeight < 50;
+        setIsAtBottom(atBottom);
+        if (atBottom) setUnreadCount(0);
+    };
+
+    const scrollToBottom = () => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        setUnreadCount(0);
+    };
+
+    // Auto-scroll to bottom only if already at bottom or own message
+    useEffect(() => {
+        if (isAtBottom || (messages.length > 0 && messages[messages.length - 1].sender_id === userProfile?.id)) {
+            scrollToBottom();
+        }
+    }, [messages, userProfile?.id]);
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!newMessage.trim() || !userProfile) return;
+        const trimmedMessage = newMessage.trim();
+        if (!trimmedMessage || !userProfile) return;
+
+        // --- RATE LIMITING & VALIDATION ---
+        const now = Date.now();
+        if (now - lastMessageTime.current < 500) { // 2 messages per second
+            return;
+        }
+
+        if (trimmedMessage.length > 500) {
+            alert('Message is too long (Max 500 characters)');
+            return;
+        }
+        // ----------------------------------
 
         setLoading(true);
         try {
@@ -133,11 +241,12 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                     {
                         room_id: roomId,
                         sender_id: userProfile.id,
-                        text: newMessage.trim(),
+                        text: trimmedMessage,
                     }
                 ]);
 
             if (error) throw error;
+            lastMessageTime.current = now;
             setNewMessage('');
         } catch (err) {
             console.error('Error sending message:', err);
@@ -185,7 +294,21 @@ export function Chat({ roomId, userProfile }: ChatProps) {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div
+                ref={chatContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-4 space-y-4 relative"
+            >
+                {/* Notification Pill */}
+                {unreadCount > 0 && !isAtBottom && (
+                    <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 animate-bounce z-20"
+                    >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        {unreadCount} new {unreadCount === 1 ? 'message' : 'messages'}
+                    </button>
+                )}
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-600">
                         <MessageCircle className="w-10 h-10 mb-3 opacity-15" />
@@ -195,7 +318,10 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                 ) : (
                     messages.map((msg) => {
                         const own = isOwnMessage(msg.sender_id);
-                        const senderName = msg.sender_name || senderNames[msg.sender_id] || 'Unknown';
+                        const info = senderInfo[msg.sender_id];
+                        const senderName = msg.sender_name || info?.name || 'Unknown';
+                        const isVerified = msg.sender_is_verified ?? info?.is_verified;
+                        const badgeLabel = msg.sender_badge_label ?? info?.badge_label;
 
                         return (
                             <div
@@ -214,7 +340,17 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                                 <div className={`max-w-[75%] ${own ? 'items-end' : 'items-start'} flex flex-col`}>
                                     {/* Sender name (not for own messages) */}
                                     {!own && (
-                                        <span className="text-[11px] text-gray-500 font-semibold mb-1 ml-1">{senderName}</span>
+                                        <div className="flex items-center gap-1.5 mb-1 ml-1">
+                                            <span className="text-[11px] text-gray-500 font-semibold">{senderName}</span>
+                                            {isVerified && (
+                                                <div className="bg-blue-500 rounded-full p-0.5" title={badgeLabel || 'Verified Scholar'}>
+                                                    <Check className="w-2 h-2 text-white" strokeWidth={4} />
+                                                </div>
+                                            )}
+                                            {badgeLabel && (
+                                                <span className="text-[8px] text-brand-accent font-black uppercase tracking-tighter bg-brand-accent/5 px-1 rounded">{badgeLabel}</span>
+                                            )}
+                                        </div>
                                     )}
 
                                     {/* Message bubble */}

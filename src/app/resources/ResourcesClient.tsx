@@ -28,6 +28,7 @@ export default function ResourcesClient() {
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [uploadType, setUploadType] = useState<'PDF' | 'PPT' | 'DOCX' | 'Video'>('PDF');
     const [uploading, setUploading] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!loading && !session) router.push('/auth');
@@ -115,6 +116,50 @@ export default function ResourcesClient() {
             if (error) throw error;
         } catch (err) {
             console.error('Failed to record download:', err);
+        }
+    };
+
+    const handleDirectDownload = async (resource: Resource) => {
+        if (downloadingId) return;
+        setDownloadingId(resource.resource_id);
+
+        try {
+            // Record download analytics
+            await handleDownload(resource.resource_id);
+
+            // Fetch the file as a blob to control the filename
+            const response = await fetch(resource.file_url);
+            if (!response.ok) throw new Error('Download failed');
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // Determine extension
+            const extMap: Record<string, string> = {
+                'PDF': '.pdf',
+                'PPT': '.pptx',
+                'DOCX': '.docx',
+                'Video': '.mp4'
+            };
+            const ext = extMap[resource.resource_type] || '';
+
+            // Sanitize filename
+            const fileName = `${resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${ext}`;
+
+            // Trigger download
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+
+        } catch (err) {
+            console.error('Download error:', err);
+            alert('Failed to download file. Please try again.');
+        } finally {
+            setDownloadingId(null);
         }
     };
 
@@ -363,16 +408,18 @@ export default function ResourcesClient() {
                                             >
                                                 <Share2 className="w-4 h-4" />
                                             </a>
-                                            <a
-                                                href={`${resource.file_url}${resource.file_url.includes('?') ? '&' : '?'}download=`}
-                                                download={resource.title}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={() => handleDownload(resource.resource_id)}
-                                                className="flex items-center gap-2 bg-brand-accent/10 hover:bg-brand-accent text-brand-accent hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all border border-brand-accent/20 hover:border-brand-accent shadow-sm"
+                                            <button
+                                                onClick={() => handleDirectDownload(resource)}
+                                                disabled={!!downloadingId}
+                                                className="flex items-center gap-2 bg-brand-accent/10 hover:bg-brand-accent text-brand-accent hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all border border-brand-accent/20 hover:border-brand-accent shadow-sm disabled:opacity-50"
                                             >
-                                                <Download className="w-3.5 h-3.5" /> GET
-                                            </a>
+                                                {downloadingId === resource.resource_id ? (
+                                                    <div className="w-3.5 h-3.5 border-2 border-brand-accent/30 border-t-brand-accent rounded-full animate-spin" />
+                                                ) : (
+                                                    <Download className="w-3.5 h-3.5" />
+                                                )}
+                                                {downloadingId === resource.resource_id ? 'WAIT..' : 'GET'}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

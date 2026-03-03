@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2 } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
 const navItems = [
@@ -157,8 +157,25 @@ export function Sidebar() {
                             <User className="w-5 h-5 text-brand-accent" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{profile?.name || 'Student'}</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{profile?.role || 'student'}</p>
+                            <div className="flex items-center gap-1">
+                                <p className="text-sm font-bold text-white truncate">{profile?.name || 'Student'}</p>
+                                {profile?.is_verified && (
+                                    <div className="flex-shrink-0" title={profile?.badge_label || 'Verified Student'}>
+                                        <div className="bg-blue-500 rounded-full p-0.5">
+                                            <Check className="w-2 h-2 text-white" strokeWidth={4} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{profile?.role || 'student'}</p>
+                                {profile?.badge_label && (
+                                    <>
+                                        <span className="text-[10px] text-gray-700">•</span>
+                                        <span className="text-[9px] text-brand-accent font-black uppercase tracking-tighter bg-brand-accent/5 px-1 rounded">{profile.badge_label}</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 

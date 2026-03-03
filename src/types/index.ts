@@ -18,6 +18,8 @@ export interface Profile {
     study_buddies: number;
     current_streak: number;
     last_active_date: string;
+    is_verified?: boolean;
+    badge_label?: string;
     created_at: string;
 }
 
