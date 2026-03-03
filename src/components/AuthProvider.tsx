@@ -36,7 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .eq('id', uid)
                 .single();
 
-            if (res.data) setProfile(res.data as Profile);
+            if (res.data) {
+                setProfile(res.data as Profile);
+                // --- STREAK HEARTBEAT ---
+                // Trigger activity update silently in the background
+                supabase.rpc('update_user_activity').then(({ error }) => {
+                    if (error) console.error('Streak update error:', error);
+                });
+            }
         } catch (err) {
             console.error('Error fetching profile:', err);
         } finally {

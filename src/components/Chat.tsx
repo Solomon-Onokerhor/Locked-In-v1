@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
 import { Send, Check, Clock, MessageCircle, ChevronDown } from 'lucide-react';
+import { UserProfileModal } from './UserProfileModal';
 
 interface ChatMessage {
     message_id: string;
@@ -39,6 +40,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
     const [isFocused, setIsFocused] = useState(true);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const lastMessageTime = useRef<number>(0);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -326,22 +328,30 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                         return (
                             <div
                                 key={msg.message_id}
-                                className={`flex gap-2.5 ${own ? 'justify-end' : 'justify-start'}`}
+                                className={`flex gap-2.5 group ${own ? 'justify-end' : 'justify-start'}`}
                             >
                                 {/* Other user's avatar */}
                                 {!own && (
-                                    <div className={`w-8 h-8 rounded-full ${getAvatarColor(msg.sender_id)} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedUserId(msg.sender_id)}
+                                        className={`w-8 h-8 rounded-full ${getAvatarColor(msg.sender_id)} flex items-center justify-center flex-shrink-0 mt-0.5 hover:ring-2 hover:ring-white/20 transition-all cursor-pointer`}
+                                    >
                                         <span className="text-white text-xs font-bold">
                                             {senderName.charAt(0).toUpperCase()}
                                         </span>
-                                    </div>
+                                    </button>
                                 )}
 
                                 <div className={`max-w-[75%] ${own ? 'items-end' : 'items-start'} flex flex-col`}>
                                     {/* Sender name (not for own messages) */}
                                     {!own && (
-                                        <div className="flex items-center gap-1.5 mb-1 ml-1">
-                                            <span className="text-[11px] text-gray-500 font-semibold">{senderName}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedUserId(msg.sender_id)}
+                                            className="flex items-center gap-1.5 mb-1 ml-1 hover:opacity-80 transition-opacity cursor-pointer text-left"
+                                        >
+                                            <span className="text-[11px] text-gray-500 font-semibold group-hover:text-brand-accent transition-colors">{senderName}</span>
                                             {isVerified && (
                                                 <div className="bg-blue-500 rounded-full p-0.5" title={badgeLabel || 'Verified Scholar'}>
                                                     <Check className="w-2 h-2 text-white" strokeWidth={4} />
@@ -350,7 +360,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                                             {badgeLabel && (
                                                 <span className="text-[8px] text-brand-accent font-black uppercase tracking-tighter bg-brand-accent/5 px-1 rounded">{badgeLabel}</span>
                                             )}
-                                        </div>
+                                        </button>
                                     )}
 
                                     {/* Message bubble */}
@@ -396,6 +406,13 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                     <Send className="w-4 h-4 text-white" />
                 </button>
             </form>
+
+            <UserProfileModal
+                isOpen={!!selectedUserId}
+                onClose={() => setSelectedUserId(null)}
+                userId={selectedUserId || ''}
+                currentUserProfile={userProfile}
+            />
         </div>
     );
 }

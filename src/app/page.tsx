@@ -14,6 +14,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [myRoomIds, setMyRoomIds] = useState<Set<string>>(new Set());
+    const [buddyRoomCounts, setBuddyRoomCounts] = useState<Record<string, number>>({});
     const [activeTab, setActiveTab] = useState<'all' | 'study' | 'skill' | 'my_rooms' | 'upcoming'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -45,6 +46,32 @@ export default function DashboardPage() {
 
             if (memberData) {
                 setMyRoomIds(new Set(memberData.map(m => m.room_id)));
+            }
+
+            // Fetch buddy activity
+            const { data: buddiesData } = await supabase
+                .from('buddy_connections')
+                .select('*')
+                .or(`user_id.eq.${session.user.id},buddy_id.eq.${session.user.id}`);
+
+            let buddyIds: string[] = [];
+            if (buddiesData) {
+                buddyIds = buddiesData.map(b => b.user_id === session.user.id ? b.buddy_id : b.user_id);
+            }
+
+            if (buddyIds.length > 0) {
+                const { data: buddyRoomsData } = await supabase
+                    .from('room_members')
+                    .select('room_id')
+                    .in('user_id', buddyIds);
+
+                const buddyCounts: Record<string, number> = {};
+                if (buddyRoomsData) {
+                    buddyRoomsData.forEach(mr => {
+                        buddyCounts[mr.room_id] = (buddyCounts[mr.room_id] || 0) + 1;
+                    });
+                }
+                setBuddyRoomCounts(buddyCounts);
             }
         }
 
@@ -208,7 +235,7 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             filteredRooms.map((room) => (
-                                <RoomCard key={room.room_id} room={room} />
+                                <RoomCard key={room.room_id} room={room} buddyCount={buddyRoomCounts[room.room_id] || 0} />
                             ))
                         )}
 
@@ -235,7 +262,7 @@ export default function DashboardPage() {
     );
 }
 
-function RoomCard({ room }: { room: Room }) {
+function RoomCard({ room, buddyCount }: { room: Room, buddyCount?: number }) {
     const handleShare = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -279,6 +306,14 @@ function RoomCard({ room }: { room: Room }) {
                         </span>
                     )}
                 </div>
+
+                {/* Buddy Activity Indicator */}
+                {(buddyCount || 0) > 0 && (
+                    <div className="absolute top-3 right-3 bg-indigo-500/90 border border-indigo-400 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 origin-top-right">
+                        <Users className="w-3 h-3" />
+                        {buddyCount} {buddyCount === 1 ? 'Buddy' : 'Buddies'} Inside
+                    </div>
+                )}
 
                 <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
                     <div className="flex gap-2">

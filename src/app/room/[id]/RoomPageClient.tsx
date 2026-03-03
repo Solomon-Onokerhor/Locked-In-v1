@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Chat } from '@/components/Chat';
+import { UserProfileModal } from '@/components/UserProfileModal';
 import type { Profile } from '@/types';
 
 export default function RoomPageClient({ roomId }: { roomId: string }) {
@@ -24,6 +25,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [error, setError] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [members, setMembers] = useState<(RoomMember & { profiles: Profile | null })[]>([]);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authLoading && !session) router.push('/auth');
@@ -367,20 +369,30 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                     <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                         {members.map((member) => (
                                             <div key={member.id} className="flex items-center gap-3 group">
-                                                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:border-brand-accent/50 transition-colors">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedUserId(member.user_id)}
+                                                    className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:border-brand-accent/50 transition-colors cursor-pointer"
+                                                >
                                                     {member.profiles?.name?.charAt(0).toUpperCase() || '?'}
-                                                </div>
+                                                </button>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1">
-                                                        <p className="text-xs font-bold text-white truncate">
-                                                            {member.profiles?.name || 'Scholar'}
-                                                            {member.user_id === session.user.id && ' (You)'}
-                                                        </p>
-                                                        {member.profiles?.is_verified && (
-                                                            <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>
-                                                                <Check className="w-1.5 h-1.5 text-white" strokeWidth={5} />
-                                                            </div>
-                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedUserId(member.user_id)}
+                                                            className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer text-left"
+                                                        >
+                                                            <p className="text-xs font-bold text-white truncate group-hover:text-brand-accent transition-colors">
+                                                                {member.profiles?.name || 'Scholar'}
+                                                                {member.user_id === session.user.id && ' (You)'}
+                                                            </p>
+                                                            {member.profiles?.is_verified && (
+                                                                <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>
+                                                                    <Check className="w-1.5 h-1.5 text-white" strokeWidth={5} />
+                                                                </div>
+                                                            )}
+                                                        </button>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">
@@ -404,6 +416,13 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         </div>
                     </section>
                 )}
+
+                <UserProfileModal
+                    isOpen={!!selectedUserId}
+                    onClose={() => setSelectedUserId(null)}
+                    userId={selectedUserId || ''}
+                    currentUserProfile={profile}
+                />
             </main>
         </div>
     );

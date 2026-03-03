@@ -91,3 +91,10 @@ export interface Resource {
     thumbnail_url?: string;
     created_at: string;
 }
+
+export interface BuddyConnection {
+    id: string;
+    user_id: string;
+    buddy_id: string;
+    created_at: string;
+}
