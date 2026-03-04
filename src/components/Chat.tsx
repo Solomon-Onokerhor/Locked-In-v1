@@ -389,6 +389,33 @@ export function Chat({ roomId, userProfile }: ChatProps) {
             </div>
 
 
+            {/* Message Input */}
+            <form
+                onSubmit={handleSendMessage}
+                className="px-4 py-3 border-t border-white/[0.06] bg-white/[0.03] flex items-center gap-3"
+            >
+                <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type a message..."
+                    maxLength={500}
+                    className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all"
+                />
+                <button
+                    type="submit"
+                    disabled={loading || !newMessage.trim()}
+                    className="w-10 h-10 rounded-xl bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-blue-500/20"
+                >
+                    {loading ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        <Send className="w-4 h-4" />
+                    )}
+                </button>
+            </form>
+
             <UserProfileModal
                 isOpen={!!selectedUserId}
                 onClose={() => setSelectedUserId(null)}
