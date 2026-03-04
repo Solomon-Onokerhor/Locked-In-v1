@@ -144,7 +144,13 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const canDelete = isCreator || isAdmin;
 
     const sessionDate = new Date(room.date_time);
-    const sessionStatus = sessionDate > new Date() ? 'upcoming' : (new Date(sessionDate.getTime() + room.duration_minutes * 60000) > new Date() ? 'live' : 'ended');
+    const now = new Date();
+    const startTime = sessionDate.getTime();
+    const endTime = startTime + (room.duration_minutes || 60) * 60000;
+    const tenMinutesBefore = startTime - 10 * 60000;
+
+    const canAccessLink = now.getTime() >= tenMinutesBefore && now.getTime() <= endTime;
+    const sessionStatus = now.getTime() < startTime ? 'upcoming' : (now.getTime() <= endTime ? 'live' : 'ended');
 
     return (
         <div className="min-h-screen bg-brand-primary">
@@ -357,7 +363,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                 </div>
                             </div>
 
-                            {room.session_mode === 'virtual' && room.meeting_link && sessionStatus === 'live' ? (
+                            {room.session_mode === 'virtual' && room.meeting_link && canAccessLink ? (
                                 <a
                                     href={room.meeting_link}
                                     target="_blank"
@@ -367,9 +373,9 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                     <Video className="w-4 h-4" />
                                     Lock In to Video Call
                                 </a>
-                            ) : room.session_mode === 'virtual' && sessionStatus === 'upcoming' ? (
+                            ) : room.session_mode === 'virtual' && !canAccessLink && sessionStatus === 'upcoming' ? (
                                 <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-gray-400">
-                                    Link available when live
+                                    Link available 10m before start
                                 </div>
                             ) : null}
 
