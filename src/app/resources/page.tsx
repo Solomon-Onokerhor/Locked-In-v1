@@ -1,6 +1,8 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabaseServer';
 import ResourcesClient from './ResourcesClient';
+import type { Resource } from '@/types';
 
 type Props = {
     searchParams: Promise<{ id?: string }>;
@@ -50,6 +52,14 @@ export async function generateMetadata(
     };
 }
 
-export default function ResourcesPage() {
-    return <ResourcesClient />;
+export default async function ResourcesPage() {
+    // Pre-fetch resources on the server
+    const { data } = await supabaseServer
+        .from('resources')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    const initialResources = (data as Resource[]) || [];
+
+    return <ResourcesClient initialResources={initialResources} />;
 }

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
 import {
-    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check
+    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { Chat } from '@/components/Chat';

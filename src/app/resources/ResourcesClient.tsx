@@ -10,11 +10,16 @@ import {
     Library, FileText, Video, Download, ThumbsUp, ThumbsDown,
     Search, Plus, ShieldCheck, Share2
 } from 'lucide-react';
+import Image from 'next/image';
 
-export default function ResourcesClient() {
+interface ResourcesClientProps {
+    initialResources: Resource[];
+}
+
+export default function ResourcesClient({ initialResources }: ResourcesClientProps) {
     const { session, profile, loading } = useAuth();
     const router = useRouter();
-    const [resources, setResources] = useState<Resource[]>([]);
+    const [resources, setResources] = useState<Resource[]>(initialResources);
     const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down'>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [showUpload, setShowUpload] = useState(false);
@@ -353,12 +358,14 @@ export default function ResourcesClient() {
                             <div key={resource.resource_id} className="glass-card flex flex-col group overflow-hidden">
                                 {resource.thumbnail_url ? (
                                     <div className="relative h-48 md:h-60 border-b border-white/5 bg-[#0a0f1e] overflow-hidden flex items-center justify-center p-2">
-                                        <img
+                                        <Image
                                             src={resource.thumbnail_url}
                                             alt={resource.title}
-                                            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105 shadow-2xl"
+                                            fill
+                                            className="object-contain transition-transform duration-700 group-hover:scale-105 shadow-2xl"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
-                                        <div className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-10">
+                                        <div className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-20">
                                             {getIcon(resource.resource_type)}
                                         </div>
                                     </div>
