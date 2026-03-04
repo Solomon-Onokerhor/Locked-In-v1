@@ -140,7 +140,7 @@ export function Sidebar() {
                     <button
                         onClick={() => {
                             const shareUrl = window.location.origin;
-                            const text = `⚠️ UMaT students are using this app to study smarter and it's actually working...\n\n📈 Track your streaks, find study buddies, and access free resources — all in one place.\n\n🔗 Join before your mates do: ${shareUrl}\n\n#LockedIn 🔒🔥`;
+                            const text = `⚠️ UMaT students are using this app to lock in and it's actually working...\\n\\n📈 Track your streaks, join study & skill sessions, and access free resources.\\n\\n🔗 Join before your mates do: ${shareUrl}\\n\\n#LockedIn 🔒🔥`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                         }}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-all border border-emerald-500/20 mt-4 animate-pulse group"
