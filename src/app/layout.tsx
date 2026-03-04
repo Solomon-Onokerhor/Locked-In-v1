@@ -7,11 +7,11 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
     metadataBase: new URL("https://locked-in-v1.vercel.app"),
-    title: "Locked In — Campus Study & Skill Connect",
-    description: "Lock in to study sessions and skill rooms. Connect with students, share resources, and level up together.",
+    title: "Locked In — The Study App UMaT Students Won't Stop Talking About",
+    description: "Free study rooms, shared resources, and a streak system that actually keeps you consistent. Join 100+ students already locked in.",
     openGraph: {
-        title: "Locked In — Campus Study & Skill Connect",
-        description: "The ultimate UMaT study platform. Lock in, level up, and connect with students.",
+        title: "Locked In — The Study App UMaT Students Won't Stop Talking About",
+        description: "Your mates are already using this. Free study rooms, shared notes, and a streak system that actually works. Don't get left behind.",
         url: "https://locked-in-v1.vercel.app",
         siteName: "Locked In",
         images: [
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Locked In — Campus Study & Skill Connect",
-        description: "The ultimate UMaT study platform. Lock in, level up, and connect with students.",
+        title: "Locked In — The Study App UMaT Students Won't Stop Talking About",
+        description: "Your mates are already using this. Free study rooms, shared notes, and a streak system that actually works. Don't get left behind.",
         images: ["/og-image.png"],
     },
 };

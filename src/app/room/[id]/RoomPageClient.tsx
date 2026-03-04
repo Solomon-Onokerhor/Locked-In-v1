@@ -127,7 +127,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     };
 
     const handleShare = () => {
-        const text = `🚀 Lock in to my study session on Locked In!\n\n📚 Topic: ${room?.title}${room?.course_code ? `\n🔢 Course: ${room.course_code}` : ''}\n⏰ Time: ${new Date(room?.date_time || '').toLocaleString()}\n\nLock in here: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
+        const text = `🚨 I just locked in to a session and you need to join!\\n\\n📚 ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\n🗓️ ${new Date(room?.date_time || '').toLocaleString()}\\n\\n⚡ Spots are limited — lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 

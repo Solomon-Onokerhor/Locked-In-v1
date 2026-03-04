@@ -15,7 +15,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
     const handleShare = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        const text = `🚀 Lock in to my study session on Locked In!\n\n📚 Topic: ${room.title}${room.course_code ? `\n🔢 Course: ${room.course_code}` : ''}\n\nLock in here: ${window.location.host}/room/${room.room_id}`;
+        const text = `🚨 This study session is filling up fast!\\n\\n📚 ${room.title}${room.course_code ? ` (${room.course_code})` : ''}\\n👥 Only ${room.max_members} spots total\\n\\n⏳ Don't miss out — lock in here: ${window.location.origin}/room/${room.room_id}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 

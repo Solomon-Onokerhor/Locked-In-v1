@@ -407,7 +407,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <a
-                                                href={`https://wa.me/?text=${encodeURIComponent(`🔥 Check out this study resource on Locked In!\n\n📚 Resource: ${resource.title}\n🔗 Link: ${window.location.origin}/resources?id=${resource.resource_id}\n\nLevel up your grades here! 🏔️`)}`}
+                                                href={`https://wa.me/?text=${encodeURIComponent(`📢 This study material just dropped and it's a game changer!\n\n📄 ${resource.title}\n👍 ${resource.thumbs_up} students already liked it\n\n🔗 Grab it free: ${window.location.origin}/resources?id=${resource.resource_id}\n\nYou're welcome 😉`)}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="p-2.5 text-emerald-400 hover:bg-emerald-400/10 rounded-xl transition-all border border-transparent hover:border-emerald-400/20"
