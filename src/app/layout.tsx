@@ -6,6 +6,7 @@ import { ClientProviders } from "@/components/ClientProviders";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
+    metadataBase: new URL("https://locked-in-v1.vercel.app"),
     title: "Locked In — Campus Study & Skill Connect",
     description: "Lock in to study sessions and skill rooms. Connect with students, share resources, and level up together.",
     openGraph: {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
         siteName: "Locked In",
         images: [
             {
-                url: "/og-image.png", // User should add this to public folder
+                url: "/og-image.png",
                 width: 1200,
                 height: 630,
                 alt: "Locked In Preview",
