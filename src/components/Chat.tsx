@@ -148,6 +148,10 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                 async (payload) => {
                     const newMsg = payload.new as ChatMessage;
                     const info = await resolveSenderInfo(newMsg.sender_id);
+
+                    // Update state properly with the new info so child components/renders can use it
+                    setSenderInfo(prev => ({ ...prev, [newMsg.sender_id]: info }));
+
                     newMsg.sender_name = info.name;
                     newMsg.sender_is_verified = info.is_verified;
                     newMsg.sender_badge_label = info.badge_label;
