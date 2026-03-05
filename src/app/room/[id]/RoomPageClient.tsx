@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
 import {
-    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap
+    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap, Edit
 } from 'lucide-react';
 import Link from 'next/link';
 import { Chat } from '@/components/Chat';
@@ -237,15 +237,25 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         {canDelete && (
                             <div className="absolute top-0 right-0 md:relative md:top-auto md:right-auto self-start flex gap-2">
                                 {!showDeleteConfirm ? (
-                                    <button
-                                        onClick={() => setShowDeleteConfirm(true)}
-                                        disabled={isDeleting}
-                                        className="p-3 bg-red-500/20 border border-red-500/30 text-white hover:bg-red-500 hover:text-white rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 backdrop-blur-md shadow-lg"
-                                        title={isAdmin && !isCreator ? "Delete Session (Admin)" : "Delete Session"}
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                        <span className="hidden sm:inline font-bold text-sm">Delete</span>
-                                    </button>
+                                    <>
+                                        <Link
+                                            href={`/edit-room/${roomId}`}
+                                            className="p-3 bg-white/10 border border-white/20 text-white hover:bg-white/20 rounded-xl transition-all flex items-center gap-2 backdrop-blur-md shadow-lg"
+                                            title="Edit Session"
+                                        >
+                                            <Edit className="w-5 h-5" />
+                                            <span className="hidden sm:inline font-bold text-sm">Edit</span>
+                                        </Link>
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            disabled={isDeleting}
+                                            className="p-3 bg-red-500/20 border border-red-500/30 text-white hover:bg-red-500 hover:text-white rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 backdrop-blur-md shadow-lg"
+                                            title={isAdmin && !isCreator ? "Delete Session (Admin)" : "Delete Session"}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                            <span className="hidden sm:inline font-bold text-sm">Delete</span>
+                                        </button>
+                                    </>
                                 ) : (
                                     <div className="flex items-center gap-2 animate-fade-in">
                                         <button
