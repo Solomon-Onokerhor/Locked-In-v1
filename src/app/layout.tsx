@@ -16,7 +16,7 @@ export const metadata: Metadata = {
         siteName: "Locked In",
         images: [
             {
-                url: "/og-image.png",
+                url: "/og-image.jpg",
                 width: 1200,
                 height: 630,
                 alt: "Locked In Preview",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: "Locked In — The Study App UMaT Students Won't Stop Talking About",
         description: "Your mates are already using this. Free study & skill rooms, shared notes, and a streak system that actually works. Don't get left behind.",
-        images: ["/og-image.png"],
+        images: ["/og-image.jpg"],
     },
 };
 
