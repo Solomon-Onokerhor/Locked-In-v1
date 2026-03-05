@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/utils/imageCompression';
 import type { Profile, Room, Resource } from '@/types';
 import {
     Shield, Users, BookOpen, MessageSquare, BarChart3,
@@ -209,13 +210,14 @@ export default function AdminPage() {
 
             let thumbnailUrl = null;
             if (thumbnailFile) {
-                const thumbExt = thumbnailFile.name.split('.').pop();
+                const compressedThumbnail = await compressImage(thumbnailFile);
+                const thumbExt = 'jpg';
                 const thumbName = `${Date.now()}_thumb_${Math.random().toString(36).slice(2)}.${thumbExt}`;
                 const thumbPath = `resources/${thumbName}`;
 
                 const { error: thumbError } = await supabase.storage
                     .from('room_thumbnails')
-                    .upload(thumbPath, thumbnailFile);
+                    .upload(thumbPath, compressedThumbnail);
 
                 if (thumbError) throw thumbError;
 

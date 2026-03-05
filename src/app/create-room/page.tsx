@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/utils/imageCompression';
 import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2 } from 'lucide-react';
 
 export default function CreateRoomPage() {
@@ -64,13 +65,14 @@ export default function CreateRoomPage() {
             let image_url = null;
 
             if (thumbnail) {
-                const fileExt = thumbnail.name.split('.').pop();
+                const compressedThumbnail = await compressImage(thumbnail);
+                const fileExt = 'jpg';
                 const fileName = `${Math.random()}.${fileExt}`;
                 const filePath = `${session.user.id}/${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('room_thumbnails')
-                    .upload(filePath, thumbnail);
+                    .upload(filePath, compressedThumbnail);
 
                 if (uploadError) throw uploadError;
 
