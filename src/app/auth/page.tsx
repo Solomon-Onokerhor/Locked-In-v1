@@ -75,26 +75,35 @@ export default function AuthPage() {
     }
 
     return (
-        <div className="min-h-screen bg-brand-primary flex flex-col items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.1),transparent),radial-gradient(circle_at_bottom_left,rgba(79,70,229,0.05),transparent)]">
-            <div className="mb-10 flex flex-col items-center animate-fade-in-up">
-                <h1 className="text-5xl font-extrabold tracking-tight text-white mb-2">
-                    Locked In<span className="text-brand-accent">.</span>
-                </h1>
-                <p className="text-gray-500 font-bold uppercase tracking-[0.3em] text-[10px]">Lock In. Level Up.</p>
+        <div className="min-h-screen bg-[#0a0b14] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Premium Animated Background */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-accent/20 rounded-full blur-[150px] opacity-60 animate-pulse-glow"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[120px] opacity-40 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
             </div>
 
-            <div className="w-full max-w-md glass-card p-8">
-                <div className="flex bg-white/5 p-1 rounded-xl mb-8">
+            <div className="mb-10 flex flex-col items-center animate-fade-in-up relative z-10">
+                <div className="w-20 h-20 bg-brand-accent/10 rounded-2xl flex items-center justify-center mb-6 border border-brand-accent/20 shadow-[0_0_30px_rgba(37,99,235,0.2)]">
+                    <Lock className="w-10 h-10 text-brand-accent drop-shadow-[0_0_8px_rgba(37,99,235,0.8)]" />
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-3 text-center">
+                    Locked In<span className="text-brand-accent drop-shadow-[0_0_10px_rgba(37,99,235,0.8)]">.</span>
+                </h1>
+                <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[11px] md:text-xs">Lock In. Level Up.</p>
+            </div>
+
+            <div className="w-full max-w-md glass-card p-8 md:p-10 relative z-10 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="flex glass-panel p-1.5 rounded-2xl mb-8">
                     <button
                         onClick={() => setIsLogin(true)}
-                        className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${isLogin ? 'bg-brand-accent text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                        className={`flex-1 py-3.5 text-[15px] font-bold rounded-xl transition-all duration-300 ${isLogin ? 'bg-brand-accent text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         Login
                     </button>
                     <button
                         onClick={() => setIsLogin(false)}
-                        className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${!isLogin ? 'bg-brand-accent text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                        className={`flex-1 py-3.5 text-[15px] font-bold rounded-xl transition-all duration-300 ${!isLogin ? 'bg-brand-accent text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         Sign Up
@@ -112,23 +121,23 @@ export default function AuthPage() {
                     {!isLogin && (
                         <>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Full Name</label>
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Full Name</label>
                                 <div className="relative group">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
                                     <input type="text" required placeholder="Kofi Mensah" value={name} onChange={(e) => setName(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 focus:bg-white/[0.08]"
+                                        className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all placeholder:text-gray-600 text-white"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Faculty</label>
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Faculty</label>
                                 <div className="relative group">
-                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
                                     <select
                                         value={faculty}
                                         onChange={(e) => setFaculty(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                        className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all text-white appearance-none"
                                     >
                                         {FACULTIES.map(fac => (
                                             <option key={fac} value={fac} className="bg-brand-primary text-white">{fac}</option>
@@ -138,13 +147,13 @@ export default function AuthPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Academic Level</label>
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Academic Level</label>
                                 <div className="relative group">
-                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
                                     <select
                                         value={level}
                                         onChange={(e) => setLevel(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                        className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all text-white appearance-none"
                                     >
                                         {['100', '200', '300', '400'].map(lvl => (
                                             <option key={lvl} value={lvl} className="bg-brand-primary text-white">Level {lvl}</option>
@@ -152,26 +161,25 @@ export default function AuthPage() {
                                     </select>
                                 </div>
                             </div>
-
                         </>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Email Address</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Email Address</label>
                         <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
                             <input type="email" required placeholder="student@campus.edu" value={email} onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 focus:bg-white/[0.08]"
+                                className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all placeholder:text-gray-600 text-white"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Password</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
                             <input type={showPassword ? "text" : "password"} required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-12 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 focus:bg-white/[0.08]"
+                                className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-12 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all placeholder:text-gray-600 text-white"
                             />
                             <button
                                 type="button"
@@ -184,7 +192,7 @@ export default function AuthPage() {
                     </div>
 
                     <button type="submit" disabled={authLoading}
-                        className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
+                        className="w-full bg-brand-accent hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 mt-6 text-[15px]"
                     >
                         {authLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

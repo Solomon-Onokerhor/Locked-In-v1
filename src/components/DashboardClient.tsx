@@ -102,13 +102,14 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         <div className="min-h-screen bg-brand-primary">
             <Sidebar />
 
-            {/* Background Gradients */}
+            {/* Premium Background Gradients */}
             <div className="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-brand-accent/20 rounded-full blur-[120px] opacity-40"></div>
-                <div className="absolute bottom-[10%] left-[20%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] opacity-30"></div>
+                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-accent/20 rounded-full blur-[120px] opacity-50 animate-pulse-glow"></div>
+                <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] opacity-40 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] opacity-30 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
             </div>
 
-            <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10">
+            <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10 animate-fade-in">
                 {/* Header Section */}
                 <header className="mb-6 md:mb-10 mt-2 md:mt-0">
                     <div className="flex items-end justify-between mb-6">
@@ -125,19 +126,19 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                         </Link>
                     </div>
 
-                    {/* Leaderboard Promo Banner */}
-                    <Link href="/leaderboard" className="block w-full bg-gradient-to-r from-amber-500/20 to-amber-600/5 hover:from-amber-500/30 transition-all border border-amber-500/30 rounded-2xl p-4 cursor-pointer group">
+                    {/* Premium Leaderboard Promo Banner */}
+                    <Link href="/leaderboard" className="block w-full glass-card hover:bg-amber-500/5 transition-all p-5 cursor-pointer group">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-amber-500/20 rounded-xl group-hover:scale-110 transition-transform">
-                                    <Trophy className="w-6 h-6 text-amber-400" />
+                                <div className="p-3.5 bg-gradient-to-br from-amber-400/20 to-amber-600/20 rounded-xl group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(251,191,36,0.2)]">
+                                    <Trophy className="w-6 h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-bold text-lg">Campus Leaderboards are live! 🏆</h3>
-                                    <p className="text-gray-400 text-sm">See which faculty is currently dominating UMaT.</p>
+                                    <h3 className="text-white font-bold text-lg tracking-wide">Campus Leaderboards are live! <span className="text-amber-400">🏆</span></h3>
+                                    <p className="text-gray-400 text-sm mt-0.5">See which faculty is currently dominating UMaT.</p>
                                 </div>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-amber-400 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all hidden md:block" />
+                            <ArrowRight className="w-5 h-5 text-amber-400 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 duration-300 hidden md:block" />
                         </div>
                     </Link>
                 </header>
@@ -147,42 +148,48 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                     <SoloTimer />
                 </div>
 
-                {/* Metric Cards */}
-                <div className="flex gap-3 md:grid md:grid-cols-2 md:gap-6 mb-6 md:mb-10 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
-                    <div onClick={() => router.push('/buddies')} className="cursor-pointer min-w-[200px] md:min-w-0 snap-center flex-shrink-0 bg-white/[0.04] border border-white/[0.06] backdrop-blur-md p-5 rounded-2xl flex flex-col gap-1.5 hover:bg-white/[0.08] transition-colors group">
+                {/* Premium Metric Cards */}
+                <div className="flex gap-4 md:grid md:grid-cols-2 lg:gap-6 mb-8 md:mb-12 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide">
+                    <div onClick={() => router.push('/buddies')} className="cursor-pointer min-w-[240px] md:min-w-0 snap-center flex-shrink-0 glass-card p-6 flex flex-col gap-2 group">
                         <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold uppercase tracking-wider group-hover:text-indigo-400 transition-colors">
-                                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                            <div className="flex items-center gap-2.5 text-gray-400 text-xs font-bold uppercase tracking-widest group-hover:text-indigo-400 transition-colors">
+                                <div className="p-2 bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/20 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.1)]">
+                                    <Users className="w-4 h-4 text-indigo-400" />
+                                </div>
                                 Buddies
                             </div>
-                            <ArrowRight className="w-3 h-3 text-gray-600 group-hover:text-white transition-colors" />
+                            <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                         </div>
-                        <div className="text-2xl font-bold text-white mt-1">
+                        <div className="text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">
                             {profile ? profile.study_buddies : '0'}
                         </div>
                     </div>
-                    <div className="min-w-[200px] md:min-w-0 snap-center flex-shrink-0 bg-white/[0.04] border border-white/[0.06] backdrop-blur-md p-5 rounded-2xl flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                            Streak
+                    <div className="min-w-[240px] md:min-w-0 snap-center flex-shrink-0 glass-card p-6 flex flex-col gap-2 group">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2.5 text-gray-400 text-xs font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">
+                                <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+                                    <BookOpen className="w-4 h-4 text-amber-400" />
+                                </div>
+                                Streak
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold text-white mt-1">
+                        <div className="text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">
                             {profile ? `${profile.current_streak} Days` : '0 Days'}
                         </div>
                     </div>
                 </div>
 
-                {/* Search + Tabs */}
-                <div className="flex flex-col gap-6 mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex bg-white/[0.04] border border-white/[0.06] p-1 rounded-full w-fit max-w-full overflow-x-auto scrollbar-hide">
+                {/* Premium Search + Tabs */}
+                <div className="flex flex-col gap-6 mb-10">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+                        <div className="flex glass-panel p-1.5 w-fit max-w-full overflow-x-auto scrollbar-hide">
                             {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab as any)}
-                                    className={`px-4 md:px-5 py-2 text-[13px] font-semibold rounded-full transition-all duration-200 whitespace-nowrap ${activeTab === tab
-                                        ? 'bg-blue-500/15 text-blue-400 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-300'
+                                    className={`px-5 py-2.5 text-[13px] font-bold tracking-wide rounded-xl transition-all duration-300 whitespace-nowrap ${activeTab === tab
+                                        ? 'bg-brand-accent text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {tab === 'my_rooms' ? 'My Rooms' : tab === 'upcoming' ? 'Upcoming' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -190,14 +197,14 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                             ))}
                         </div>
 
-                        <div className="relative w-full md:max-w-xs">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                        <div className="relative w-full xl:max-w-md">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                             <input
                                 type="text"
                                 placeholder="Search by title or course code..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-full py-2.5 pl-10 pr-4 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
+                                className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-3.5 pl-11 pr-5 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
                             />
                         </div>
                     </div>
@@ -218,16 +225,16 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredRooms.length === 0 ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center glass-card border border-white/5 rounded-3xl animate-fade-in-up">
-                                <div className="w-20 h-20 bg-brand-accent/10 rounded-full flex items-center justify-center mb-6 border border-brand-accent/20">
-                                    {activeTab === 'upcoming' ? <Calendar className="w-10 h-10 text-brand-accent opacity-80" /> : <BookOpen className="w-10 h-10 text-brand-accent opacity-80" />}
+                            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 text-center glass-card animate-fade-in-up">
+                                <div className="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mb-8 border border-brand-accent/20 shadow-[0_0_30px_rgba(37,99,235,0.15)] animate-float">
+                                    {activeTab === 'upcoming' ? <Calendar className="w-10 h-10 text-brand-accent drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" /> : <BookOpen className="w-10 h-10 text-brand-accent drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" />}
                                 </div>
-                                <h3 className="text-2xl font-black text-white mb-2 tracking-tight">
+                                <h3 className="text-3xl font-black text-white mb-3 tracking-tight">
                                     {activeTab === 'my_rooms' ? "You haven't joined any rooms yet" :
                                         activeTab === 'upcoming' ? "No upcoming sessions found" :
                                             "No sessions found"}
                                 </h3>
-                                <p className="text-gray-400 max-w-md mx-auto mb-8">
+                                <p className="text-gray-400 mt-2 max-w-lg mx-auto mb-10 text-lg leading-relaxed">
                                     {activeTab === 'my_rooms' ? "Join a room or host your own to see them here!" :
                                         activeTab === 'upcoming' ? "You don't have any sessions scheduled for the future." :
                                             "Be the first to lock in! Host a new study or skill-sharing session and invite others to join."}
@@ -240,7 +247,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                                             setActiveTab('all');
                                         }
                                     }}
-                                    className="px-8 py-3.5 bg-brand-accent hover:bg-brand-accent/90 text-white text-sm font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-2"
+                                    className="px-10 py-4 bg-brand-accent hover:bg-blue-600 text-white text-base font-bold rounded-xl transition-all shadow-[0_0_25px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] flex items-center gap-3 active:scale-95"
                                 >
                                     {activeTab === 'all' ? <PlusCircle className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
                                     {activeTab === 'all' ? "Host a Session" : "Explore All Rooms"}
@@ -252,13 +259,13 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                             ))
                         )}
 
-                        <Link href="/create-room" className="hidden md:flex glass-card rounded-2xl border-dashed border-2 !border-white/10 !bg-transparent hover:!border-brand-accent cursor-pointer items-center justify-center p-6 min-h-[300px] group transition-all">
+                        <Link href="/create-room" className="hidden md:flex glass-card !bg-transparent hover:!bg-brand-accent/5 border-dashed border-2 !border-white/10 hover:!border-brand-accent/50 cursor-pointer items-center justify-center p-8 min-h-[320px] group transition-all">
                             <div className="text-center">
-                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform group-hover:bg-brand-accent/20">
-                                    <PlusCircle className="text-3xl text-gray-500 group-hover:text-brand-accent w-8 h-8" />
+                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-brand-accent/20 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                                    <PlusCircle className="text-3xl text-gray-500 group-hover:text-brand-accent w-8 h-8 transition-colors" />
                                 </div>
-                                <h4 className="text-lg font-bold text-white mb-1">Create New Room</h4>
-                                <p className="text-gray-400 text-sm">Start your own session</p>
+                                <h4 className="text-xl font-bold text-white mb-2 tracking-wide group-hover:text-brand-accent transition-colors">Create New Room</h4>
+                                <p className="text-gray-500 text-sm font-medium">Start your own session</p>
                             </div>
                         </Link>
                     </div>

@@ -22,8 +22,8 @@ export function Sidebar() {
 
     return (
         <>
-            {/* ═══ MOBILE: Top App Bar ═══ */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-[#0a0b14]/95 backdrop-blur-xl border-b border-white/[0.04]">
+            {/* ═══ MOBILE: Premium Top App Bar ═══ */}
+            <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-[#0a0b14]/70 backdrop-blur-2xl border-b border-white/[0.05] shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                 <Link href="/" className="flex items-center">
                     <span className="text-xl font-bold tracking-tight text-white">Locked In<span className="text-blue-500">.</span></span>
                 </Link>
@@ -45,8 +45,8 @@ export function Sidebar() {
                 </div>
             </header>
 
-            {/* ═══ MOBILE: Bottom Tab Bar ═══ */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0d1224]/90 backdrop-blur-xl border-t border-white/[0.06]">
+            {/* ═══ MOBILE: Premium Bottom Tab Bar ═══ */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0b14]/80 backdrop-blur-2xl border-t border-white/[0.05] shadow-[0_-4px_30px_rgba(0,0,0,0.2)]">
                 <div className="flex items-stretch justify-around px-2 py-1">
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -55,9 +55,9 @@ export function Sidebar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-2xl transition-all duration-200 ${isActive
-                                    ? 'text-blue-400'
-                                    : 'text-gray-500 active:text-gray-300'
+                                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-4 rounded-2xl transition-all duration-300 ${isActive
+                                    ? 'text-blue-400 scale-105'
+                                    : 'text-gray-500 hover:text-gray-400 hover:scale-105'
                                     }`}
                             >
                                 <div className={`relative ${isActive ? '' : ''}`}>
@@ -93,8 +93,8 @@ export function Sidebar() {
                 <div className="h-[env(safe-area-inset-bottom)]" />
             </nav>
 
-            {/* ═══ DESKTOP: Classic Side Panel ═══ */}
-            <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 bg-brand-secondary border-r border-white/5 flex-col p-6 z-50">
+            {/* ═══ DESKTOP: Premium Glass Side Panel ═══ */}
+            <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 bg-[#0a0b14]/40 backdrop-blur-2xl border-r border-white/5 flex-col p-6 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
                 {/* Logo */}
                 <Link href="/" className="flex flex-col mb-12 group">
                     <h1 className="text-3xl font-extrabold tracking-tight text-white leading-none">
@@ -112,12 +112,13 @@ export function Sidebar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
-                                    ? 'bg-brand-accent/10 text-brand-accent shadow-inner'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all duration-300 group overflow-hidden relative ${isActive
+                                    ? 'bg-blue-600/10 text-brand-accent border border-blue-500/20 shadow-[inset_0_0_20px_rgba(37,99,235,0.05)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                                     }`}
                             >
-                                <Icon className={`w-5 h-5 transition-transform ${isActive ? '' : 'group-hover:scale-110'}`} />
+                                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(37,99,235,1)]"></div>}
+                                <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(37,99,235,0.8)]' : 'group-hover:scale-110'}`} />
                                 <span className="font-medium">{item.label}</span>
                             </Link>
                         );
@@ -150,17 +151,17 @@ export function Sidebar() {
                         </Link>
                     )}
 
-                    {/* Invite Friends / Viral Growth */}
+                    {/* Premium Invite Friends Button */}
                     <button
                         onClick={() => {
                             const shareUrl = window.location.origin;
                             const text = `⚠️ UMaT students are using this app to lock in and it's actually working...\\n\\n📈 Track your streaks, join study & skill sessions, and access free resources.\\n\\n🔗 Join before your mates do: ${shareUrl}\\n\\n#LockedIn 🔒🔥`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                         }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-all border border-emerald-500/20 mt-4 animate-pulse group"
+                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/15 transition-all duration-300 border border-emerald-500/20 mt-6 shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] group hover:scale-[1.02]"
                     >
-                        <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                        <span className="font-bold">Invite Friends</span>
+                        <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <span className="font-bold tracking-wide">Invite Friends</span>
                     </button>
                 </nav>
 

@@ -81,25 +81,28 @@ export function SoloTimer() {
     const progress = ((FOCUS_DURATION - timeLeft) / FOCUS_DURATION) * 100;
 
     return (
-        <div className="glass-card p-6 md:p-8 rounded-3xl relative overflow-hidden group">
-            {/* Background Glow */}
-            <div className={`absolute inset-0 bg-blue-500/5 transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+        <div className="glass-card p-8 md:p-10 rounded-3xl relative overflow-hidden group border border-white/5">
+            {/* Premium Background Glow */}
+            <div className={`absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/5 transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+            {isActive && <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -mr-10 -mt-10 animate-pulse-glow"></div>}
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
                 {/* Left: Info */}
                 <div className="flex-1 text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <Flame className={`w-5 h-5 ${isActive ? 'text-amber-500 animate-pulse' : 'text-gray-500'}`} />
-                        <h3 className="text-xl font-bold text-white tracking-tight">Solo Lock-In</h3>
+                    <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+                        <div className={`p-2.5 rounded-xl transition-all duration-500 ${isActive ? 'bg-amber-500/20 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-white/5'}`}>
+                            <Flame className={`w-6 h-6 ${isActive ? 'text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]' : 'text-gray-400'}`} />
+                        </div>
+                        <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight">Solo Lock-In</h3>
                     </div>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                        No groups available? Start a 25-minute Pomodoro timer to save your daily streak and boost your Faculty's total score.
+                    <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-6 max-w-md mx-auto md:mx-0 font-medium">
+                        No groups available? Start a focused 25-minute session to save your daily streak and boost your Faculty's total score.
                     </p>
 
                     {isCompleted && (
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold animate-fade-in-up">
-                            <CheckCircle2 className="w-4 h-4" />
+                        <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-bold animate-fade-in-up shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                            <CheckCircle2 className="w-5 h-5 drop-shadow-[0_0_5px_rgba(16,185,129,0.6)]" />
                             Session Logged! Streak Saved.
                         </div>
                     )}
@@ -107,48 +110,49 @@ export function SoloTimer() {
 
                 {/* Right: Timer UI */}
                 <div className="flex flex-col items-center">
-                    {/* Circular Timer Display */}
-                    <div className="relative w-40 h-40 flex items-center justify-center mb-6">
+                    {/* Glowing Circular Timer Display */}
+                    <div className="relative w-48 h-48 flex items-center justify-center mb-8 shrink-0">
                         {/* Static Background Ring */}
-                        <svg className="w-full h-full absolute -rotate-90 transform" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
+                        <svg className="w-full h-full absolute -rotate-90 transform drop-shadow-2xl" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="46" fill="transparent" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
                             {/* Animated Progress Ring */}
                             <circle
-                                cx="50" cy="50" r="45"
+                                cx="50" cy="50" r="46"
                                 fill="none"
-                                stroke={isActive ? "#3b82f6" : "#6b7280"}
+                                stroke={isActive ? "#3b82f6" : "rgba(255,255,255,0.1)"}
                                 strokeWidth="4"
                                 strokeLinecap="round"
-                                strokeDasharray="283"
-                                strokeDashoffset={283 - (283 * progress) / 100}
-                                className="transition-all duration-1000 ease-linear"
+                                strokeDasharray="289"
+                                strokeDashoffset={289 - (289 * progress) / 100}
+                                className="transition-all duration-1000 ease-linear drop-shadow-[0_0_12px_rgba(59,130,246,0.8)]"
                             />
                         </svg>
 
-                        <div className="flex flex-col items-center justify-center font-mono">
-                            <span className={`text-4xl font-light tracking-tighter ${isActive ? 'text-blue-400' : 'text-gray-300'}`}>
+                        <div className="flex flex-col items-center justify-center font-mono z-10">
+                            <span className={`text-5xl font-light tracking-tighter tabular-nums ${isActive ? 'text-white' : 'text-gray-400'}`}>
                                 {formatTime(timeLeft)}
                             </span>
-                            {isSaving && <Loader2 className="w-4 h-4 text-brand-accent animate-spin mt-2" />}
+                            {isSaving && <Loader2 className="w-5 h-5 text-brand-accent animate-spin mt-3 opacity-80" />}
                         </div>
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         <button
                             onClick={toggleTimer}
-                            disabled={isCompleted}
-                            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${isActive
-                                    ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30'
-                                    : 'bg-brand-accent hover:bg-brand-accent-hover text-white shadow-lg shadow-brand-accent/20 hover:scale-105'
+                            disabled={isCompleted || isSaving}
+                            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${isActive
+                                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                                : 'bg-brand-accent hover:bg-blue-600 text-white shadow-[0_0_25px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] hover:scale-105 border border-blue-500/50'
                                 } disabled:opacity-50 disabled:hover:scale-100`}
                         >
-                            {isActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />}
+                            {isActive ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
                         </button>
 
                         <button
                             onClick={resetTimer}
-                            className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                            disabled={isSaving}
+                            className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all hover:scale-105 disabled:opacity-50"
                             title="Reset Timer"
                         >
                             <Square className="w-4 h-4" />
