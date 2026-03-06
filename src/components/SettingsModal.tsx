@@ -24,6 +24,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     const [name, setName] = useState('');
     const [faculty, setFaculty] = useState('Faculty of Engineering');
+    const [level, setLevel] = useState('100');
 
     const [isSaving, setIsSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -34,6 +35,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         if (isOpen && profile) {
             setName(profile.name || '');
             setFaculty(profile.faculty || 'Faculty of Engineering');
+            setLevel(profile.level || '100');
             setSuccessMessage('');
             setError(null);
         }
@@ -55,7 +57,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 .from('profiles')
                 .update({
                     name: name.trim(),
-                    faculty: faculty
+                    faculty: faculty,
+                    level: level
                 })
                 .eq('id', profile.id);
 
@@ -140,6 +143,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 >
                                     {FACULTIES.map(fac => (
                                         <option key={fac} value={fac} className="bg-brand-primary text-white">{fac}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Academic Level</label>
+                            <div className="relative group">
+                                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                                <select
+                                    value={level}
+                                    onChange={(e) => setLevel(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                >
+                                    {['100', '200', '300', '400'].map(lvl => (
+                                        <option key={lvl} value={lvl} className="bg-brand-primary text-white">Level {lvl}</option>
                                     ))}
                                 </select>
                             </div>

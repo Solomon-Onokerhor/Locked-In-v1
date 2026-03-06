@@ -11,6 +11,7 @@ export interface Profile {
     name: string;
     email: string;
     faculty?: string;
+    level?: string;
     courses?: string[];
     role: UserRole;
     joined_rooms: string[];

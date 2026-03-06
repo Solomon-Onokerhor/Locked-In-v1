@@ -19,6 +19,7 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
     const [faculty, setFaculty] = useState('Faculty of Engineering');
+    const [level, setLevel] = useState('100');
 
     const FACULTIES = [
         'Faculty of Mining and Minerals Technology',
@@ -52,7 +53,7 @@ export default function AuthPage() {
                 if (signUpError) throw signUpError;
                 if (data.user) {
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: data.user.id, name, email, role: 'student', faculty: faculty },
+                        { id: data.user.id, name, email, role: 'student', faculty, level },
                     ]);
                     if (profileError) throw profileError;
                 }
@@ -131,6 +132,22 @@ export default function AuthPage() {
                                     >
                                         {FACULTIES.map(fac => (
                                             <option key={fac} value={fac} className="bg-brand-primary text-white">{fac}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Academic Level</label>
+                                <div className="relative group">
+                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors" />
+                                    <select
+                                        value={level}
+                                        onChange={(e) => setLevel(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                    >
+                                        {['100', '200', '300', '400'].map(lvl => (
+                                            <option key={lvl} value={lvl} className="bg-brand-primary text-white">Level {lvl}</option>
                                         ))}
                                     </select>
                                 </div>

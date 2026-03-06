@@ -185,6 +185,12 @@ export function Sidebar() {
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{profile?.role || 'student'}</p>
+                                        {profile?.level && (
+                                            <>
+                                                <span className="text-[10px] text-gray-700">•</span>
+                                                <span className="text-[10px] text-gray-400 font-black tracking-tighter">Lvl {profile.level}</span>
+                                            </>
+                                        )}
                                         {profile?.badge_label && (
                                             <>
                                                 <span className="text-[10px] text-gray-700">•</span>
