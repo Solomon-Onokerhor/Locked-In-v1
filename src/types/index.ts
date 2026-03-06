@@ -40,7 +40,7 @@ export interface Room {
     is_paid: boolean;
     price: number;
     commission_rate: number;
-    status: 'active' | 'archived';
+    status: 'active' | 'pending' | 'rejected' | 'archived';
     tags: string[];
     faculty?: string;
     course_code?: string;

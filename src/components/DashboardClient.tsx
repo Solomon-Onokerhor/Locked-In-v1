@@ -3,6 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { Sidebar } from '@/components/Sidebar';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Room } from '@/types';
 import Link from 'next/link';
@@ -20,12 +21,15 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     const [buddyRoomCounts, setBuddyRoomCounts] = useState<Record<string, number>>({});
     const [activeTab, setActiveTab] = useState<'all' | 'study' | 'skill' | 'my_rooms' | 'upcoming'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const router = useRouter();
 
     useEffect(() => {
-        if (session) {
+        if (!loading && !session) {
+            router.push('/auth');
+        } else if (session) {
             fetchPrivateData();
         }
-    }, [session]);
+    }, [session, loading, router]);
 
     const fetchPrivateData = async () => {
         // Fetch user's joined rooms
