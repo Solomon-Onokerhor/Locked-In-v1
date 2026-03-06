@@ -9,6 +9,7 @@ import type { Room } from '@/types';
 import Link from 'next/link';
 import { Search, BookOpen, Users, Calendar, ArrowRight, PlusCircle, Trophy } from 'lucide-react';
 import { RoomCard } from './RoomCard';
+import { SoloTimer } from './SoloTimer';
 
 interface DashboardClientProps {
     initialRooms: Room[];
@@ -140,6 +141,11 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                         </div>
                     </Link>
                 </header>
+
+                {/* Solo Lock-In Timer */}
+                <div className="mb-6 md:mb-10">
+                    <SoloTimer />
+                </div>
 
                 {/* Metric Cards */}
                 <div className="flex gap-3 md:grid md:grid-cols-2 md:gap-6 mb-6 md:mb-10 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
