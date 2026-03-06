@@ -47,7 +47,7 @@ export function Sidebar() {
 
             {/* ═══ MOBILE: Premium Bottom Tab Bar ═══ */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0b14]/80 backdrop-blur-2xl border-t border-white/[0.05] shadow-[0_-4px_30px_rgba(0,0,0,0.2)]">
-                <div className="flex items-stretch justify-around px-2 py-1">
+                <div className="flex items-center justify-between px-1 py-1.5 w-full max-w-md mx-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
@@ -55,18 +55,15 @@ export function Sidebar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-4 rounded-2xl transition-all duration-300 ${isActive
-                                    ? 'text-blue-400 scale-105'
-                                    : 'text-gray-500 hover:text-gray-400 hover:scale-105'
+                                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${isActive
+                                    ? 'text-blue-400 bg-blue-500/10'
+                                    : 'text-gray-500 hover:text-gray-400'
                                     }`}
                             >
-                                <div className={`relative ${isActive ? '' : ''}`}>
-                                    <Icon className={`w-[22px] h-[22px] transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} strokeWidth={isActive ? 2.5 : 1.8} />
-                                    {isActive && (
-                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400" />
-                                    )}
+                                <div className={`relative flex items-center justify-center`}>
+                                    <Icon className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
                                 </div>
-                                <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-blue-400' : ''}`}>
+                                <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${isActive ? 'text-blue-400' : ''}`}>
                                     {item.label}
                                 </span>
                             </Link>
@@ -76,13 +73,13 @@ export function Sidebar() {
                     {profile?.role === 'admin' && (
                         <Link
                             href="/admin"
-                            className={`flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-2xl transition-all duration-200 ${pathname === '/admin'
-                                ? 'text-red-400'
-                                : 'text-gray-500 active:text-gray-300'
+                            className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${pathname === '/admin'
+                                ? 'text-red-400 bg-red-500/10'
+                                : 'text-gray-500 hover:text-gray-400'
                                 }`}
                         >
-                            <Shield className={`w-[22px] h-[22px] transition-transform duration-200 ${pathname === '/admin' ? 'scale-110' : ''}`} strokeWidth={pathname === '/admin' ? 2.5 : 1.8} />
-                            <span className={`text-[10px] font-semibold tracking-wide ${pathname === '/admin' ? 'text-red-400' : ''}`}>
+                            <Shield className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${pathname === '/admin' ? 'scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]' : ''}`} strokeWidth={pathname === '/admin' ? 2.5 : 2} />
+                            <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${pathname === '/admin' ? 'text-red-400' : ''}`}>
                                 Admin
                             </span>
                         </Link>
