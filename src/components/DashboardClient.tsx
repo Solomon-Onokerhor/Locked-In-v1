@@ -104,9 +104,9 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
             {/* Premium Background Gradients */}
             <div className="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-accent/20 rounded-full blur-[120px] opacity-50 animate-pulse-glow"></div>
-                <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] opacity-40 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] opacity-30 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-accent/20 rounded-full blur-[80px] opacity-50 animate-pulse-glow"></div>
+                <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[64px] opacity-40 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[64px] opacity-30 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
             </div>
 
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10 animate-fade-in">

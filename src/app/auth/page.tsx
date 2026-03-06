@@ -78,8 +78,8 @@ export default function AuthPage() {
         <div className="min-h-screen bg-[#0a0b14] flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Premium Animated Background */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-accent/20 rounded-full blur-[150px] opacity-60 animate-pulse-glow"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[120px] opacity-40 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-accent/20 rounded-full blur-[90px] opacity-60 animate-pulse-glow"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[70px] opacity-40 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
             </div>
 
             <div className="mb-10 flex flex-col items-center animate-fade-in-up relative z-10">

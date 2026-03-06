@@ -84,7 +84,7 @@ export function SoloTimer() {
         <div className="glass-card p-8 md:p-10 rounded-3xl relative overflow-hidden group border border-white/5">
             {/* Premium Background Glow */}
             <div className={`absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/5 transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-            {isActive && <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -mr-10 -mt-10 animate-pulse-glow"></div>}
+            {isActive && <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[40px] -mr-10 -mt-10 animate-pulse-glow"></div>}
 
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
@@ -124,7 +124,7 @@ export function SoloTimer() {
                                 strokeLinecap="round"
                                 strokeDasharray="289"
                                 strokeDashoffset={289 - (289 * progress) / 100}
-                                className="transition-all duration-1000 ease-linear drop-shadow-[0_0_12px_rgba(59,130,246,0.8)]"
+                                className="transition-all duration-1000 ease-linear"
                             />
                         </svg>
 
