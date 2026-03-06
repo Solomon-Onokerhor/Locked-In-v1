@@ -127,10 +127,13 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
                 {/* Metric Cards */}
                 <div className="flex gap-3 md:grid md:grid-cols-2 md:gap-6 mb-6 md:mb-10 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
-                    <div className="min-w-[200px] md:min-w-0 snap-center flex-shrink-0 bg-white/[0.04] border border-white/[0.06] backdrop-blur-md p-5 rounded-2xl flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
-                            <Users className="w-3.5 h-3.5 text-indigo-400" />
-                            Buddies
+                    <div onClick={() => router.push('/buddies')} className="cursor-pointer min-w-[200px] md:min-w-0 snap-center flex-shrink-0 bg-white/[0.04] border border-white/[0.06] backdrop-blur-md p-5 rounded-2xl flex flex-col gap-1.5 hover:bg-white/[0.08] transition-colors group">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold uppercase tracking-wider group-hover:text-indigo-400 transition-colors">
+                                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                                Buddies
+                            </div>
+                            <ArrowRight className="w-3 h-3 text-gray-600 group-hover:text-white transition-colors" />
                         </div>
                         <div className="text-2xl font-bold text-white mt-1">
                             {profile ? profile.study_buddies : '0'}

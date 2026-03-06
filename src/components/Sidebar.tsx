@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check, Users } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: Home },
+    { href: '/buddies', label: 'Buddies', icon: Users },
     { href: '/create-room', label: 'Host Room', icon: PlusCircle },
     { href: '/resources', label: 'Resources', icon: Library },
 ];
