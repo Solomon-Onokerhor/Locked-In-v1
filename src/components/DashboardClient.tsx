@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Room } from '@/types';
 import Link from 'next/link';
-import { Search, BookOpen, Users, Calendar, ArrowRight, PlusCircle } from 'lucide-react';
+import { Search, BookOpen, Users, Calendar, ArrowRight, PlusCircle, Trophy } from 'lucide-react';
 import { RoomCard } from './RoomCard';
 
 interface DashboardClientProps {
@@ -110,7 +110,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10">
                 {/* Header Section */}
                 <header className="mb-6 md:mb-10 mt-2 md:mt-0">
-                    <div className="flex items-end justify-between">
+                    <div className="flex items-end justify-between mb-6">
                         <div>
                             <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white">Welcome back{session?.user?.email ? `, ${session.user.email.split('@')[0]}` : ''}</h2>
                             <p className="text-gray-500 text-sm md:text-lg mt-1">Lock In. Level Up.</p>
@@ -123,6 +123,22 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                             Host Room
                         </Link>
                     </div>
+
+                    {/* Leaderboard Promo Banner */}
+                    <Link href="/leaderboard" className="block w-full bg-gradient-to-r from-amber-500/20 to-amber-600/5 hover:from-amber-500/30 transition-all border border-amber-500/30 rounded-2xl p-4 cursor-pointer group">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-amber-500/20 rounded-xl group-hover:scale-110 transition-transform">
+                                    <Trophy className="w-6 h-6 text-amber-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold text-lg">Campus Leaderboards are live! 🏆</h3>
+                                    <p className="text-gray-400 text-sm">See which faculty is currently dominating UMaT.</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-amber-400 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all hidden md:block" />
+                        </div>
+                    </Link>
                 </header>
 
                 {/* Metric Cards */}
