@@ -1,13 +1,11 @@
 export const FACULTIES = [
-    "Faculty of Science",
+    "Faculty of Mining and Minerals Technology",
+    "Faculty of Computing and Mathematical Sciences",
+    "Faculty of Integrated Management Science",
     "Faculty of Engineering",
-    "Faculty of Arts & Social Sciences",
-    "Faculty of Business & Law",
-    "Faculty of Education",
-    "Faculty of Health Sciences",
-    "Faculty of Agriculture",
-    "School of Business",
-    "School of Law",
-    "School of Performing Arts",
+    "Faculty of Geosciences and Environmental Studies",
+    "School of Petroleum Studies",
+    "School of Railways and Infrastructure Development",
+    "School of Postgraduate Studies",
     "Other"
 ];
