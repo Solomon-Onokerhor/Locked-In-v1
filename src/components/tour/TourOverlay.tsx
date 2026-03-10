@@ -56,8 +56,8 @@ export function TourOverlay() {
                     });
                     setIsVisible(true);
                 }, 400);
-            } else if (attempts < 20) {
-                retryRef.current = setTimeout(() => findTarget(attempts + 1), 250);
+            } else if (attempts < 10) {
+                retryRef.current = setTimeout(() => findTarget(attempts + 1), 150);
             } else {
                 // Fallback: no target found, show centered tooltip
                 setTargetRect(null);
