@@ -414,10 +414,10 @@ export default function CreateRoomPage() {
 
                                 {/* Submit */}
                                 <button type="submit" disabled={creating}
-                                    className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-white/10 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full bg-brand-accent hover:bg-brand-accent-hover text-black font-bold py-4 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {creating ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                                     ) : (
                                         <><PlusCircle className="w-5 h-5" /> Create Room</>
                                     )}
@@ -426,7 +426,7 @@ export default function CreateRoomPage() {
                         )}
                     </form>
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }
