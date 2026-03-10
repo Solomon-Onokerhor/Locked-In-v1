@@ -214,7 +214,7 @@ export function LeaderboardClient() {
                                                 
                                                 return (
                                                     <div key={`stat-${fac.faculty}`} className="flex items-center gap-2 md:gap-4">
-                                                        <p className="text-white text-xs md:text-sm font-bold w-20 md:w-28 truncate" title={fac.faculty}>{fac.faculty}</p>
+                                                        <p className="text-white text-xs md:text-sm font-bold w-32 md:w-48 truncate" title={fac.faculty}>{fac.faculty}</p>
                                                         <div className="flex-1 h-3 bg-[#000000] rounded overflow-hidden">
                                                             <div className={`h-full ${barClass}`} style={{ width: `${percentage}%` }}></div>
                                                         </div>
