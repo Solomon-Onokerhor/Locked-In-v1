@@ -33,6 +33,8 @@ export default function AdminPage() {
     // Users
     const [users, setUsers] = useState<Profile[]>([]);
     const [userSearch, setUserSearch] = useState('');
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
 
     // Rooms
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -156,6 +158,25 @@ export default function AdminPage() {
             fetchStats();
         }
         setProcessingId(null);
+    };
+
+    // Delete user
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return;
+        setIsDeletingUser(true);
+        const { error } = await supabase.rpc('delete_user_by_admin', { target_user_id: userToDelete });
+        
+        if (!error) {
+            // Remove user from local state to visually update immediately
+            setUsers(prev => prev.filter(u => u.id !== userToDelete));
+            fetchStats();
+        } else {
+            console.error(error);
+            alert("Error deleting user: " + error.message);
+        }
+        
+        setIsDeletingUser(false);
+        setUserToDelete(null);
     };
 
     // Delete room
@@ -409,6 +430,7 @@ export default function AdminPage() {
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Email</th>
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider">Role</th>
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Joined</th>
+                                            <th className="text-right px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -448,6 +470,16 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="px-5 py-3.5 text-gray-500 text-xs hidden md:table-cell">
                                                     {new Date(user.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-5 py-3.5 text-right">
+                                                    <button
+                                                        onClick={() => setUserToDelete(user.id)}
+                                                        disabled={user.email === 'sonokerhor@gmail.com'}
+                                                        className="text-gray-600 hover:text-red-400 transition-colors p-2 disabled:opacity-20 disabled:hover:text-gray-600"
+                                                        title="Delete User"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -795,6 +827,46 @@ export default function AdminPage() {
                                     <>
                                         <Trash2 className="w-4 h-4" />
                                         Delete Room
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* User Delete Confirmation Modal */}
+            {userToDelete && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0d1224]/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#12182b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-5">
+                                <AlertCircle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-extrabold text-white mb-2">Delete User</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                Are you sure you want to completely delete this user? Their profile, messages, rooms, and auth record will be permanently erased.
+                            </p>
+                        </div>
+                        <div className="flex bg-white/[0.02] border-t border-white/5 p-4 gap-3">
+                            <button
+                                onClick={() => setUserToDelete(null)}
+                                disabled={isDeletingUser}
+                                className="flex-1 py-3 rounded-xl font-bold text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteUser}
+                                disabled={isDeletingUser}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all disabled:opacity-50 shadow-lg active:scale-[0.98]"
+                            >
+                                {isDeletingUser ? (
+                                    <div className="w-5 h-5 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete User
                                     </>
                                 )}
                             </button>

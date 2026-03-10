@@ -33,6 +33,14 @@ export default function AuthPage() {
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Strict email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+
         setAuthLoading(true);
         setError(null);
 
@@ -59,6 +67,23 @@ export default function AuthPage() {
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
+            setAuthLoading(false);
+        }
+    };
+
+    const handleGoogleAuth = async () => {
+        setAuthLoading(true);
+        setError(null);
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/`,
+                }
+            });
+            if (error) throw error;
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Google sign in failed');
             setAuthLoading(false);
         }
     };
@@ -186,7 +211,12 @@ export default function AuthPage() {
                 </div>
 
                 <div className="mt-6 w-full">
-                    <button type="button" className="w-full h-14 bg-transparent border border-white/10 text-white font-medium rounded hover:bg-[#111] transition-colors flex items-center justify-center gap-3">
+                    <button 
+                        type="button" 
+                        onClick={handleGoogleAuth}
+                        disabled={authLoading}
+                        className="w-full h-14 bg-transparent border border-white/10 text-white font-medium rounded hover:bg-[#111] transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+                    >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
