@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/utils/imageCompression';
-import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, Save, Video, Clock, Image, Trash2, Share2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, Save, Video, Clock, Image, Trash2, Share2, ArrowLeft, AlertCircle, GraduationCap } from 'lucide-react';
+import { FACULTIES } from '@/lib/constants';
 import Link from 'next/link';
 
 export default function EditRoomPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +30,7 @@ export default function EditRoomPage({ params }: { params: Promise<{ id: string 
     const [isPaid, setIsPaid] = useState(false);
     const [price, setPrice] = useState(0);
     const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
+    const [faculty, setFaculty] = useState('');
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
@@ -82,6 +84,7 @@ export default function EditRoomPage({ params }: { params: Promise<{ id: string 
             setIsPaid(room.is_paid || false);
             setPrice(room.price || 0);
             setWhatsappGroupLink(room.whatsapp_group_link || '');
+            setFaculty(room.faculty || '');
             setCurrentImageUrl(room.image_url);
             if (room.image_url) {
                 setThumbnailPreview(room.image_url);
@@ -163,6 +166,7 @@ export default function EditRoomPage({ params }: { params: Promise<{ id: string 
                     location_note: sessionMode === 'in_person' ? locationNote : null,
                     max_members: maxMembers,
                     course_code: roomType === 'Study' ? courseCode : null,
+                    faculty: faculty || null,
                     whatsapp_group_link: whatsappGroupLink || null,
                 })
                 .eq('room_id', roomId);
@@ -244,6 +248,24 @@ export default function EditRoomPage({ params }: { params: Promise<{ id: string 
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* Faculty */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                                <GraduationCap className="w-3 h-3" /> Faculty / College *
+                            </label>
+                            <select
+                                required
+                                value={faculty}
+                                onChange={(e) => setFaculty(e.target.value)}
+                                className="w-full bg-[#0f1123] border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all appearance-none text-white"
+                            >
+                                <option value="" disabled>Select a Faculty</option>
+                                {FACULTIES.map(fac => (
+                                    <option key={fac} value={fac}>{fac}</option>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Title */}

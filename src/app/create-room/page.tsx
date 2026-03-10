@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/utils/imageCompression';
-import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2 } from 'lucide-react';
+import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2, GraduationCap } from 'lucide-react';
+import { FACULTIES } from '@/lib/constants';
 
 export default function CreateRoomPage() {
     const { session, profile, loading } = useAuth();
@@ -27,6 +28,7 @@ export default function CreateRoomPage() {
     const [price, setPrice] = useState(0);
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
+    const [faculty, setFaculty] = useState(profile?.faculty || '');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -108,6 +110,7 @@ export default function CreateRoomPage() {
                     price: 0,
                     commission_rate: 0.1,
                     course_code: roomType === 'Study' ? courseCode : null,
+                    faculty: faculty || null,
                     whatsapp_group_link: whatsappGroupLink || null,
                     status: 'pending',
                 }])
@@ -198,6 +201,24 @@ export default function CreateRoomPage() {
                                             );
                                         })}
                                     </div>
+                                </div>
+
+                                {/* Faculty */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                                        <GraduationCap className="w-3 h-3" /> Faculty / College *
+                                    </label>
+                                    <select
+                                        required
+                                        value={faculty}
+                                        onChange={(e) => setFaculty(e.target.value)}
+                                        className="w-full bg-[#0f1123] border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all appearance-none text-white"
+                                    >
+                                        <option value="" disabled>Select a Faculty</option>
+                                        {FACULTIES.map(fac => (
+                                            <option key={fac} value={fac}>{fac}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 {/* Title */}

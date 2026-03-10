@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { StepCard } from "@/components/onboarding/StepCard";
 import { ArrowRight } from "lucide-react";
+import { FACULTIES } from "@/lib/constants";
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -139,15 +140,18 @@ export default function OnboardingPage() {
                             <label htmlFor="faculty" className="block text-sm font-bold text-gray-300">
                                 Faculty / College
                             </label>
-                            <input
+                            <select
                                 id="faculty"
-                                type="text"
                                 value={faculty}
                                 onChange={(e) => setFaculty(e.target.value)}
-                                placeholder="e.g. Science, Engineering, Business..."
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none text-white transition-all placeholder:text-gray-500 hover:bg-white/10"
+                                className="w-full px-4 py-3 bg-[#0f1123] border border-white/10 rounded-xl focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none text-white transition-all hover:bg-[#151830] appearance-none"
                                 required
-                            />
+                            >
+                                <option value="" disabled className="text-gray-500">Select your faculty</option>
+                                {FACULTIES.map(fac => (
+                                    <option key={fac} value={fac}>{fac}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="space-y-2 text-left">
