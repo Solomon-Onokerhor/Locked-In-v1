@@ -32,6 +32,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
         <Link
             href={`/room/${room.room_id}`}
             className="group flex flex-col glass-card border border-white/5 hover:border-brand-accent/50 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 overflow-hidden relative p-0"
+            data-tour="join-room"
         >
             <div className="aspect-video w-full relative overflow-hidden">
                 <Image
@@ -55,7 +56,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
                 </div>
 
                 <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter backdrop-blur-md border ${room.room_type === 'Study' ? 'bg-brand-accent/40 border-brand-accent/20 text-blue-100' : 'bg-amber-500/40 border-amber-500/20 text-amber-100'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter backdrop-blur-md border ${room.room_type === 'Study' ? 'bg-brand-accent/40 border-brand-accent/20 text-gray-300' : 'bg-white/10 border-white/20 text-gray-300'}`}>
                         {room.room_type}
                     </span>
                     {room.course_code && (
@@ -67,7 +68,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
 
                 {/* Buddy Activity Indicator */}
                 {(buddyCount || 0) > 0 && (
-                    <div className="absolute top-3 right-3 bg-indigo-500/90 border border-indigo-400 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 origin-top-right z-20">
+                    <div className="absolute top-3 right-3 bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 origin-top-right z-20">
                         <Users className="w-3 h-3" />
                         {buddyCount} {buddyCount === 1 ? 'Buddy' : 'Buddies'} Inside
                     </div>
@@ -76,13 +77,13 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
                 <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-20">
                     <div className="flex gap-2">
                         {isLive && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-red-500/40 border-red-500/40 text-white flex items-center gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-white/10 border-white/20 text-white flex items-center gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                 Live
                             </span>
                         )}
                         {isUpcoming && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-amber-500/40 border-amber-500/20 text-white flex items-center gap-1.5">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-white/10 border-white/20 text-white flex items-center gap-1.5">
                                 Upcoming
                             </span>
                         )}

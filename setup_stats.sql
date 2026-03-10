@@ -41,9 +41,9 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Room is full');
   END IF;
 
-  -- Join room
-  INSERT INTO room_members (room_id, user_id, role_in_room, has_access_to_resources)
-  VALUES (p_room_id, p_user_id, 'member', true);
+  -- Join room (attendance is auto-confirmed on lock-in)
+  INSERT INTO room_members (room_id, user_id, role_in_room, has_access_to_resources, attendance_confirmed)
+  VALUES (p_room_id, p_user_id, 'member', true, true);
 
   -- Update Profile Stats (Focus Time)
   UPDATE profiles 
@@ -89,3 +89,23 @@ DROP TRIGGER IF EXISTS tr_update_stats_on_join ON room_members;
 CREATE TRIGGER tr_update_stats_on_join
 AFTER INSERT ON room_members
 FOR EACH ROW EXECUTE FUNCTION handle_activity_stats();
+
+-- 6. RPC: Update streak from SoloTimer (called when a solo session completes)
+CREATE OR REPLACE FUNCTION update_user_activity()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE profiles
+  SET 
+    current_streak = CASE 
+      WHEN last_active_date = CURRENT_DATE - INTERVAL '1 day' THEN current_streak + 1
+      WHEN last_active_date < CURRENT_DATE - INTERVAL '1 day' THEN 1
+      WHEN last_active_date = CURRENT_DATE THEN current_streak
+      ELSE 1
+    END,
+    last_active_date = CURRENT_DATE
+  WHERE id = auth.uid();
+END;
+$$;

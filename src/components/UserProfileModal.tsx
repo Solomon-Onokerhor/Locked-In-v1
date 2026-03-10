@@ -106,7 +106,7 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                 </button>
 
                 {/* Header Background */}
-                <div className="h-32 bg-gradient-to-br from-blue-600 to-brand-accent relative">
+                <div className="h-32 bg-gradient-to-br from-white/10 to-transparent relative">
                     <div className="absolute inset-0 bg-black/20" />
                 </div>
 
@@ -114,8 +114,8 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                 <div className="px-6 pb-6 pt-0 relative">
                     {/* Avatar */}
                     <div className="w-24 h-24 rounded-2xl bg-brand-primary border-4 border-brand-primary flex items-center justify-center -mt-12 mb-4 mx-auto relative overflow-hidden">
-                        <div className="absolute inset-0 bg-blue-500/10" />
-                        <span className="text-4xl font-black text-blue-400">
+                        <div className="absolute inset-0 bg-white/10" />
+                        <span className="text-4xl font-black text-gray-300">
                             {profile?.name?.charAt(0).toUpperCase() || '?'}
                         </span>
                     </div>
@@ -129,7 +129,7 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                             <h2 className="text-2xl font-black text-white flex items-center justify-center gap-2">
                                 {profile.name}
                                 {profile.is_verified && (
-                                    <div className="bg-blue-500 rounded-full p-0.5" title={profile.badge_label || 'Verified Scholar'}>
+                                    <div className="bg-white/10 rounded-full p-0.5" title={profile.badge_label || 'Verified Scholar'}>
                                         <Check className="w-3.5 h-3.5 text-white" strokeWidth={5} />
                                     </div>
                                 )}
@@ -143,17 +143,17 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                             {/* Stats Grid */}
                             <div className="grid grid-cols-3 gap-2 mt-6 mb-8">
                                 <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                                    <Flame className="w-5 h-5 text-amber-500 mb-1" />
+                                    <Flame className="w-5 h-5 text-gray-300 mb-1" />
                                     <span className="text-white font-bold">{profile.current_streak}</span>
                                     <span className="text-[10px] text-gray-400 uppercase font-black">Streak</span>
                                 </div>
                                 <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                                    <Clock className="w-5 h-5 text-emerald-400 mb-1" />
+                                    <Clock className="w-5 h-5 text-gray-300 mb-1" />
                                     <span className="text-white font-bold">{Math.round(profile.total_focus_time_minutes / 60)}h</span>
                                     <span className="text-[10px] text-gray-400 uppercase font-black">Focus</span>
                                 </div>
                                 <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                                    <Users className="w-5 h-5 text-indigo-400 mb-1" />
+                                    <Users className="w-5 h-5 text-gray-300 mb-1" />
                                     <span className="text-white font-bold">{profile.study_buddies}</span>
                                     <span className="text-[10px] text-gray-400 uppercase font-black">Buddies</span>
                                 </div>
@@ -165,8 +165,8 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                                     onClick={isConnected ? handleDisconnect : handleConnect}
                                     disabled={isConnecting}
                                     className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isConnected
-                                            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20'
-                                            : 'bg-brand-accent hover:bg-blue-600 text-white shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/40'
+                                        ? 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/10'
+                                        : 'bg-brand-accent hover:bg-white/10 text-white shadow-lg shadow-white/10 hover:shadow-white/10'
                                         }`}
                                 >
                                     {isConnecting ? (

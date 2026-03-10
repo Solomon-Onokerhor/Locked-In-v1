@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Locked In - Student Study Groups & Timers",
     description: "Join highly focused study groups, track your productivity streak, and compete on the campus leaderboard.",
     manifest: "/manifest.json",
-    themeColor: "#0a0b14",
+    themeColor: "#000000",
     appleWebApp: {
         capable: true,
         statusBarStyle: "default",

@@ -27,10 +27,13 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     useEffect(() => {
         if (!loading && !session) {
             router.push('/auth');
+        } else if (!loading && session && profile && !profile.faculty) {
+            // Old accounts missing onboarding data → force onboarding
+            router.push('/onboarding');
         } else if (session) {
             fetchPrivateData();
         }
-    }, [session, loading, router]);
+    }, [session, loading, profile, router]);
 
     const fetchPrivateData = async () => {
         // Fetch user's joined rooms
@@ -99,183 +102,151 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     }
 
     return (
-        <div className="min-h-screen bg-brand-primary">
+        <div className="min-h-screen bg-[#000000]">
             <Sidebar />
 
-            {/* Premium Background Gradients */}
-            <div className="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-accent/20 rounded-full blur-[80px] opacity-50 animate-pulse-glow"></div>
-                <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[64px] opacity-40 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[64px] opacity-30 animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
-            </div>
+            <main className="px-4 pt-20 pb-24 md:p-10 md:ml-[280px] relative z-10 animate-fade-in flex-1">
+                <div className="max-w-[1080px] mx-auto flex flex-col gap-10">
+                    {/* Header Section */}
+                    <header className="flex flex-col gap-2" data-tour="welcome">
+                        <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">Welcome back{session?.user?.email ? `, ${session.user.email.split('@')[0]}` : ''}</h2>
+                        <p className="text-[#888888] text-lg">Lock In. Level Up.</p>
+                    </header>
 
-            <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10 animate-fade-in">
-                {/* Header Section */}
-                <header className="mb-6 md:mb-10 mt-2 md:mt-0">
-                    <div className="flex items-end justify-between mb-6">
-                        <div>
-                            <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white">Welcome back{session?.user?.email ? `, ${session.user.email.split('@')[0]}` : ''}</h2>
-                            <p className="text-gray-500 text-sm md:text-lg mt-1">Lock In. Level Up.</p>
+                    {/* Banner */}
+                    <div className="w-full flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl border border-white/20 bg-[#0a0a0a] gap-4">
+                        <div className="flex flex-col gap-1">
+                            <h3 className="text-white text-xl font-bold tracking-tight">Campus Leaderboards are live! 🏆</h3>
+                            <p className="text-[#888888] text-sm">Check out where you stand among your peers.</p>
                         </div>
-                        <Link
-                            href="/create-room"
-                            className="hidden md:flex bg-brand-accent hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold items-center gap-2 transition-all shadow-lg shadow-brand-accent/25 hover:shadow-brand-accent/40 active:scale-95"
-                        >
-                            <PlusCircle className="w-5 h-5" />
-                            Host Room
+                        <Link href="/leaderboard" className="px-6 py-3 md:py-2 rounded-lg bg-white text-black text-sm font-bold hover:bg-gray-200 transition-colors text-center shrink-0">
+                            View Rankings
                         </Link>
                     </div>
 
-                    {/* Premium Leaderboard Promo Banner */}
-                    <Link href="/leaderboard" className="block w-full glass-card hover:bg-amber-500/5 transition-all p-5 cursor-pointer group">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3.5 bg-gradient-to-br from-amber-400/20 to-amber-600/20 rounded-xl group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(251,191,36,0.2)]">
-                                    <Trophy className="w-6 h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-lg tracking-wide">Campus Leaderboards are live! <span className="text-amber-400">🏆</span></h3>
-                                    <p className="text-gray-400 text-sm mt-0.5">See which faculty is currently dominating UMaT.</p>
-                                </div>
-                            </div>
-                            <ArrowRight className="w-5 h-5 text-amber-400 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 duration-300 hidden md:block" />
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Timer Card */}
+                        <div className="col-span-1 lg:col-span-2 rounded-2xl border border-white/20 bg-[#0d0d0d] p-8 flex flex-col gap-6" data-tour="solo-timer">
+                            <h3 className="text-white text-2xl font-bold tracking-tight">Solo Lock-In</h3>
+                            <SoloTimer />
                         </div>
-                    </Link>
-                </header>
 
-                {/* Solo Lock-In Timer */}
-                <div className="mb-6 md:mb-10">
-                    <SoloTimer />
-                </div>
-
-                {/* Premium Metric Cards */}
-                <div className="flex gap-4 md:grid md:grid-cols-2 lg:gap-6 mb-8 md:mb-12 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide">
-                    <div onClick={() => router.push('/buddies')} className="cursor-pointer min-w-[240px] md:min-w-0 snap-center flex-shrink-0 glass-card p-6 flex flex-col gap-2 group">
-                        <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2.5 text-gray-400 text-xs font-bold uppercase tracking-widest group-hover:text-indigo-400 transition-colors">
-                                <div className="p-2 bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/20 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.1)]">
-                                    <Users className="w-4 h-4 text-indigo-400" />
+                        {/* Right Column Cards */}
+                        <div className="col-span-1 flex flex-col gap-6">
+                            <div onClick={() => router.push('/buddies')} className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between cursor-pointer group hover:border-white/40 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Buddies</h3>
+                                    <Users className="w-6 h-6 text-[#888888]" />
                                 </div>
-                                Buddies
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-                        </div>
-                        <div className="text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">
-                            {profile ? profile.study_buddies : '0'}
-                        </div>
-                    </div>
-                    <div className="min-w-[240px] md:min-w-0 snap-center flex-shrink-0 glass-card p-6 flex flex-col gap-2 group">
-                        <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2.5 text-gray-400 text-xs font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">
-                                <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors shadow-[0_0_10px_rgba(251,191,36,0.1)]">
-                                    <BookOpen className="w-4 h-4 text-amber-400" />
+                                <div className="flex flex-col gap-1 mt-4">
+                                    <span className="text-white text-4xl font-black">{profile ? profile.study_buddies : '0'}</span>
+                                    <span className="text-[#888888] text-sm">Online now</span>
                                 </div>
-                                Streak
-                            </div>
-                        </div>
-                        <div className="text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">
-                            {profile ? `${profile.current_streak} Days` : '0 Days'}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Premium Search + Tabs */}
-                <div className="flex flex-col gap-6 mb-10">
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
-                        <div className="flex glass-panel p-1.5 w-fit max-w-full overflow-x-auto scrollbar-hide">
-                            {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab as any)}
-                                    className={`px-5 py-2.5 text-[13px] font-bold tracking-wide rounded-xl transition-all duration-300 whitespace-nowrap ${activeTab === tab
-                                        ? 'bg-brand-accent text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    {tab === 'my_rooms' ? 'My Rooms' : tab === 'upcoming' ? 'Upcoming' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                <button className="mt-6 w-full py-2.5 rounded-lg border border-white/20 text-white text-sm font-bold hover:bg-white/10 transition-colors">
+                                    Find Buddies
                                 </button>
-                            ))}
-                        </div>
-
-                        <div className="relative w-full xl:max-w-md">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="Search by title or course code..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-3.5 pl-11 pr-5 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Room List */}
-                <section>
-                    <div className="flex items-center gap-2 mb-6">
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${activeTab === 'upcoming' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-                        <h3 className="text-lg md:text-2xl font-bold text-white">
-                            {activeTab === 'all' && 'All Rooms'}
-                            {activeTab === 'study' && 'Study Rooms'}
-                            {activeTab === 'skill' && 'Skill-Building Rooms'}
-                            {activeTab === 'my_rooms' && 'My Rooms'}
-                            {activeTab === 'upcoming' && 'Your Upcoming Sessions'}
-                        </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredRooms.length === 0 ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 text-center glass-card animate-fade-in-up">
-                                <div className="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mb-8 border border-brand-accent/20 shadow-[0_0_30px_rgba(37,99,235,0.15)] animate-float">
-                                    {activeTab === 'upcoming' ? <Calendar className="w-10 h-10 text-brand-accent drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" /> : <BookOpen className="w-10 h-10 text-brand-accent drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" />}
+                            </div>
+                            <div className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Streak</h3>
+                                    <span className="text-[#888888]"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-80q-100 0-170-70.5T240-322q0-46 17-86.5t48-73.5q25-25 57-46t64-37q-9-33-8-68t16-68q23 35 59 55t77 24q5-42-4.5-85T502-780q62 25 100 77t38 117q0 61-26 113.5T541-379q14-11 32-15t38-4q30 5 57.5 21t46.5 42q20-31 32.5-66.5T760-476q0 21-6 41t-15 39q-22 56-65 92t-99 43L480-80Z" /></svg></span>
                                 </div>
-                                <h3 className="text-3xl font-black text-white mb-3 tracking-tight">
-                                    {activeTab === 'my_rooms' ? "You haven't joined any rooms yet" :
-                                        activeTab === 'upcoming' ? "No upcoming sessions found" :
-                                            "No sessions found"}
-                                </h3>
-                                <p className="text-gray-400 mt-2 max-w-lg mx-auto mb-10 text-lg leading-relaxed">
-                                    {activeTab === 'my_rooms' ? "Join a room or host your own to see them here!" :
-                                        activeTab === 'upcoming' ? "You don't have any sessions scheduled for the future." :
-                                            "Be the first to lock in! Host a new study or skill-sharing session and invite others to join."}
-                                </p>
-                                <Link
-                                    href={activeTab === 'all' ? "/create-room" : "/"}
-                                    onClick={(e) => {
-                                        if (activeTab !== 'all') {
-                                            e.preventDefault();
-                                            setActiveTab('all');
-                                        }
-                                    }}
-                                    className="px-10 py-4 bg-brand-accent hover:bg-blue-600 text-white text-base font-bold rounded-xl transition-all shadow-[0_0_25px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] flex items-center gap-3 active:scale-95"
-                                >
-                                    {activeTab === 'all' ? <PlusCircle className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
-                                    {activeTab === 'all' ? "Host a Session" : "Explore All Rooms"}
+                                <div className="flex flex-col gap-1 mt-4">
+                                    <span className="text-white text-4xl font-black">{profile ? profile.current_streak : '0'}</span>
+                                    <span className="text-[#888888] text-sm">Days active</span>
+                                </div>
+                                <div className="flex gap-1.5 mt-6 h-2">
+                                    {[...Array(5)].map((_, i) => (
+                                        <div key={i} className={`flex-1 rounded-full ${i < (profile?.current_streak || 0) % 5 ? 'bg-white' : 'bg-white/20'}`}></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Room Browser */}
+                    <div className="flex flex-col gap-6" data-tour="room-tabs">
+                        <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-4 gap-4">
+                            <div className="flex items-center gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                                {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab as any)}
+                                        className={`text-sm font-bold pb-4 -mb-[18px] transition-colors whitespace-nowrap ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-[#888888] hover:text-white'}`}
+                                    >
+                                        {tab === 'my_rooms' ? 'My Rooms' : tab === 'upcoming' ? 'Upcoming' : tab === 'all' ? 'All Rooms' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
+                                <input
+                                    type="text"
+                                    placeholder="Search rooms..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full h-10 pl-9 pr-4 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder-[#888888] transition-colors"
+                                />
+                            </div>
+                        </div>
+
+                        <section>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredRooms.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-white/20 rounded-2xl">
+                                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                                            {activeTab === 'upcoming' ? <Calendar className="w-8 h-8 text-[#888888]" /> : <BookOpen className="w-8 h-8 text-[#888888]" />}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                                            {activeTab === 'my_rooms' ? "You haven't joined any rooms yet" :
+                                                activeTab === 'upcoming' ? "No upcoming sessions found" :
+                                                    "No sessions found"}
+                                        </h3>
+                                        <p className="text-[#888888] max-w-sm mx-auto mb-8 text-sm">
+                                            {activeTab === 'my_rooms' ? "Join a room or host your own to see them here!" :
+                                                activeTab === 'upcoming' ? "You don't have any sessions scheduled for the future." :
+                                                    "Be the first to lock in! Host a new study or skill-sharing session and invite others to join."}
+                                        </p>
+                                        <Link
+                                            href={activeTab === 'all' ? "/create-room" : "/"}
+                                            onClick={(e) => {
+                                                if (activeTab !== 'all') {
+                                                    e.preventDefault();
+                                                    setActiveTab('all');
+                                                }
+                                            }}
+                                            className="px-6 py-3 bg-white hover:bg-gray-200 text-black text-sm font-bold rounded-lg transition-colors flex items-center gap-2 inline-flex"
+                                        >
+                                            {activeTab === 'all' ? <PlusCircle className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                                            {activeTab === 'all' ? "Host a Session" : "Explore All Rooms"}
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    filteredRooms.map((room) => (
+                                        <RoomCard key={room.room_id} room={room} buddyCount={buddyRoomCounts[room.room_id] || 0} />
+                                    ))
+                                )}
+
+                                <Link href="/create-room" data-tour="host-room" className="hidden md:flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-white/40 bg-transparent hover:bg-white/5 transition-all p-8 cursor-pointer group min-h-[220px]">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                        <PlusCircle className="w-8 h-8 text-[#888888] group-hover:text-white transition-colors" />
+                                    </div>
+                                    <div className="text-center">
+                                        <h4 className="text-white font-bold text-lg tracking-tight group-hover:text-white transition-colors">Create New Room</h4>
+                                        <p className="text-[#888888] text-sm">Start your own session</p>
+                                    </div>
                                 </Link>
                             </div>
-                        ) : (
-                            filteredRooms.map((room) => (
-                                <RoomCard key={room.room_id} room={room} buddyCount={buddyRoomCounts[room.room_id] || 0} />
-                            ))
-                        )}
-
-                        <Link href="/create-room" className="hidden md:flex glass-card !bg-transparent hover:!bg-brand-accent/5 border-dashed border-2 !border-white/10 hover:!border-brand-accent/50 cursor-pointer items-center justify-center p-8 min-h-[320px] group transition-all">
-                            <div className="text-center">
-                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-brand-accent/20 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-                                    <PlusCircle className="text-3xl text-gray-500 group-hover:text-brand-accent w-8 h-8 transition-colors" />
-                                </div>
-                                <h4 className="text-xl font-bold text-white mb-2 tracking-wide group-hover:text-brand-accent transition-colors">Create New Room</h4>
-                                <p className="text-gray-500 text-sm font-medium">Start your own session</p>
-                            </div>
-                        </Link>
+                        </section>
                     </div>
-                </section>
+                </div>
 
                 <Link
                     href="/create-room"
-                    className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 active:scale-90 transition-transform"
+                    data-tour="host-room"
+                    className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 bg-white text-black rounded-full flex items-center justify-center shadow-xl shadow-black/50 active:scale-90 transition-transform"
                 >
-                    <PlusCircle className="w-6 h-6 text-white" />
+                    <PlusCircle className="w-6 h-6" />
                 </Link>
             </main>
         </div>

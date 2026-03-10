@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/utils/imageCompression';
-import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2 } from 'lucide-react';
+import { BookOpen, Zap, Calendar, MapPin, Users, DollarSign, PlusCircle, Video, Clock, Image, Trash2, Share2, GraduationCap } from 'lucide-react';
+import { FACULTIES } from '@/lib/constants';
 
 export default function CreateRoomPage() {
     const { session, profile, loading } = useAuth();
@@ -27,6 +28,7 @@ export default function CreateRoomPage() {
     const [price, setPrice] = useState(0);
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
+    const [faculty, setFaculty] = useState(profile?.faculty || '');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -51,7 +53,13 @@ export default function CreateRoomPage() {
                 throw new Error('Description cannot exceed 1000 characters');
             }
 
-            const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+            const selectedDate = new Date(dateTime).getTime();
+            if (selectedDate < Date.now()) {
+                throw new Error('Room date and time must be in the future.');
+            }
+
+            // Updated regex to allow query parameters (?, &, =, etc)
+            const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?&#=-]*)*\/?$/i;
 
             if (sessionMode === 'virtual' && (!meetingLink || !urlRegex.test(meetingLink))) {
                 throw new Error('Please enter a valid meeting URL (e.g., Zoom/Google Meet)');
@@ -102,6 +110,7 @@ export default function CreateRoomPage() {
                     price: 0,
                     commission_rate: 0.1,
                     course_code: roomType === 'Study' ? courseCode : null,
+                    faculty: faculty || null,
                     whatsapp_group_link: whatsappGroupLink || null,
                     status: 'pending',
                 }])
@@ -148,7 +157,7 @@ export default function CreateRoomPage() {
 
                     <form onSubmit={handleCreateRoom} className="space-y-8">
                         {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg">
+                            <div className="p-4 bg-white/10 border border-white/20 text-gray-300 text-sm rounded-lg">
                                 {error}
                             </div>
                         )}
@@ -161,7 +170,7 @@ export default function CreateRoomPage() {
                                 <button
                                     type="button"
                                     onClick={() => router.push('/')}
-                                    className="px-8 py-3 bg-brand-accent hover:bg-brand-accent/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-brand-accent/20"
+                                    className="px-8 py-3 bg-brand-accent hover:bg-brand-accent/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-white/10"
                                 >
                                     Return to Dashboard
                                 </button>
@@ -194,11 +203,29 @@ export default function CreateRoomPage() {
                                     </div>
                                 </div>
 
+                                {/* Faculty */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                                        <GraduationCap className="w-3 h-3" /> Faculty / College *
+                                    </label>
+                                    <select
+                                        required
+                                        value={faculty}
+                                        onChange={(e) => setFaculty(e.target.value)}
+                                        className="w-full bg-[#111111] border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all appearance-none text-white"
+                                    >
+                                        <option value="" disabled>Select a Faculty</option>
+                                        {FACULTIES.map(fac => (
+                                            <option key={fac} value={fac}>{fac}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 {/* Title */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Title</label>
                                     <input type="text" required placeholder="e.g., Calculus Study Group" value={title} onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                     />
                                 </div>
 
@@ -206,7 +233,7 @@ export default function CreateRoomPage() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Description</label>
                                     <textarea rows={3} placeholder="What will this session cover?" value={description} onChange={(e) => setDescription(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 resize-none"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600 resize-none"
                                     />
                                 </div>
 
@@ -220,7 +247,7 @@ export default function CreateRoomPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => { setThumbnail(null); setThumbnailPreview(null); }}
-                                                    className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full p-1 backdrop-blur-sm transition-colors"
+                                                    className="absolute top-1 right-1 bg-black/50 hover:bg-white/10 text-white rounded-full p-1 backdrop-blur-sm transition-colors"
                                                 >
                                                     <Trash2 className="w-3 h-3" />
                                                 </button>
@@ -261,7 +288,7 @@ export default function CreateRoomPage() {
                                                 placeholder="e.g., CP 151"
                                                 value={courseCode}
                                                 onChange={(e) => setCourseCode(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                             />
                                         </div>
                                     </div>
@@ -275,22 +302,22 @@ export default function CreateRoomPage() {
                                             type="button"
                                             onClick={() => setSessionMode('virtual')}
                                             className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all ${sessionMode === 'virtual'
-                                                ? 'border-blue-500/50 bg-blue-500/10 text-white'
+                                                ? 'border-white/20 bg-white/10 text-white'
                                                 : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
                                                 }`}
                                         >
-                                            <Video className={`w-5 h-5 ${sessionMode === 'virtual' ? 'text-blue-400' : ''}`} />
+                                            <Video className={`w-5 h-5 ${sessionMode === 'virtual' ? 'text-gray-300' : ''}`} />
                                             <span className="font-bold">Virtual</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setSessionMode('in_person')}
                                             className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all ${sessionMode === 'in_person'
-                                                ? 'border-emerald-500/50 bg-emerald-500/10 text-white'
+                                                ? 'border-white/20 bg-white/10 text-white'
                                                 : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
                                                 }`}
                                         >
-                                            <MapPin className={`w-5 h-5 ${sessionMode === 'in_person' ? 'text-emerald-400' : ''}`} />
+                                            <MapPin className={`w-5 h-5 ${sessionMode === 'in_person' ? 'text-gray-300' : ''}`} />
                                             <span className="font-bold">In-Person</span>
                                         </button>
                                     </div>
@@ -303,7 +330,7 @@ export default function CreateRoomPage() {
                                             <Calendar className="w-3 h-3" /> Date & Time *
                                         </label>
                                         <input type="datetime-local" required value={dateTime} onChange={(e) => setDateTime(e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -311,7 +338,7 @@ export default function CreateRoomPage() {
                                             <Clock className="w-3 h-3" /> Duration (mins) *
                                         </label>
                                         <input type="number" required min={15} step={15} value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                         />
                                     </div>
                                 </div>
@@ -324,7 +351,7 @@ export default function CreateRoomPage() {
                                                 <Video className="w-3 h-3" /> Meeting Link (Zoom, Meet, etc) *
                                             </label>
                                             <input type="url" required placeholder="https://zoom.us/j/..." value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all placeholder:text-gray-600"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600"
                                             />
                                             <p className="text-[10px] text-gray-500">Links remain hidden securely until users lock in and the session is live.</p>
                                         </div>
@@ -335,13 +362,13 @@ export default function CreateRoomPage() {
                                                     <MapPin className="w-3 h-3" /> Physical Location *
                                                 </label>
                                                 <input type="text" required placeholder="e.g. Library, Room 301" value={physicalLocation} onChange={(e) => setPhysicalLocation(e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-gray-600"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600"
                                                 />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Location Note (Optional)</label>
                                                 <input type="text" placeholder="e.g. Second floor near lab 3" value={locationNote} onChange={(e) => setLocationNote(e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-gray-600"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600"
                                                 />
                                             </div>
                                         </div>
@@ -355,19 +382,19 @@ export default function CreateRoomPage() {
                                             <Users className="w-3 h-3" /> Max Members
                                         </label>
                                         <input type="number" min={2} max={100} value={maxMembers} onChange={(e) => setMaxMembers(Number(e.target.value))}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1 text-emerald-400">
-                                            <Share2 className="w-3 h-3 text-emerald-400" /> WhatsApp Group Link (Optional)
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1 text-gray-300">
+                                            <Share2 className="w-3 h-3 text-gray-300" /> WhatsApp Group Link (Optional)
                                         </label>
                                         <input
                                             type="url"
                                             placeholder="https://chat.whatsapp.com/..."
                                             value={whatsappGroupLink}
                                             onChange={(e) => setWhatsappGroupLink(e.target.value)}
-                                            className="w-full bg-white/5 border border-emerald-500/20 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-gray-600"
+                                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600"
                                         />
                                     </div>
                                 </div>
@@ -376,7 +403,7 @@ export default function CreateRoomPage() {
                                 <div className="space-y-4 opacity-50 relative">
                                     <div className="flex items-center gap-3">
                                         <input type="checkbox" id="isPaid" disabled checked={false}
-                                            className="w-5 h-5 rounded bg-white/5 border-white/10 text-brand-accent focus:ring-brand-accent cursor-not-allowed"
+                                            className="w-5 h-5 rounded bg-white/5 border-white/10 text-brand-accent focus:ring-white/30 cursor-not-allowed"
                                         />
                                         <label htmlFor="isPaid" className="text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
                                             <DollarSign className="w-4 h-4" /> Paid Session
@@ -387,10 +414,10 @@ export default function CreateRoomPage() {
 
                                 {/* Submit */}
                                 <button type="submit" disabled={creating}
-                                    className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full bg-brand-accent hover:bg-brand-accent-hover text-black font-bold py-4 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {creating ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                                     ) : (
                                         <><PlusCircle className="w-5 h-5" /> Create Room</>
                                     )}
@@ -399,7 +426,7 @@ export default function CreateRoomPage() {
                         )}
                     </form>
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }

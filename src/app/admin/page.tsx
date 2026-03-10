@@ -33,6 +33,8 @@ export default function AdminPage() {
     // Users
     const [users, setUsers] = useState<Profile[]>([]);
     const [userSearch, setUserSearch] = useState('');
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
 
     // Rooms
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -156,6 +158,25 @@ export default function AdminPage() {
             fetchStats();
         }
         setProcessingId(null);
+    };
+
+    // Delete user
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return;
+        setIsDeletingUser(true);
+        const { error } = await supabase.rpc('delete_user_by_admin', { target_user_id: userToDelete });
+        
+        if (!error) {
+            // Remove user from local state to visually update immediately
+            setUsers(prev => prev.filter(u => u.id !== userToDelete));
+            fetchStats();
+        } else {
+            console.error(error);
+            alert("Error deleting user: " + error.message);
+        }
+        
+        setIsDeletingUser(false);
+        setUserToDelete(null);
     };
 
     // Delete room
@@ -294,8 +315,8 @@ export default function AdminPage() {
                 {/* Admin Header */}
                 <header className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-red-400" />
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-gray-300" />
                         </div>
                         <div>
                             <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Admin Dashboard</h1>
@@ -318,7 +339,7 @@ export default function AdminPage() {
                             {tab.icon}
                             {tab.label}
                             {tab.badge !== undefined && tab.badge > 0 && (
-                                <span className="ml-2 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                <span className="ml-2 bg-white/10 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                                     {tab.badge}
                                 </span>
                             )}
@@ -331,10 +352,10 @@ export default function AdminPage() {
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
-                                { label: 'Total Users', value: stats.totalUsers, icon: <Users className="w-4 h-4 text-blue-400" />, color: 'bg-blue-500/10' },
-                                { label: 'Rooms', value: stats.totalRooms, icon: <Home className="w-4 h-4 text-emerald-400" />, color: 'bg-emerald-500/10' },
-                                { label: 'Resources', value: stats.totalResources, icon: <FileText className="w-4 h-4 text-amber-400" />, color: 'bg-amber-500/10' },
-                                { label: 'Messages', value: stats.totalMessages, icon: <MessageSquare className="w-4 h-4 text-purple-400" />, color: 'bg-purple-500/10' },
+                                { label: 'Total Users', value: stats.totalUsers, icon: <Users className="w-4 h-4 text-gray-300" />, color: 'bg-white/10' },
+                                { label: 'Rooms', value: stats.totalRooms, icon: <Home className="w-4 h-4 text-gray-300" />, color: 'bg-white/10' },
+                                { label: 'Resources', value: stats.totalResources, icon: <FileText className="w-4 h-4 text-gray-300" />, color: 'bg-white/10' },
+                                { label: 'Messages', value: stats.totalMessages, icon: <MessageSquare className="w-4 h-4 text-gray-300" />, color: 'bg-white/10' },
                             ].map((stat) => (
                                 <div key={stat.label} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
@@ -351,7 +372,7 @@ export default function AdminPage() {
                         {/* Recent Resources */}
                         <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <BookOpen className="w-5 h-5 text-amber-400" />
+                                <BookOpen className="w-5 h-5 text-gray-300" />
                                 Recent Resources
                             </h3>
                             {resources.length === 0 ? (
@@ -362,9 +383,9 @@ export default function AdminPage() {
                                         <div key={res.resource_id} className="flex items-center justify-between py-3 px-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
                                             <div className="flex items-center gap-3">
                                                 {res.resource_type === 'Video' ? (
-                                                    <Video className="w-5 h-5 text-blue-400" />
+                                                    <Video className="w-5 h-5 text-gray-300" />
                                                 ) : (
-                                                    <FileText className="w-5 h-5 text-amber-400" />
+                                                    <FileText className="w-5 h-5 text-gray-300" />
                                                 )}
                                                 <div>
                                                     <p className="text-sm font-semibold text-white">{res.title}</p>
@@ -373,7 +394,7 @@ export default function AdminPage() {
                                             </div>
                                             <button
                                                 onClick={() => setResourceToDelete(res.resource_id)}
-                                                className="text-gray-600 hover:text-red-400 transition-colors p-2"
+                                                className="text-gray-600 hover:text-gray-300 transition-colors p-2"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -396,7 +417,7 @@ export default function AdminPage() {
                                 placeholder="Search users..."
                                 value={userSearch}
                                 onChange={(e) => setUserSearch(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-2.5 pl-10 pr-4 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
+                                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-2.5 pl-10 pr-4 focus:border-white/20 focus:ring-1 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
                             />
                         </div>
 
@@ -409,6 +430,7 @@ export default function AdminPage() {
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Email</th>
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider">Role</th>
                                             <th className="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Joined</th>
+                                            <th className="text-right px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -416,8 +438,8 @@ export default function AdminPage() {
                                             <tr key={user.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-blue-400 text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
+                                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-gray-300 text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
                                                         </div>
                                                         <div>
                                                             <p className="text-white font-semibold text-sm">{user.name}</p>
@@ -433,10 +455,10 @@ export default function AdminPage() {
                                                             onChange={(e) => handleRoleChange(user.id, e.target.value)}
                                                             disabled={user.email === 'sonokerhor@gmail.com'}
                                                             className={`appearance-none bg-transparent border rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer pr-7 outline-none transition-colors ${user.role === 'admin'
-                                                                ? 'border-red-500/30 text-red-400'
+                                                                ? 'border-white/20 text-gray-300'
                                                                 : user.role === 'room_creator'
-                                                                    ? 'border-amber-500/30 text-amber-400'
-                                                                    : 'border-blue-500/30 text-blue-400'
+                                                                    ? 'border-white/20 text-gray-300'
+                                                                    : 'border-white/20 text-gray-300'
                                                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                                                         >
                                                             <option value="student">Student</option>
@@ -448,6 +470,16 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="px-5 py-3.5 text-gray-500 text-xs hidden md:table-cell">
                                                     {new Date(user.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-5 py-3.5 text-right">
+                                                    <button
+                                                        onClick={() => setUserToDelete(user.id)}
+                                                        disabled={user.email === 'sonokerhor@gmail.com'}
+                                                        className="text-gray-600 hover:text-red-400 transition-colors p-2 disabled:opacity-20 disabled:hover:text-gray-600"
+                                                        title="Delete User"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -466,7 +498,7 @@ export default function AdminPage() {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-emerald-400" />
+                                <CheckCircle className="w-5 h-5 text-gray-300" />
                                 Pending Approvals
                             </h3>
                             <span className="text-xs text-gray-500 font-medium">{pendingRooms.length} rooms waiting</span>
@@ -474,8 +506,8 @@ export default function AdminPage() {
 
                         {pendingRooms.length === 0 ? (
                             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-12 text-center">
-                                <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle className="w-8 h-8 text-emerald-400 opacity-50" />
+                                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle className="w-8 h-8 text-gray-300 opacity-50" />
                                 </div>
                                 <h4 className="text-white font-bold text-lg mb-1">All Caught Up!</h4>
                                 <p className="text-gray-500 text-sm">There are no pending rooms to approve at the moment.</p>
@@ -487,8 +519,8 @@ export default function AdminPage() {
                                         <div className="p-5 flex-1">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${room.room_type === 'Study'
-                                                    ? 'bg-blue-500/10 text-blue-400'
-                                                    : 'bg-amber-500/10 text-amber-400'
+                                                    ? 'bg-white/10 text-gray-300'
+                                                    : 'bg-white/10 text-gray-300'
                                                     }`}>
                                                     {room.room_type}
                                                 </span>
@@ -513,14 +545,14 @@ export default function AdminPage() {
                                             <button
                                                 onClick={() => handleReject(room.room_id)}
                                                 disabled={processingId !== null}
-                                                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all disabled:opacity-50"
+                                                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/10 border border-white/20 transition-all disabled:opacity-50"
                                             >
                                                 {processingId === room.room_id ? 'Wait...' : 'Reject'}
                                             </button>
                                             <button
                                                 onClick={() => handleApprove(room.room_id)}
                                                 disabled={processingId !== null}
-                                                className="flex-2 py-2.5 px-6 rounded-xl text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
+                                                className="flex-2 py-2.5 px-6 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/10 transition-all shadow-lg shadow-white/10 active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 {processingId === room.room_id ? 'Approving...' : 'Approve Room'}
                                             </button>
@@ -542,7 +574,7 @@ export default function AdminPage() {
                                 placeholder="Search rooms..."
                                 value={roomSearch}
                                 onChange={(e) => setRoomSearch(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-2.5 pl-10 pr-4 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
+                                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-2.5 pl-10 pr-4 focus:border-white/20 focus:ring-1 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600 text-white text-sm"
                             />
                         </div>
 
@@ -553,13 +585,13 @@ export default function AdminPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1.5">
                                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${room.room_type === 'Study'
-                                                    ? 'bg-blue-500/10 text-blue-400'
-                                                    : 'bg-amber-500/10 text-amber-400'
+                                                    ? 'bg-white/10 text-gray-300'
+                                                    : 'bg-white/10 text-gray-300'
                                                     }`}>
                                                     {room.room_type}
                                                 </span>
                                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${room.status === 'active'
-                                                    ? 'bg-emerald-500/10 text-emerald-400'
+                                                    ? 'bg-white/10 text-gray-300'
                                                     : 'bg-gray-500/10 text-gray-400'
                                                     }`}>
                                                     {room.status}
@@ -572,7 +604,7 @@ export default function AdminPage() {
                                         </div>
                                         <button
                                             onClick={() => setRoomToDelete(room.room_id)}
-                                            className="text-gray-600 hover:text-red-400 transition-colors p-2 ml-2 flex-shrink-0"
+                                            className="text-gray-600 hover:text-gray-300 transition-colors p-2 ml-2 flex-shrink-0"
                                             title="Delete Room"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -596,17 +628,17 @@ export default function AdminPage() {
                         {/* Upload Form */}
                         <form onSubmit={handleUpload} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 space-y-5">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Upload className="w-5 h-5 text-blue-400" />
+                                <Upload className="w-5 h-5 text-gray-300" />
                                 Upload Resource
                             </h3>
 
                             {uploadSuccess && (
-                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl flex items-center gap-2">
+                                <div className="p-3 bg-white/10 border border-white/20 text-gray-300 text-sm rounded-xl flex items-center gap-2">
                                     <CheckCircle className="w-4 h-4 flex-shrink-0" /> {uploadSuccess}
                                 </div>
                             )}
                             {uploadError && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl flex items-center gap-2">
+                                <div className="p-3 bg-white/10 border border-white/20 text-gray-300 text-sm rounded-xl flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 flex-shrink-0" /> {uploadError}
                                 </div>
                             )}
@@ -619,7 +651,7 @@ export default function AdminPage() {
                                     onChange={(e) => setUploadTitle(e.target.value)}
                                     required
                                     placeholder="e.g. Calculus Lecture Notes"
-                                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all"
+                                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-white/20 focus:ring-1 focus:ring-white/20 outline-none transition-all"
                                 />
                             </div>
 
@@ -630,7 +662,7 @@ export default function AdminPage() {
                                     onChange={(e) => setUploadDesc(e.target.value)}
                                     placeholder="Brief description of the resource..."
                                     rows={3}
-                                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all resize-none"
+                                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-white/20 focus:ring-1 focus:ring-white/20 outline-none transition-all resize-none"
                                 />
                             </div>
 
@@ -641,7 +673,7 @@ export default function AdminPage() {
                                         <select
                                             value={uploadType}
                                             onChange={(e) => setUploadType(e.target.value as 'PDF' | 'PPT' | 'DOCX' | 'Video')}
-                                            className="w-full appearance-none bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/40 outline-none transition-all cursor-pointer pr-8"
+                                            className="w-full appearance-none bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:border-white/20 outline-none transition-all cursor-pointer pr-8"
                                         >
                                             <option value="PDF">PDF</option>
                                             <option value="PPT">PPT</option>
@@ -656,7 +688,7 @@ export default function AdminPage() {
                                     <label className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1.5 block">File *</label>
                                     <label
                                         htmlFor="file-upload"
-                                        className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] border-dashed rounded-xl px-4 py-3 text-sm cursor-pointer hover:border-blue-500/30 transition-colors"
+                                        className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] border-dashed rounded-xl px-4 py-3 text-sm cursor-pointer hover:border-white/20 transition-colors"
                                     >
                                         <Upload className="w-4 h-4 text-gray-500" />
                                         <span className={selectedFile ? 'text-white' : 'text-gray-600'}>
@@ -677,7 +709,7 @@ export default function AdminPage() {
                                     <div className="flex gap-2">
                                         <label
                                             htmlFor="thumb-upload"
-                                            className="flex-1 flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] border-dashed rounded-xl px-4 py-3 text-sm cursor-pointer hover:border-blue-500/30 transition-colors"
+                                            className="flex-1 flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] border-dashed rounded-xl px-4 py-3 text-sm cursor-pointer hover:border-white/20 transition-colors"
                                         >
                                             <Shield className="w-4 h-4 text-gray-500" />
                                             <span className={thumbnailFile ? 'text-white' : 'text-gray-600'}>
@@ -709,7 +741,7 @@ export default function AdminPage() {
                             <button
                                 type="submit"
                                 disabled={uploading || !uploadTitle.trim() || !selectedFile}
-                                className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                                className="w-full bg-white/10 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/10 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-white/10 active:scale-[0.98] flex items-center justify-center gap-2"
                             >
                                 {uploading ? (
                                     <>
@@ -728,7 +760,7 @@ export default function AdminPage() {
                         {/* Existing Resources */}
                         <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <BookOpen className="w-5 h-5 text-amber-400" />
+                                <BookOpen className="w-5 h-5 text-gray-300" />
                                 Uploaded Resources ({resources.length})
                             </h3>
                             {resources.length === 0 ? (
@@ -739,9 +771,9 @@ export default function AdminPage() {
                                         <div key={res.resource_id} className="flex items-center justify-between py-3 px-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 {res.resource_type === 'Video' ? (
-                                                    <Video className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                                                    <Video className="w-5 h-5 text-gray-300 flex-shrink-0" />
                                                 ) : (
-                                                    <FileText className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                                                    <FileText className="w-5 h-5 text-gray-300 flex-shrink-0" />
                                                 )}
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-semibold text-white truncate">{res.title}</p>
@@ -750,7 +782,7 @@ export default function AdminPage() {
                                             </div>
                                             <button
                                                 onClick={() => setResourceToDelete(res.resource_id)}
-                                                className="text-gray-600 hover:text-red-400 transition-colors p-2 flex-shrink-0"
+                                                className="text-gray-600 hover:text-gray-300 transition-colors p-2 flex-shrink-0"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -768,8 +800,8 @@ export default function AdminPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0d1224]/80 backdrop-blur-sm animate-fade-in">
                     <div className="bg-[#12182b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
                         <div className="p-6">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-5">
-                                <AlertCircle className="w-6 h-6 text-red-400" />
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-5">
+                                <AlertCircle className="w-6 h-6 text-gray-300" />
                             </div>
                             <h3 className="text-xl font-extrabold text-white mb-2">Delete Room</h3>
                             <p className="text-gray-400 text-sm leading-relaxed">
@@ -787,7 +819,7 @@ export default function AdminPage() {
                             <button
                                 onClick={confirmDeleteRoom}
                                 disabled={isDeletingRoom}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all disabled:opacity-50 shadow-lg shadow-red-500/20 active:scale-[0.98]"
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-white/10 hover:bg-white/10 transition-all disabled:opacity-50 shadow-lg shadow-white/10 active:scale-[0.98]"
                             >
                                 {isDeletingRoom ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -803,13 +835,53 @@ export default function AdminPage() {
                 </div>
             )}
 
+            {/* User Delete Confirmation Modal */}
+            {userToDelete && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0d1224]/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#12182b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-5">
+                                <AlertCircle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-extrabold text-white mb-2">Delete User</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                Are you sure you want to completely delete this user? Their profile, messages, rooms, and auth record will be permanently erased.
+                            </p>
+                        </div>
+                        <div className="flex bg-white/[0.02] border-t border-white/5 p-4 gap-3">
+                            <button
+                                onClick={() => setUserToDelete(null)}
+                                disabled={isDeletingUser}
+                                className="flex-1 py-3 rounded-xl font-bold text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteUser}
+                                disabled={isDeletingUser}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all disabled:opacity-50 shadow-lg active:scale-[0.98]"
+                            >
+                                {isDeletingUser ? (
+                                    <div className="w-5 h-5 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete User
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Resource Delete Confirmation Modal */}
             {resourceToDelete && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0d1224]/80 backdrop-blur-sm animate-fade-in">
                     <div className="bg-[#12182b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up">
                         <div className="p-6">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-5">
-                                <AlertCircle className="w-6 h-6 text-red-400" />
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-5">
+                                <AlertCircle className="w-6 h-6 text-gray-300" />
                             </div>
                             <h3 className="text-xl font-extrabold text-white mb-2">Delete Resource</h3>
                             <p className="text-gray-400 text-sm leading-relaxed">
@@ -827,7 +899,7 @@ export default function AdminPage() {
                             <button
                                 onClick={confirmDeleteResource}
                                 disabled={isDeletingResource}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all disabled:opacity-50 shadow-lg shadow-red-500/20 active:scale-[0.98]"
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-white/10 hover:bg-white/10 transition-all disabled:opacity-50 shadow-lg shadow-white/10 active:scale-[0.98]"
                             >
                                 {isDeletingResource ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

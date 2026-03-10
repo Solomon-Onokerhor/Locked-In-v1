@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Locked In Sign Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#ffffff",
+          "background-light": "#f0f0f0",
+          "background-dark": "#000000",
+          "surface-dark": "#111111",
+          "border-dark": "rgba(255,255,255,0.1)",
+          "text-muted": "#888888",
+        },
+        fontFamily: {
+          "display": ["Space Grotesk", "sans-serif"]
+        },
+        borderRadius: {"DEFAULT": "0", "lg": "0", "xl": "0", "full": "0"},
+      },
+    },
+  }
+</script>
+<style>
+  body { font-family: 'Space Grotesk', sans-serif; }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center font-display">
+<div class="w-full max-w-[480px] p-8 border border-border-dark bg-surface-dark/50 backdrop-blur-sm">
+<div class="mb-8">
+<h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em] mb-1">Locked In.</h1>
+<p class="text-text-muted text-sm font-medium tracking-widest uppercase">Lock in. Level up.</p>
+</div>
+<div class="flex border-b border-border-dark mb-6">
+<a class="flex-1 text-center py-3 text-text-muted hover:text-white transition-colors border-b-[3px] border-transparent font-bold tracking-[0.015em]" href="#">Sign In</a>
+<a class="flex-1 text-center py-3 text-white border-b-[3px] border-white font-bold tracking-[0.015em]" href="#">Sign Up</a>
+</div>
+<form class="space-y-5">
+<div>
+<label class="block text-white text-sm font-medium mb-2">Full Name</label>
+<input class="w-full h-14 bg-surface-dark border border-border-dark text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors px-4 text-base placeholder:text-text-muted" placeholder="Enter your full name" type="text"/>
+</div>
+<div>
+<label class="block text-white text-sm font-medium mb-2">UMaT Student Email</label>
+<input class="w-full h-14 bg-surface-dark border border-border-dark text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors px-4 text-base placeholder:text-text-muted" placeholder="Enter your student email" type="email"/>
+</div>
+<div>
+<label class="block text-white text-sm font-medium mb-2">Create Password</label>
+<div class="relative flex items-center">
+<input class="w-full h-14 bg-surface-dark border border-border-dark text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors px-4 pr-12 text-base placeholder:text-text-muted" placeholder="Create a password" type="password"/>
+<button class="absolute right-0 top-0 bottom-0 px-4 text-text-muted hover:text-white flex items-center justify-center" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<button class="w-full h-14 bg-white text-black font-bold text-lg mt-8 hover:bg-gray-200 transition-colors" type="submit">
+      Create Account
+    </button>
+</form>
+<div class="mt-8 flex items-center">
+<div class="flex-1 border-t border-border-dark"></div>
+<span class="px-4 text-text-muted text-sm">Or continue with</span>
+<div class="flex-1 border-t border-border-dark"></div>
+</div>
+<div class="mt-6">
+<button class="w-full h-14 bg-transparent border border-border-dark text-white font-medium hover:bg-surface-dark transition-colors flex items-center justify-center gap-3" type="button">
+<svg fill="none" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+      Google
+    </button>
+</div>
+<p class="mt-8 text-center text-text-muted text-xs">
+    By continuing, you agree to our <a class="text-white hover:underline" href="#">Terms of Service</a>
+</p>
+</div>
+</body></html>

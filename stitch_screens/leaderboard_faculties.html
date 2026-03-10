@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Locked In Top Faculties Leaderboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffffff",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#000000",
+                        "surface-dark": "#111111",
+                        "border-dark": "rgba(255, 255, 255, 0.1)",
+                        "text-muted": "#9da6b9",
+                        "accent": "#0bda5e"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="w-[280px] flex-shrink-0 border-r border-border-dark bg-background-dark flex flex-col justify-between p-4">
+<div class="flex flex-col gap-8">
+<div class="flex gap-3 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12 border border-border-dark" data-alt="User profile placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLzIkjdY3jZcNKeGH9O-Mhlm8CNJxjBGdcKsZxpsGPvTaKcvZZG0VYJ3-3h9ngjv2o16B36GyK-eqgh0AMMvZxYBxIwygiUEVanSSTwxIMUq4wFhVsFrrseydP4QxLgpd83Wps49j8uiaAk6AOiMoGFSbbK7KEG8lKSWMJYtZWBvqgxZjQeke3AAJYyzpTgvWocEENisfeIq2axUAB0vpYUhju-Ek99n8Arv0EW3O9zFT0BwsApc9hHBNC_Nn6gWAVofoDK3ny-wE");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal">Kofi Mensah</h1>
+<p class="text-text-muted text-sm font-medium leading-normal">Computer Science</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-3 rounded text-text-muted hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">space_dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-text-muted hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<p class="text-sm font-medium leading-normal">Tasks</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-text-muted hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<p class="text-sm font-medium leading-normal">Schedule</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded bg-surface-dark text-white border border-border-dark" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<p class="text-sm font-bold leading-normal">Leaderboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-text-muted hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+</nav>
+</div>
+<button class="flex w-full items-center justify-center rounded h-12 px-4 border border-border-dark hover:bg-surface-dark text-white text-sm font-bold transition-colors">
+<span class="material-symbols-outlined mr-2">logout</span>
+<span>Log Out</span>
+</button>
+</aside>
+<main class="flex-1 overflow-y-auto bg-background-dark p-10">
+<div class="max-w-5xl mx-auto flex flex-col gap-8">
+<header class="flex flex-col gap-6">
+<h1 class="text-white text-[40px] font-black leading-tight tracking-tight">Leaderboard 🏆</h1>
+<div class="flex border-b border-border-dark gap-8">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-text-muted pb-4 pt-2 hover:text-white transition-colors" href="#">
+<p class="text-sm font-bold tracking-wide uppercase">Top Students</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-white text-white pb-4 pt-2" href="#">
+<p class="text-sm font-bold tracking-wide uppercase">Top Faculties</p>
+</a>
+</div>
+</header>
+<div class="grid grid-cols-1 gap-8 mb-8">
+<div class="p-6 rounded border border-border-dark bg-surface-dark flex flex-col gap-4">
+<div>
+<p class="text-text-muted text-sm font-bold uppercase tracking-wider mb-1">Total Faculty Study Hours</p>
+<div class="flex items-end gap-3">
+<p class="text-white text-4xl font-black leading-none">49,200 <span class="text-xl text-text-muted font-bold">hrs</span></p>
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-accent text-sm font-bold">trending_up</span>
+<p class="text-accent text-sm font-bold leading-normal">+12% this week</p>
+</div>
+</div>
+</div>
+<div class="mt-4 flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<p class="text-white text-sm font-bold w-24">Mining</p>
+<div class="flex-1 h-3 bg-background-dark rounded overflow-hidden">
+<div class="h-full bg-white" style="width: 25%;"></div>
+</div>
+<p class="text-text-muted text-xs font-bold w-12 text-right">25%</p>
+</div>
+<div class="flex items-center gap-4">
+<p class="text-white text-sm font-bold w-24">Engineering</p>
+<div class="flex-1 h-3 bg-background-dark rounded overflow-hidden">
+<div class="h-full bg-white/80" style="width: 24%;"></div>
+</div>
+<p class="text-text-muted text-xs font-bold w-12 text-right">24%</p>
+</div>
+<div class="flex items-center gap-4">
+<p class="text-white text-sm font-bold w-24">Science</p>
+<div class="flex-1 h-3 bg-background-dark rounded overflow-hidden">
+<div class="h-full bg-white/60" style="width: 20%;"></div>
+</div>
+<p class="text-text-muted text-xs font-bold w-12 text-right">20%</p>
+</div>
+<div class="flex items-center gap-4">
+<p class="text-white text-sm font-bold w-24">Business</p>
+<div class="flex-1 h-3 bg-background-dark rounded overflow-hidden">
+<div class="h-full bg-white/40" style="width: 17%;"></div>
+</div>
+<p class="text-text-muted text-xs font-bold w-12 text-right">17%</p>
+</div>
+<div class="flex items-center gap-4">
+<p class="text-white text-sm font-bold w-24">Arts</p>
+<div class="flex-1 h-3 bg-background-dark rounded overflow-hidden">
+<div class="h-full bg-white/20" style="width: 14%;"></div>
+</div>
+<p class="text-text-muted text-xs font-bold w-12 text-right">14%</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center px-6 py-3 text-text-muted text-xs font-bold uppercase tracking-wider">
+<div class="w-16">Rank</div>
+<div class="flex-1">Faculty</div>
+<div class="w-32 text-right">Members</div>
+<div class="w-40 text-right">Study Hours</div>
+</div>
+<div class="flex items-center px-6 py-5 rounded border border-border-dark bg-surface-dark hover:border-white/30 transition-colors">
+<div class="w-16 text-2xl font-black text-white">1</div>
+<div class="flex-1 flex items-center gap-4">
+<div class="size-10 rounded bg-white/10 flex items-center justify-center text-white font-bold border border-border-dark">
+                                M
+                            </div>
+<p class="text-white text-lg font-bold">Faculty of Mining and Minerals</p>
+</div>
+<div class="w-32 text-right text-text-muted font-medium">
+                            842 <span class="text-xs">members</span>
+</div>
+<div class="w-40 text-right text-white font-bold text-lg">
+                            12,400 <span class="text-sm text-text-muted font-normal">hrs</span>
+</div>
+</div>
+<div class="flex items-center px-6 py-5 rounded border border-border-dark bg-surface-dark hover:border-white/30 transition-colors">
+<div class="w-16 text-2xl font-black text-white/80">2</div>
+<div class="flex-1 flex items-center gap-4">
+<div class="size-10 rounded bg-white/5 flex items-center justify-center text-white/80 font-bold border border-border-dark">
+                                E
+                            </div>
+<p class="text-white/90 text-lg font-bold">Faculty of Engineering</p>
+</div>
+<div class="w-32 text-right text-text-muted font-medium">
+                            1,200 <span class="text-xs">members</span>
+</div>
+<div class="w-40 text-right text-white font-bold text-lg">
+                            11,800 <span class="text-sm text-text-muted font-normal">hrs</span>
+</div>
+</div>
+<div class="flex items-center px-6 py-5 rounded border border-border-dark bg-surface-dark hover:border-white/30 transition-colors">
+<div class="w-16 text-2xl font-black text-white/60">3</div>
+<div class="flex-1 flex items-center gap-4">
+<div class="size-10 rounded bg-white/5 flex items-center justify-center text-white/60 font-bold border border-border-dark">
+                                S
+                            </div>
+<p class="text-white/80 text-lg font-bold">Faculty of Science</p>
+</div>
+<div class="w-32 text-right text-text-muted font-medium">
+                            950 <span class="text-xs">members</span>
+</div>
+<div class="w-40 text-right text-white font-bold text-lg">
+                            10,200 <span class="text-sm text-text-muted font-normal">hrs</span>
+</div>
+</div>
+<div class="flex items-center px-6 py-5 rounded border border-border-dark bg-surface-dark hover:border-white/30 transition-colors">
+<div class="w-16 text-xl font-bold text-text-muted">4</div>
+<div class="flex-1 flex items-center gap-4">
+<div class="size-10 rounded bg-transparent flex items-center justify-center text-text-muted font-bold border border-border-dark">
+                                B
+                            </div>
+<p class="text-white/70 text-base font-medium">Faculty of Business</p>
+</div>
+<div class="w-32 text-right text-text-muted font-medium">
+                            600 <span class="text-xs">members</span>
+</div>
+<div class="w-40 text-right text-white/90 font-bold text-base">
+                            8,500 <span class="text-sm text-text-muted font-normal">hrs</span>
+</div>
+</div>
+<div class="flex items-center px-6 py-5 rounded border border-border-dark bg-surface-dark hover:border-white/30 transition-colors">
+<div class="w-16 text-xl font-bold text-text-muted">5</div>
+<div class="flex-1 flex items-center gap-4">
+<div class="size-10 rounded bg-transparent flex items-center justify-center text-text-muted font-bold border border-border-dark">
+                                A
+                            </div>
+<p class="text-white/70 text-base font-medium">Faculty of Arts</p>
+</div>
+<div class="w-32 text-right text-text-muted font-medium">
+                            450 <span class="text-xs">members</span>
+</div>
+<div class="w-40 text-right text-white/90 font-bold text-base">
+                            6,300 <span class="text-sm text-text-muted font-normal">hrs</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

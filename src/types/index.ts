@@ -11,7 +11,8 @@ export interface Profile {
     name: string;
     email: string;
     faculty?: string;
-    level?: string;
+    level?: string; // used for Class/Level
+    programme?: string;
     courses?: string[];
     role: UserRole;
     joined_rooms: string[];
