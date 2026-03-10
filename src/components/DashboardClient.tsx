@@ -20,6 +20,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     const [rooms, setRooms] = useState<Room[]>(initialRooms);
     const [myRoomIds, setMyRoomIds] = useState<Set<string>>(new Set());
     const [buddyRoomCounts, setBuddyRoomCounts] = useState<Record<string, number>>({});
+    const [activeSoloCount, setActiveSoloCount] = useState(0);
     const [activeTab, setActiveTab] = useState<'all' | 'study' | 'skill' | 'my_rooms' | 'upcoming'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
@@ -45,6 +46,15 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         if (memberData) {
             setMyRoomIds(new Set(memberData.map(m => m.room_id)));
         }
+
+        // Fetch active solo lockers (recent 30 mins)
+        const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const { count } = await supabase
+            .from('solo_sessions')
+            .select('*', { count: 'exact', head: true })
+            .gt('completed_at', thirtyMinsAgo);
+
+        setActiveSoloCount(count || 0);
 
         // Fetch buddy activity
         const { data: buddiesData } = await supabase
@@ -148,16 +158,16 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                             </div>
                             <div className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Streak</h3>
-                                    <span className="text-[#888888]"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-80q-100 0-170-70.5T240-322q0-46 17-86.5t48-73.5q25-25 57-46t64-37q-9-33-8-68t16-68q23 35 59 55t77 24q5-42-4.5-85T502-780q62 25 100 77t38 117q0 61-26 113.5T541-379q14-11 32-15t38-4q30 5 57.5 21t46.5 42q20-31 32.5-66.5T760-476q0 21-6 41t-15 39q-22 56-65 92t-99 43L480-80Z" /></svg></span>
+                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Focus Score</h3>
+                                    <Trophy className="w-6 h-6 text-amber-400" />
                                 </div>
                                 <div className="flex flex-col gap-1 mt-4">
-                                    <span className="text-white text-4xl font-black">{profile ? profile.current_streak : '0'}</span>
-                                    <span className="text-[#888888] text-sm">Days active</span>
+                                    <span className="text-white text-4xl font-black">{profile ? profile.focus_score || 0 : '0'}</span>
+                                    <span className="text-[#888888] text-sm">Total points earned</span>
                                 </div>
                                 <div className="flex gap-1.5 mt-6 h-2">
                                     {[...Array(5)].map((_, i) => (
-                                        <div key={i} className={`flex-1 rounded-full ${i < (profile?.current_streak || 0) % 5 ? 'bg-white' : 'bg-white/20'}`}></div>
+                                        <div key={i} className={`flex-1 rounded-full ${i < ((profile?.focus_score || 0) / 10) % 5 ? 'bg-amber-400' : 'bg-white/10'}`}></div>
                                     ))}
                                 </div>
                             </div>

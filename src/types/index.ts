@@ -19,6 +19,8 @@ export interface Profile {
     total_focus_time_minutes: number;
     study_buddies: number;
     current_streak: number;
+    focus_score?: number;
+    sessions_completed?: number;
     last_active_date: string;
     is_verified?: boolean;
     badge_label?: string;
@@ -99,4 +101,12 @@ export interface BuddyConnection {
     user_id: string;
     buddy_id: string;
     created_at: string;
+}
+
+export interface SoloSession {
+    id: string;
+    user_id: string;
+    label: string;
+    duration_minutes: number;
+    completed_at: string;
 }
