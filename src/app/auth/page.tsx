@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { BookOpen, LogIn, UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage() {
-    const { session, loading } = useAuth();
+    const { session, loading, profile } = useAuth();
     const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [authLoading, setAuthLoading] = useState(false);
@@ -18,22 +18,18 @@ export default function AuthPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
-    const [faculty, setFaculty] = useState('Faculty of Engineering');
-    const [level, setLevel] = useState('100');
 
-    const FACULTIES = [
-        'Faculty of Mining and Minerals Technology',
-        'Faculty of Engineering',
-        'Faculty of Computing and Mathematical Sciences',
-        'Faculty Of Integrated Management Studies',
-        'Faculty of Geosciences and Environmental Studies',
-        'School of Petroleum Studies'
-    ];
 
 
     useEffect(() => {
-        if (!loading && session) router.push('/');
-    }, [loading, session, router]);
+        if (!loading && session) {
+            if (profile && !profile.faculty) {
+                router.push('/onboarding');
+            } else if (profile && profile.faculty) {
+                router.push('/');
+            }
+        }
+    }, [loading, session, profile, router]);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,12 +49,13 @@ export default function AuthPage() {
                 if (signUpError) throw signUpError;
                 if (data.user) {
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: data.user.id, name, email, role: 'student', faculty, level },
+                        { id: data.user.id, name, email, role: 'student' },
                     ]);
                     if (profileError) throw profileError;
                 }
             }
-            router.push('/');
+            // Redirection is handled by the useEffect above
+
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
@@ -130,37 +127,7 @@ export default function AuthPage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Faculty</label>
-                                <div className="relative group">
-                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
-                                    <select
-                                        value={faculty}
-                                        onChange={(e) => setFaculty(e.target.value)}
-                                        className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all text-white appearance-none"
-                                    >
-                                        {FACULTIES.map(fac => (
-                                            <option key={fac} value={fac} className="bg-brand-primary text-white">{fac}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Academic Level</label>
-                                <div className="relative group">
-                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-brand-accent transition-colors duration-300" />
-                                    <select
-                                        value={level}
-                                        onChange={(e) => setLevel(e.target.value)}
-                                        className="w-full glass-panel !bg-black/20 focus:!bg-black/40 py-4 pl-12 pr-4 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/30 outline-none transition-all text-white appearance-none"
-                                    >
-                                        {['100', '200', '300', '400'].map(lvl => (
-                                            <option key={lvl} value={lvl} className="bg-brand-primary text-white">Level {lvl}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
                         </>
                     )}
 

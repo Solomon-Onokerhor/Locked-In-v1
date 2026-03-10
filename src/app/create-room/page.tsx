@@ -51,7 +51,13 @@ export default function CreateRoomPage() {
                 throw new Error('Description cannot exceed 1000 characters');
             }
 
-            const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+            const selectedDate = new Date(dateTime).getTime();
+            if (selectedDate < Date.now()) {
+                throw new Error('Room date and time must be in the future.');
+            }
+
+            // Updated regex to allow query parameters (?, &, =, etc)
+            const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?&#=-]*)*\/?$/i;
 
             if (sessionMode === 'virtual' && (!meetingLink || !urlRegex.test(meetingLink))) {
                 throw new Error('Please enter a valid meeting URL (e.g., Zoom/Google Meet)');

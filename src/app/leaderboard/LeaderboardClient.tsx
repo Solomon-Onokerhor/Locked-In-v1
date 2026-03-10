@@ -95,7 +95,7 @@ export function LeaderboardClient() {
             </div>
 
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10">
-                <header className="mb-6 md:mb-10 mt-2 md:mt-0">
+                <header className="mb-6 md:mb-10 mt-2 md:mt-0" data-tour="leaderboard">
                     <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white flex items-center gap-3">
                         <Trophy className="w-8 h-8 text-amber-400" />
                         Campus Leaderboards
@@ -109,8 +109,8 @@ export function LeaderboardClient() {
                     <button
                         onClick={() => setActiveTab('students')}
                         className={`px-6 py-2 text-[13px] font-semibold rounded-full transition-all duration-200 flex items-center gap-2 ${activeTab === 'students'
-                                ? 'bg-amber-500/15 text-amber-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-300'
+                            ? 'bg-amber-500/15 text-amber-400 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
                         <User className="w-3.5 h-3.5" />
@@ -119,8 +119,8 @@ export function LeaderboardClient() {
                     <button
                         onClick={() => setActiveTab('faculties')}
                         className={`px-6 py-2 text-[13px] font-semibold rounded-full transition-all duration-200 flex items-center gap-2 ${activeTab === 'faculties'
-                                ? 'bg-amber-500/15 text-amber-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-300'
+                            ? 'bg-amber-500/15 text-amber-400 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
                         <Building2 className="w-3.5 h-3.5" />
@@ -140,9 +140,9 @@ export function LeaderboardClient() {
                             ) : (
                                 topStudents.map((student, index) => (
                                     <div key={student.id} className={`glass-card p-4 rounded-2xl border flex items-center justify-between transition-colors ${index === 0 ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]' :
-                                            index === 1 ? 'bg-gray-300/5 border-gray-400/20' :
-                                                index === 2 ? 'bg-amber-700/5 border-amber-700/20' :
-                                                    'border-white/5 hover:bg-white/[0.02]'
+                                        index === 1 ? 'bg-gray-300/5 border-gray-400/20' :
+                                            index === 2 ? 'bg-amber-700/5 border-amber-700/20' :
+                                                'border-white/5 hover:bg-white/[0.02]'
                                         }`}>
                                         <div className="flex items-center gap-4 min-w-0">
                                             <div className="w-10 font-bold text-gray-400 text-center flex-shrink-0">
@@ -188,7 +188,7 @@ export function LeaderboardClient() {
                             ) : (
                                 topFaculties.map((fac, index) => (
                                     <div key={fac.faculty} className={`glass-card p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${index === 0 ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] md:scale-[1.02]' :
-                                            'border-white/5 hover:bg-white/[0.04]'
+                                        'border-white/5 hover:bg-white/[0.04]'
                                         }`}>
                                         <div className="flex items-center gap-4 min-w-0">
                                             <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center font-black text-2xl shrink-0">

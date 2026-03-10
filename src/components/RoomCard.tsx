@@ -32,6 +32,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
         <Link
             href={`/room/${room.room_id}`}
             className="group flex flex-col glass-card border border-white/5 hover:border-brand-accent/50 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 overflow-hidden relative p-0"
+            data-tour="join-room"
         >
             <div className="aspect-video w-full relative overflow-hidden">
                 <Image

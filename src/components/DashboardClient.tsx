@@ -27,10 +27,13 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     useEffect(() => {
         if (!loading && !session) {
             router.push('/auth');
+        } else if (!loading && session && profile && !profile.faculty) {
+            // Old accounts missing onboarding data → force onboarding
+            router.push('/onboarding');
         } else if (session) {
             fetchPrivateData();
         }
-    }, [session, loading, router]);
+    }, [session, loading, profile, router]);
 
     const fetchPrivateData = async () => {
         // Fetch user's joined rooms
@@ -111,7 +114,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10 animate-fade-in">
                 {/* Header Section */}
-                <header className="mb-6 md:mb-10 mt-2 md:mt-0">
+                <header className="mb-6 md:mb-10 mt-2 md:mt-0" data-tour="welcome">
                     <div className="flex items-end justify-between mb-6">
                         <div>
                             <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white">Welcome back{session?.user?.email ? `, ${session.user.email.split('@')[0]}` : ''}</h2>
@@ -144,7 +147,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                 </header>
 
                 {/* Solo Lock-In Timer */}
-                <div className="mb-6 md:mb-10">
+                <div className="mb-6 md:mb-10" data-tour="solo-timer">
                     <SoloTimer />
                 </div>
 
@@ -180,7 +183,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                 </div>
 
                 {/* Premium Search + Tabs */}
-                <div className="flex flex-col gap-6 mb-10">
+                <div className="flex flex-col gap-6 mb-10" data-tour="room-tabs">
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
                         <div className="flex glass-panel p-1.5 w-fit max-w-full overflow-x-auto scrollbar-hide">
                             {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
@@ -259,7 +262,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                             ))
                         )}
 
-                        <Link href="/create-room" className="hidden md:flex glass-card !bg-transparent hover:!bg-brand-accent/5 border-dashed border-2 !border-white/10 hover:!border-brand-accent/50 cursor-pointer items-center justify-center p-8 min-h-[320px] group transition-all">
+                        <Link href="/create-room" data-tour="host-room" className="hidden md:flex glass-card !bg-transparent hover:!bg-brand-accent/5 border-dashed border-2 !border-white/10 hover:!border-brand-accent/50 cursor-pointer items-center justify-center p-8 min-h-[320px] group transition-all">
                             <div className="text-center">
                                 <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-brand-accent/20 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                                     <PlusCircle className="text-3xl text-gray-500 group-hover:text-brand-accent w-8 h-8 transition-colors" />
@@ -273,6 +276,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
                 <Link
                     href="/create-room"
+                    data-tour="host-room"
                     className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 active:scale-90 transition-transform"
                 >
                     <PlusCircle className="w-6 h-6 text-white" />

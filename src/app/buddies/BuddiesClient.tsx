@@ -164,7 +164,7 @@ export function BuddiesClient() {
 
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72 relative z-10">
                 {/* Header */}
-                <header className="mb-6 md:mb-10 mt-2 md:mt-0">
+                <header className="mb-6 md:mb-10 mt-2 md:mt-0" data-tour="buddies">
                     <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white flex items-center gap-3">
                         <Users className="w-8 h-8 text-indigo-400" />
                         Study Buddies
@@ -179,8 +179,8 @@ export function BuddiesClient() {
                     <button
                         onClick={() => setActiveTab('my_buddies')}
                         className={`px-6 py-2 text-[13px] font-semibold rounded-full transition-all duration-200 ${activeTab === 'my_buddies'
-                                ? 'bg-blue-500/15 text-blue-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-300'
+                            ? 'bg-blue-500/15 text-blue-400 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
                         My Buddies ({myBuddies.length})
@@ -188,8 +188,8 @@ export function BuddiesClient() {
                     <button
                         onClick={() => setActiveTab('discover')}
                         className={`px-6 py-2 text-[13px] font-semibold rounded-full transition-all duration-200 flex items-center gap-2 ${activeTab === 'discover'
-                                ? 'bg-blue-500/15 text-blue-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-300'
+                            ? 'bg-blue-500/15 text-blue-400 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
                         <Search className="w-3.5 h-3.5" />

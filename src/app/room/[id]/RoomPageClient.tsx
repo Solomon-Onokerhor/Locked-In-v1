@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
 import {
-    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap, Edit
+    AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap, Edit, UserCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { Chat } from '@/components/Chat';
@@ -26,6 +26,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [members, setMembers] = useState<(RoomMember & { profiles: Profile | null })[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [confirmingAttendance, setConfirmingAttendance] = useState(false);
 
     // Removal of mandatory redirect to allow preview mode
     // useEffect(() => {
@@ -100,6 +101,28 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             setError(err instanceof Error ? err.message : 'Failed to lock in');
         } finally {
             setLockingIn(false);
+        }
+    };
+
+    const handleConfirmAttendance = async () => {
+        if (!session || !room || !membership) return;
+        setConfirmingAttendance(true);
+        setError(null);
+
+        try {
+            const { error: rpcError } = await supabase.rpc('confirm_room_attendance', {
+                p_room_id: roomId
+            });
+
+            if (rpcError) throw rpcError;
+
+            // Optimistic update
+            setMembership({ ...membership, attendance_confirmed: true });
+            await fetchMembers(); // Refresh the sidebar to show confirmed status if you ever add an indicator there
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to confirm attendance');
+        } finally {
+            setConfirmingAttendance(false);
         }
     };
 
@@ -316,158 +339,196 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                     </button>
                 </section>
 
-                {!membership ? (
-                    <section className="glass-card p-8 mb-8">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center">
-                                <Lock className="w-7 h-7 text-brand-accent" />
+                {/* Unified Action & Status Bar */}
+                <section className="glass-card p-6 border border-white/10 mb-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                    {/* Subtle animated background gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-accent/5 via-transparent to-brand-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+                        {/* Status Left */}
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 w-full lg:w-auto">
+                            <div className="flex items-center gap-3">
+                                {room.session_mode === 'in_person' ? (
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                                        <MapPin className="w-4 h-4" />
+                                        <span className="font-bold text-sm">{room.physical_location}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+                                        <Video className="w-4 h-4" />
+                                        <span className="font-bold text-sm">Virtual Session</span>
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <h2 className="text-xl font-extrabold text-white">
-                                    {session ? 'Lock in to this Room' : 'Join the Scholars'}
-                                </h2>
-                                <p className="text-gray-500 text-sm">
-                                    {!session
-                                        ? 'Create an account to join this study session and access resources.'
-                                        : (room.is_paid ? `Pay GHS ${room.price} to lock in to this session` : 'Free to lock in — start learning now')}
-                                </p>
+
+                            <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+                                <div className={`w-2 h-2 rounded-full ${sessionStatus === 'live' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></div>
+                                <span className="text-sm font-bold tracking-wider text-gray-300 capitalize">{sessionStatus}</span>
                             </div>
+
+                            {room.session_mode === 'in_person' && room.location_note && (
+                                <span className="text-xs text-gray-400 italic">"{room.location_note}"</span>
+                            )}
                         </div>
 
-                        {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg flex items-center gap-2 mb-4">
-                                <AlertCircle className="w-4 h-4" /> {error}
-                            </div>
-                        )}
-
-                        {session ? (
+                        {/* Action Right */}
+                        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
                             <button
-                                onClick={handleLockIn}
-                                disabled={lockingIn}
-                                className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                                onClick={handleShare}
+                                className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                                title="Share Session"
                             >
-                                {lockingIn ? (
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : room.is_paid ? (
-                                    <><CreditCard className="w-5 h-5" /> Pay & Lock In</>
-                                ) : (
-                                    <><CheckCircle className="w-5 h-5" /> Lock In Now</>
-                                )}
+                                <Share2 className="w-5 h-5" />
                             </button>
-                        ) : (
-                            <Link
-                                href="/auth"
-                                className="inline-flex items-center gap-2 bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-brand-accent/20 transition-all active:scale-[0.98]"
-                            >
-                                <Zap className="w-5 h-5" /> Create Account to Join
-                            </Link>
-                        )}
-                    </section>
-                ) : (
-                    <section className="space-y-6">
-                        <div className="glass-card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <CheckCircle className="w-6 h-6 text-green-400" />
-                                <div>
-                                    <h3 className="text-green-400 font-bold">You are a confirmed member</h3>
-                                </div>
-                            </div>
 
-                            {room.session_mode === 'virtual' && room.meeting_link && canAccessLink ? (
-                                <a
-                                    href={room.meeting_link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
-                                >
-                                    <Video className="w-4 h-4" />
-                                    Lock In to Video Call
-                                </a>
-                            ) : room.session_mode === 'virtual' && !canAccessLink && sessionStatus === 'upcoming' ? (
-                                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-gray-400">
-                                    Link available 10m before start
-                                </div>
-                            ) : null}
-
-                            {/* WhatsApp Connector Button */}
-                            {room.whatsapp_group_link && (
+                            {room.whatsapp_group_link && membership && (
                                 <a
                                     href={room.whatsapp_group_link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]"
+                                    className="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                                    title="Join WhatsApp Group"
                                 >
-                                    <Share2 className="w-4 h-4 text-white" />
-                                    Join WhatsApp Group
+                                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.12-.407-.179-1.098-.484-1.554-.863-.456-.379-1.168-1.503-1.564-2.12-.396-.617-.417-1.127-.245-1.543.172-.417.472-.544.698-.592.226-.048.455-.008.629.071.173.08.368.428.53.766.162.338.316.634.348.74.032.106.012.272-.07.412-.082.14-.146.224-.316.42-.17.196-.301.353-.418.497-.183.226-.376.471-.161.84.215.369.832 1.272 1.638 1.954.806.682 1.458.91 1.77 1.05.312.14.542.115.753-.053.211-.168.618-.68.802-.916.184-.236.368-.192.65-.084.282.108 1.838.866 2.152 1.022.314.156.524.232.592.356.068.124.085.672-.059 1.077z" /></svg>
                                 </a>
                             )}
-                        </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                            <div className="lg:col-span-3">
+                            {error && (
+                                <span className="text-red-400 text-sm font-medium mr-2 max-w-[200px] truncate" title={error}>{error}</span>
+                            )}
+
+                            {/* Main Action Logic */}
+                            {!session ? (
+                                <Link
+                                    href="/auth"
+                                    className="px-6 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] flex items-center gap-2 hover:-translate-y-0.5"
+                                >
+                                    <Zap className="w-5 h-5" /> Sign In to Join
+                                </Link>
+                            ) : !membership ? (
+                                <button
+                                    onClick={handleLockIn}
+                                    disabled={lockingIn}
+                                    className={`px-8 py-3 font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 ${room.is_paid
+                                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
+                                        : 'bg-brand-accent hover:bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(37,99,235,0.6)]'
+                                        }`}
+                                >
+                                    {lockingIn ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : room.is_paid ? (
+                                        <><CreditCard className="w-5 h-5" /> Pay GHS {room.price}</>
+                                    ) : (
+                                        <><CheckCircle className="w-5 h-5" /> Lock In Now</>
+                                    )}
+                                </button>
+                            ) : (
+                                /* User IS a member */
+                                <>
+                                    {room.session_mode === 'virtual' && room.meeting_link && canAccessLink ? (
+                                        <a
+                                            href={room.meeting_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95 flex items-center gap-2"
+                                        >
+                                            <Video className="w-5 h-5" /> Join Call
+                                        </a>
+                                    ) : room.session_mode === 'virtual' && !canAccessLink && sessionStatus === 'upcoming' ? (
+                                        <span className="px-6 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl flex items-center gap-2">
+                                            <Clock className="w-5 h-5" /> Link unlocks 10m before start
+                                        </span>
+                                    ) : null}
+
+                                    {sessionStatus === 'live' && (
+                                        <span className="px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold rounded-xl flex items-center gap-2 cursor-default">
+                                            <CheckCircle className="w-5 h-5" /> Attended
+                                        </span>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div className="lg:col-span-3">
+                        {membership ? (
+                            <div className="animate-fade-in-up">
                                 <Chat roomId={room.room_id} userProfile={profile} />
                             </div>
+                        ) : (
+                            <div className="glass-card flex flex-col items-center justify-center p-12 text-center h-[600px] border border-white/5 relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                <Lock className="w-16 h-16 text-gray-600 mb-6 group-hover:scale-110 transition-transform duration-500 relative z-10" />
+                                <h3 className="text-3xl font-black text-white mb-3 tracking-tight relative z-10">Members Only Space</h3>
+                                <p className="text-gray-400 max-w-sm text-lg relative z-10">Lock in to this session to view the live chat, share resources, and connect with other scholars.</p>
+                            </div>
+                        )}
+                    </div>
 
-                            <aside className="lg:col-span-1">
-                                <div className="glass-card p-5 sticky top-8">
-                                    <div className="flex items-center gap-2 mb-6">
-                                        <Users className="w-4 h-4 text-brand-accent" />
-                                        <h3 className="text-sm font-black uppercase tracking-widest text-white">Scholars Locked In</h3>
-                                        <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-[10px] font-bold text-gray-400">
-                                            {members.length}/{room.max_members}
-                                        </span>
-                                    </div>
+                    <aside className="lg:col-span-1">
+                        <div className="glass-card p-5 sticky top-8">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Users className="w-4 h-4 text-brand-accent" />
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">Scholars Locked In</h3>
+                                <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-[10px] font-bold text-gray-400">
+                                    {members.length}/{room.max_members}
+                                </span>
+                            </div>
 
-                                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                        {members.map((member) => (
-                                            <div key={member.id} className="flex items-center gap-3 group">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSelectedUserId(member.user_id)}
-                                                    className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:border-brand-accent/50 transition-colors cursor-pointer"
-                                                >
-                                                    {member.profiles?.name?.charAt(0).toUpperCase() || '?'}
-                                                </button>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setSelectedUserId(member.user_id)}
-                                                            className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer text-left"
-                                                        >
-                                                            <p className="text-xs font-bold text-white truncate group-hover:text-brand-accent transition-colors">
-                                                                {member.profiles?.name || 'Scholar'}
-                                                                {session && member.user_id === session.user.id && ' (You)'}
-                                                            </p>
-                                                            {member.profiles?.is_verified && (
-                                                                <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>
-                                                                    <Check className="w-1.5 h-1.5 text-white" strokeWidth={5} />
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">
-                                                            {member.role_in_room === 'creator' ? 'Host' : 'Member'}
+                            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                {members.length === 0 ? (
+                                    <p className="text-xs text-center text-gray-500 py-4">No scholars have locked in yet.</p>
+                                ) : (
+                                    members.map((member) => (
+                                        <div key={member.id} className="flex items-center gap-3 group">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedUserId(member.user_id)}
+                                                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:border-brand-accent/50 transition-colors cursor-pointer"
+                                            >
+                                                {member.profiles?.name?.charAt(0).toUpperCase() || '?'}
+                                            </button>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedUserId(member.user_id)}
+                                                        className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer text-left"
+                                                    >
+                                                        <p className="text-xs font-bold text-white truncate group-hover:text-brand-accent transition-colors">
+                                                            {member.profiles?.name || 'Scholar'}
+                                                            {session && member.user_id === session.user.id && ' (You)'}
                                                         </p>
-                                                        {member.profiles?.badge_label && (
-                                                            <>
-                                                                <span className="text-gray-700">•</span>
-                                                                <span className="text-[8px] text-brand-accent font-black uppercase px-1 rounded bg-brand-accent/5">
-                                                                    {member.profiles.badge_label}
-                                                                </span>
-                                                            </>
+                                                        {member.profiles?.is_verified && (
+                                                            <div className="bg-blue-500 rounded-full p-0.5" title={member.profiles?.badge_label || 'Verified Scholar'}>
+                                                                <Check className="w-1.5 h-1.5 text-white" strokeWidth={5} />
+                                                            </div>
                                                         )}
-                                                    </div>
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">
+                                                        {member.role_in_room === 'creator' ? 'Host' : 'Member'}
+                                                    </p>
+                                                    {member.profiles?.badge_label && (
+                                                        <>
+                                                            <span className="text-gray-700">•</span>
+                                                            <span className="text-[8px] text-brand-accent font-black uppercase px-1 rounded bg-brand-accent/5">
+                                                                {member.profiles.badge_label}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </aside>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </section>
-                )}
+                    </aside>
+                </div>
 
                 <UserProfileModal
                     isOpen={!!selectedUserId}

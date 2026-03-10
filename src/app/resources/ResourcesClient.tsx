@@ -247,7 +247,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
         <div className="min-h-screen bg-brand-primary">
             <Sidebar />
             <main className="px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-8 md:ml-72">
-                <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center justify-between mb-10" data-tour="resources">
                     <div>
                         <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
                             <Library className="w-8 h-8 text-brand-accent" /> Free Resources
