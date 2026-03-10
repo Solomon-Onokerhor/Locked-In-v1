@@ -56,8 +56,8 @@ export function TourOverlay() {
                     });
                     setIsVisible(true);
                 }, 400);
-            } else if (attempts < 20) {
-                retryRef.current = setTimeout(() => findTarget(attempts + 1), 250);
+            } else if (attempts < 10) {
+                retryRef.current = setTimeout(() => findTarget(attempts + 1), 150);
             } else {
                 // Fallback: no target found, show centered tooltip
                 setTargetRect(null);
@@ -86,6 +86,17 @@ export function TourOverlay() {
             window.removeEventListener('resize', handler);
         };
     }, [isTourActive, currentStep, updateRect]);
+
+    // Auto-scroll the tooltip into view so the text guide is always visible
+    useEffect(() => {
+        if (isVisible && tooltipRef.current) {
+            // Small delay to let the tooltip position settle
+            const timer = setTimeout(() => {
+                tooltipRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, currentStepIndex]);
 
     if (!isTourActive || !currentStep || !isVisible) return null;
 

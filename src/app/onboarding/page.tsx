@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/AuthProvider";
 import { StepCard } from "@/components/onboarding/StepCard";
 import { ArrowRight } from "lucide-react";
 import { FACULTIES } from "@/lib/constants";
 
 export default function OnboardingPage() {
     const router = useRouter();
+    const { refreshProfile } = useAuth();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -106,6 +108,9 @@ export default function OnboardingPage() {
                     });
                 if (insertError) throw insertError;
             }
+
+            // Refresh the global profile state so OnboardingEnforcer sees a complete profile
+            await refreshProfile();
 
             // Redirect to dashboard with tour active
             router.push("/?tour=1");
