@@ -70,17 +70,41 @@ export default function OnboardingPage() {
         setError("");
 
         try {
-            const { error: updateError } = await supabase
+            // First, check if the profile exists to decide between update and insert
+            const { data: existingProfile } = await supabase
                 .from("profiles")
-                .upsert({
-                    id: userId,
-                    email: email,
-                    faculty: faculty.trim(),
-                    programme: programme.trim(),
-                    level: level.trim()
-                }, { onConflict: 'id' });
+                .select("id")
+                .eq("id", userId)
+                .single();
 
-            if (updateError) throw updateError;
+            if (existingProfile) {
+                const { error: updateError } = await supabase
+                    .from("profiles")
+                    .update({
+                        faculty: faculty.trim(),
+                        programme: programme.trim(),
+                        level: level.trim()
+                    })
+                    .eq('id', userId);
+                if (updateError) throw updateError;
+            } else {
+                // If profile is missing (e.g. failed insert during signup), create it
+                const { data: authUser } = await supabase.auth.getUser();
+                const userName = authUser.user?.user_metadata?.full_name || "Scholar";
+
+                const { error: insertError } = await supabase
+                    .from("profiles")
+                    .insert({
+                        id: userId,
+                        email: email,
+                        name: userName,
+                        faculty: faculty.trim(),
+                        programme: programme.trim(),
+                        level: level.trim(),
+                        role: 'student'
+                    });
+                if (insertError) throw insertError;
+            }
 
             // Redirect to dashboard with tour active
             router.push("/?tour=1");
