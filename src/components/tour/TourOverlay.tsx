@@ -87,6 +87,17 @@ export function TourOverlay() {
         };
     }, [isTourActive, currentStep, updateRect]);
 
+    // Auto-scroll the tooltip into view so the text guide is always visible
+    useEffect(() => {
+        if (isVisible && tooltipRef.current) {
+            // Small delay to let the tooltip position settle
+            const timer = setTimeout(() => {
+                tooltipRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, currentStepIndex]);
+
     if (!isTourActive || !currentStep || !isVisible) return null;
 
     const isLastStep = currentStepIndex === totalSteps - 1;
