@@ -284,8 +284,8 @@ export function Chat({ roomId, userProfile }: ChatProps) {
     // Generate avatar color from sender ID
     const getAvatarColor = (senderId: string) => {
         const colors = [
-            'bg-blue-500', 'bg-emerald-500', 'bg-purple-500',
-            'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500'
+            'bg-white/10', 'bg-white/10', 'bg-white/10',
+            'bg-white/10', 'bg-white/20', 'bg-white/15', 'bg-white/10'
         ];
         const hash = senderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return colors[hash % colors.length];
@@ -296,15 +296,15 @@ export function Chat({ roomId, userProfile }: ChatProps) {
             {/* Chat Header */}
             <div className="px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03] flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <MessageCircle className="w-4 h-4 text-blue-400" />
+                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+                        <MessageCircle className="w-4 h-4 text-gray-300" />
                     </div>
                     <div>
                         <h3 className="font-bold text-sm text-white">Live Chat</h3>
                         <span className="text-[10px] text-gray-500">{messages.length} messages</span>
                     </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-white/10 text-gray-300 text-[10px] font-bold uppercase tracking-wider">
                     Real-time
                 </span>
             </div>
@@ -319,7 +319,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                 {unreadCount > 0 && !isAtBottom && (
                     <button
                         onClick={scrollToBottom}
-                        className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 animate-bounce z-20"
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/10 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 animate-bounce z-20"
                     >
                         <ChevronDown className="w-3.5 h-3.5" />
                         {unreadCount} new {unreadCount === 1 ? 'message' : 'messages'}
@@ -367,7 +367,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                                         >
                                             <span className="text-[11px] text-gray-500 font-semibold group-hover:text-brand-accent transition-colors">{senderName}</span>
                                             {isVerified && (
-                                                <div className="bg-blue-500 rounded-full p-0.5" title={badgeLabel || 'Verified Scholar'}>
+                                                <div className="bg-white/10 rounded-full p-0.5" title={badgeLabel || 'Verified Scholar'}>
                                                     <Check className="w-2 h-2 text-white" strokeWidth={4} />
                                                 </div>
                                             )}
@@ -379,7 +379,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
 
                                     {/* Message bubble */}
                                     <div className={`px-4 py-2.5 text-sm leading-relaxed ${own
-                                        ? 'bg-blue-500 text-white rounded-2xl rounded-br-md'
+                                        ? 'bg-white/10 text-white rounded-2xl rounded-br-md'
                                         : 'bg-white/[0.06] text-gray-200 rounded-2xl rounded-bl-md border border-white/[0.04]'
                                         }`}>
                                         {msg.text}
@@ -388,7 +388,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                                     {/* Timestamp */}
                                     <span className={`text-[10px] text-gray-600 mt-1 flex items-center gap-1 ${own ? 'mr-1' : 'ml-1'}`}>
                                         {own ? (
-                                            <Check className="w-2.5 h-2.5 text-blue-400/80" />
+                                            <Check className="w-2.5 h-2.5 text-gray-300" />
                                         ) : (
                                             <Clock className="w-2.5 h-2.5" />
                                         )}
@@ -415,12 +415,12 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
                     maxLength={500}
-                    className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all"
+                    className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all"
                 />
                 <button
                     type="submit"
                     disabled={loading || !newMessage.trim()}
-                    className="w-10 h-10 rounded-xl bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-blue-500/20"
+                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/10 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-white/10"
                 >
                     {loading ? (
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

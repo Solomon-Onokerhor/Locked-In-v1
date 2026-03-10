@@ -230,8 +230,8 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'Video': return <Video className="w-5 h-5 text-purple-400" />;
-            default: return <FileText className="w-5 h-5 text-blue-400" />;
+            case 'Video': return <Video className="w-5 h-5 text-gray-300" />;
+            default: return <FileText className="w-5 h-5 text-gray-300" />;
         }
     };
 
@@ -257,7 +257,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                     {isAdmin && (
                         <button
                             onClick={() => setShowUpload(!showUpload)}
-                            className="bg-brand-accent hover:bg-brand-accent-hover text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand-accent/20 transition-all"
+                            className="bg-brand-accent hover:bg-brand-accent-hover text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-white/10 transition-all"
                         >
                             <Plus className="w-5 h-5" /> Upload Resource
                         </button>
@@ -273,10 +273,10 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                         <form onSubmit={handleUpload} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <input type="text" required placeholder="Resource title" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)}
-                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                 />
                                 <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'PDF' | 'PPT' | 'DOCX' | 'Video')}
-                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-gray-300"
+                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all text-gray-300"
                                 >
                                     <option value="PDF">PDF</option>
                                     <option value="PPT">PPT</option>
@@ -285,15 +285,15 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                                 </select>
                             </div>
                             <textarea rows={2} placeholder="Description" value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600 resize-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600 resize-none"
                             />
                             <div className="grid grid-cols-2 gap-4">
                                 <input type="url" required placeholder="File URL (e.g., Google Drive link)" value={uploadUrl} onChange={(e) => setUploadUrl(e.target.value)}
-                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                    className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                 />
                                 <div className="flex gap-2">
                                     <input type="url" placeholder="Thumbnail URL" value={uploadThumbnailUrl} onChange={(e) => setUploadThumbnailUrl(e.target.value)}
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                                     />
                                     <label className="cursor-pointer bg-white/5 border border-white/10 rounded-xl px-4 flex items-center justify-center hover:bg-white/10 transition-all">
                                         <Plus className="w-5 h-5 text-gray-400" />
@@ -319,7 +319,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                                     <button
                                         type="button"
                                         onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}
-                                        className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white hover:bg-red-500"
+                                        className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white hover:bg-white/10"
                                     >
                                         <ShieldCheck className="w-3 h-3" />
                                     </button>
@@ -342,7 +342,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                         placeholder="Search resources..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-white/30 outline-none transition-all placeholder:text-gray-600"
                     />
                 </div>
 
@@ -386,16 +386,16 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                                         <div className="flex items-center gap-4">
                                             <button onClick={() => handleVote(resource.resource_id, 'up')}
                                                 className={`flex items-center gap-1.5 transition-all text-sm ${userVotes[resource.resource_id] === 'up'
-                                                    ? 'text-green-400 font-bold scale-110'
-                                                    : 'text-gray-500 hover:text-green-400'
+                                                    ? 'text-gray-300 font-bold scale-110'
+                                                    : 'text-gray-500 hover:text-gray-300'
                                                     }`}
                                             >
                                                 <ThumbsUp className={`w-4 h-4 ${userVotes[resource.resource_id] === 'up' ? 'fill-green-400/20' : ''}`} /> {resource.thumbs_up}
                                             </button>
                                             <button onClick={() => handleVote(resource.resource_id, 'down')}
                                                 className={`flex items-center gap-1.5 transition-all text-sm ${userVotes[resource.resource_id] === 'down'
-                                                    ? 'text-red-400 font-bold scale-110'
-                                                    : 'text-gray-500 hover:text-red-400'
+                                                    ? 'text-gray-300 font-bold scale-110'
+                                                    : 'text-gray-500 hover:text-gray-300'
                                                     }`}
                                             >
                                                 <ThumbsDown className={`w-4 h-4 ${userVotes[resource.resource_id] === 'down' ? 'fill-red-400/20' : ''}`} /> {resource.thumbs_down}
@@ -410,7 +410,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
                                                 href={`https://wa.me/?text=${encodeURIComponent(`📢 This study material just dropped and it's a game changer!\n\n📄 ${resource.title}\n👍 ${resource.thumbs_up} students already liked it\n\n🔗 Grab it free: ${window.location.origin}/resources?id=${resource.resource_id}\n\nYou're welcome 😉`)}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2.5 text-emerald-400 hover:bg-emerald-400/10 rounded-xl transition-all border border-transparent hover:border-emerald-400/20"
+                                                className="p-2.5 text-gray-300 hover:bg-white/10 rounded-xl transition-all border border-transparent hover:border-white/20"
                                                 title="Share to WhatsApp"
                                             >
                                                 <Share2 className="w-4 h-4" />

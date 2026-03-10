@@ -23,9 +23,9 @@ export function Sidebar() {
     return (
         <>
             {/* ═══ MOBILE: Premium Top App Bar ═══ */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-[#0a0b14]/70 backdrop-blur-2xl border-b border-white/[0.05] shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+            <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-[#000000]/70 backdrop-blur-2xl border-b border-white/[0.05] shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                 <Link href="/" className="flex items-center">
-                    <span className="text-xl font-bold tracking-tight text-white">Locked In<span className="text-blue-500">.</span></span>
+                    <span className="text-xl font-bold tracking-tight text-white">Locked In<span className="text-gray-300">.</span></span>
                 </Link>
                 <div className="flex items-center gap-2">
                     <button
@@ -46,7 +46,7 @@ export function Sidebar() {
             </header>
 
             {/* ═══ MOBILE: Premium Bottom Tab Bar ═══ */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0b14]/80 backdrop-blur-2xl border-t border-white/[0.05] shadow-[0_-4px_30px_rgba(0,0,0,0.2)]">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#000000]/80 backdrop-blur-2xl border-t border-white/[0.05] shadow-[0_-4px_30px_rgba(0,0,0,0.2)]">
                 <div className="flex items-center justify-between px-1 py-1.5 w-full max-w-md mx-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -56,14 +56,14 @@ export function Sidebar() {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${isActive
-                                    ? 'text-blue-400 bg-blue-500/10'
+                                    ? 'text-gray-300 bg-white/10'
                                     : 'text-gray-500 hover:text-gray-400'
                                     }`}
                             >
                                 <div className={`relative flex items-center justify-center`}>
-                                    <Icon className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                                    <Icon className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
                                 </div>
-                                <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${isActive ? 'text-blue-400' : ''}`}>
+                                <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${isActive ? 'text-gray-300' : ''}`}>
                                     {item.label}
                                 </span>
                             </Link>
@@ -74,12 +74,12 @@ export function Sidebar() {
                         <Link
                             href="/admin"
                             className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${pathname === '/admin'
-                                ? 'text-red-400 bg-red-500/10'
+                                ? 'text-gray-300 bg-white/10'
                                 : 'text-gray-500 hover:text-gray-400'
                                 }`}
                         >
-                            <Shield className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${pathname === '/admin' ? 'scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]' : ''}`} strokeWidth={pathname === '/admin' ? 2.5 : 2} />
-                            <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${pathname === '/admin' ? 'text-red-400' : ''}`}>
+                            <Shield className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${pathname === '/admin' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : ''}`} strokeWidth={pathname === '/admin' ? 2.5 : 2} />
+                            <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${pathname === '/admin' ? 'text-gray-300' : ''}`}>
                                 Admin
                             </span>
                         </Link>
@@ -91,7 +91,7 @@ export function Sidebar() {
             </nav>
 
             {/* ═══ DESKTOP: Premium Glass Side Panel ═══ */}
-            <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 bg-[#0a0b14]/40 backdrop-blur-2xl border-r border-white/5 flex-col p-6 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+            <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 bg-[#000000]/40 backdrop-blur-2xl border-r border-white/5 flex-col p-6 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
                 {/* Logo */}
                 <Link href="/" className="flex flex-col mb-12 group">
                     <h1 className="text-3xl font-extrabold tracking-tight text-white leading-none">
@@ -110,12 +110,12 @@ export function Sidebar() {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all duration-300 group overflow-hidden relative ${isActive
-                                    ? 'bg-blue-600/10 text-brand-accent border border-blue-500/20 shadow-[inset_0_0_20px_rgba(37,99,235,0.05)]'
+                                    ? 'bg-white/10 text-brand-accent border border-white/20 shadow-[inset_0_0_20px_rgba(255, 255, 255, 0.1)]'
                                     : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                                     }`}
                             >
-                                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(37,99,235,1)]"></div>}
-                                <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(37,99,235,0.8)]' : 'group-hover:scale-110'}`} />
+                                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(255, 255, 255, 0.1)]"></div>}
+                                <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'group-hover:scale-110'}`} />
                                 <span className="font-medium">{item.label}</span>
                             </Link>
                         );
@@ -139,8 +139,8 @@ export function Sidebar() {
                         <Link
                             href="/admin"
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all mt-2 ${pathname === '/admin'
-                                ? 'bg-red-500/10 text-red-400 shadow-inner'
-                                : 'text-red-400/70 hover:text-red-400 hover:bg-red-500/5 border border-red-500/15'
+                                ? 'bg-white/10 text-gray-300 shadow-inner'
+                                : 'text-gray-300 hover:text-gray-300 hover:bg-white/10 border border-white/20'
                                 }`}
                         >
                             <Shield className="w-5 h-5" />
@@ -155,9 +155,9 @@ export function Sidebar() {
                             const text = `⚠️ UMaT students are using this app to lock in and it's actually working...\\n\\n📈 Track your streaks, join study & skill sessions, and access free resources.\\n\\n🔗 Join before your mates do: ${shareUrl}\\n\\n#LockedIn 🔒🔥`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                         }}
-                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/15 transition-all duration-300 border border-emerald-500/20 mt-6 shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] group hover:scale-[1.02]"
+                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 bg-white/10 hover:bg-white/10 transition-all duration-300 border border-white/20 mt-6 shadow-[0_0_20px_rgba(255, 255, 255, 0.1)] hover:shadow-[0_0_30px_rgba(255, 255, 255, 0.1)] group hover:scale-[1.02]"
                     >
-                        <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
                         <span className="font-bold tracking-wide">Invite Friends</span>
                     </button>
                 </nav>
@@ -175,7 +175,7 @@ export function Sidebar() {
                                         <p className="text-sm font-bold text-white truncate">{profile?.name || 'Student'}</p>
                                         {profile?.is_verified && (
                                             <div className="flex-shrink-0" title={profile?.badge_label || 'Verified Student'}>
-                                                <div className="bg-blue-500 rounded-full p-0.5">
+                                                <div className="bg-white/10 rounded-full p-0.5">
                                                     <Check className="w-2 h-2 text-white" strokeWidth={4} />
                                                 </div>
                                             </div>
@@ -208,7 +208,7 @@ export function Sidebar() {
                                 </button>
                                 <button
                                     onClick={signOut}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/5 transition-all bg-white/[0.02] border border-white/5"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-gray-400 hover:text-gray-300 hover:bg-white/10 transition-all bg-white/[0.02] border border-white/5"
                                 >
                                     <LogOut className="w-4 h-4" />
                                 </button>
@@ -217,7 +217,7 @@ export function Sidebar() {
                     ) : (
                         <Link
                             href="/auth"
-                            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold transition-all shadow-lg shadow-brand-accent/20 active:scale-95"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold transition-all shadow-lg shadow-white/10 active:scale-95"
                         >
                             <LogOut className="w-5 h-5 rotate-180" />
                             Sign In / Join

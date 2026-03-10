@@ -152,13 +152,13 @@ export function TourOverlay() {
             {/* Spotlight ring glow */}
             {targetRect && (
                 <div
-                    className="fixed border-2 border-blue-500/50 rounded-xl pointer-events-none"
+                    className="fixed border-2 border-white/20 rounded-xl pointer-events-none"
                     style={{
                         top: targetRect.top - padding,
                         left: targetRect.left - padding,
                         width: targetRect.width + padding * 2,
                         height: targetRect.height + padding * 2,
-                        boxShadow: '0 0 0 3px rgba(59,130,246,0.15), 0 0 25px rgba(59,130,246,0.25)',
+                        boxShadow: '0 0 0 3px rgba(255, 255, 255, 0.1), 0 0 25px rgba(255, 255, 255, 0.1)',
                         animation: 'pulse 2s infinite',
                     }}
                 />
@@ -191,8 +191,8 @@ export function TourOverlay() {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-2.5">
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-[11px] text-blue-400 font-bold uppercase tracking-wider">
+                            <Sparkles className="w-3.5 h-3.5 text-gray-300" />
+                            <span className="text-[11px] text-gray-300 font-bold uppercase tracking-wider">
                                 Step {currentStepIndex + 1} of {totalSteps}
                             </span>
                         </div>
@@ -214,8 +214,8 @@ export function TourOverlay() {
                             <div
                                 key={i}
                                 className={`h-1 rounded-full transition-all duration-300 ${i <= currentStepIndex
-                                        ? 'bg-blue-500 w-5'
-                                        : 'bg-white/10 w-2.5'
+                                    ? 'bg-white/10 w-5'
+                                    : 'bg-white/10 w-2.5'
                                     }`}
                             />
                         ))}
@@ -243,8 +243,8 @@ export function TourOverlay() {
                         <button
                             onClick={nextStep}
                             className={`flex-1 py-2.5 px-4 font-bold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${isLastStep
-                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-                                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_12px_rgba(37,99,235,0.3)]'
+                                ? 'bg-white hover:bg-gray-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                                : 'bg-white/10 hover:bg-white/10 text-white shadow-[0_0_12px_rgba(255, 255, 255, 0.1)]'
                                 }`}
                         >
                             {isLastStep ? "Let's Go! 🔥" : 'Next'}

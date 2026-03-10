@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Locked In Main Dashboard Desktop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#ffffff",
+          "background-light": "#ffffff",
+          "background-dark": "#000000",
+        },
+        fontFamily: {
+          "display": ["Inter", "sans-serif"]
+        },
+        borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+      },
+    },
+  }
+</script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-[280px] h-full flex flex-col justify-between border-r border-white/10 p-6 flex-shrink-0 bg-background-dark">
+<div class="flex flex-col gap-8">
+<div class="flex flex-col">
+<h1 class="text-white text-4xl font-bold leading-none tracking-tight">Locked In.</h1>
+<p class="text-gray-400 text-xs font-medium uppercase tracking-wider mt-1">LOCK IN. LEVEL UP.</p>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white text-black transition-colors" href="#">
+<span class="material-symbols-outlined text-black">home</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="text-sm font-medium">Leaderboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Buddies</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="text-sm font-medium">Host Room</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="text-sm font-medium">Resources</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-4">
+<button class="w-full h-10 flex items-center justify-center rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition-colors">
+        Invite Friends
+      </button>
+<div class="flex items-center gap-3 pt-4 border-t border-white/10">
+<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+<img alt="User avatar portrait" class="w-full h-full object-cover" data-alt="User avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA__mnA_SExlCO6DgM22qpzAK_C_YvGafeIr6SswsJU1lyVLHtgYgTV4rHyNKUsH8YrF92o2z-kAzJRPIvyza9M84sIVOaV8Nbd8hr-mzI8MBOp9TJdtOJn5agXC3kE3i6KWg4UPqulrYGEEjKovp9C7rB7TJaFc7glVSIQxtTA8pa2BQE242X4cjELIBNFmFGtbUWmq8kEjXXszkozLn74IcqlXxJFpTzFVK6nAlYxtozMQRuW3JgekjIT4Dx3LZWWl6NDODDiqLU"/>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-bold">Solomon</span>
+<span class="text-gray-400 text-xs font-medium tracking-wide">STUDENT</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 h-full overflow-y-auto p-10 bg-background-dark">
+<div class="max-w-[1080px] mx-auto flex flex-col gap-10">
+<!-- Header -->
+<header class="flex flex-col gap-2">
+<h2 class="text-white text-5xl font-black tracking-tight">Welcome back, Solomon</h2>
+<p class="text-gray-400 text-lg">Lock In. Level Up.</p>
+</header>
+<!-- Banner -->
+<div class="w-full flex items-center justify-between p-6 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-sm">
+<div class="flex flex-col gap-1">
+<h3 class="text-white text-xl font-bold">Campus Leaderboards are live! 🏆</h3>
+<p class="text-gray-400 text-sm">Check out where you stand among your peers.</p>
+</div>
+<button class="px-6 py-2 rounded-lg bg-white text-black text-sm font-bold hover:bg-gray-200 transition-colors">
+          View Rankings
+        </button>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Timer Card -->
+<div class="col-span-1 lg:col-span-2 rounded-2xl border border-white/20 bg-[#0d0d0d] p-8 flex flex-col gap-6">
+<h3 class="text-white text-2xl font-bold">Solo Lock-In</h3>
+<div class="flex items-center justify-center gap-4 py-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10">
+<span class="text-white text-5xl font-black tabular-nums">25</span>
+</div>
+<span class="text-gray-400 text-sm font-medium uppercase tracking-wider">Minutes</span>
+</div>
+<span class="text-white text-4xl font-bold pb-8">:</span>
+<div class="flex flex-col items-center gap-2">
+<div class="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10">
+<span class="text-white text-5xl font-black tabular-nums">00</span>
+</div>
+<span class="text-gray-400 text-sm font-medium uppercase tracking-wider">Seconds</span>
+</div>
+</div>
+<div class="flex justify-center mt-4">
+<button class="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-3xl">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Right Column Cards -->
+<div class="col-span-1 flex flex-col gap-6">
+<div class="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<h3 class="text-white text-lg font-bold uppercase tracking-wider">Buddies</h3>
+<span class="material-symbols-outlined text-gray-400">group</span>
+</div>
+<div class="flex flex-col gap-1 mt-4">
+<span class="text-white text-4xl font-black">0</span>
+<span class="text-gray-400 text-sm">Online now</span>
+</div>
+<button class="mt-6 w-full py-2 rounded-lg border border-white/20 text-white text-sm font-medium hover:bg-white/5 transition-colors">
+                Find Buddies
+            </button>
+</div>
+<div class="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<h3 class="text-white text-lg font-bold uppercase tracking-wider">Streak</h3>
+<span class="material-symbols-outlined text-gray-400">local_fire_department</span>
+</div>
+<div class="flex flex-col gap-1 mt-4">
+<span class="text-white text-4xl font-black">2</span>
+<span class="text-gray-400 text-sm">Days active</span>
+</div>
+<div class="flex gap-1 mt-6">
+<div class="h-1.5 flex-1 rounded-full bg-white"></div>
+<div class="h-1.5 flex-1 rounded-full bg-white"></div>
+<div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+<div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+<div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Browser -->
+<div class="flex flex-col gap-6 mt-4">
+<div class="flex items-center justify-between border-b border-white/10 pb-4">
+<div class="flex items-center gap-6">
+<button class="text-white text-sm font-bold border-b-2 border-white pb-4 -mb-[18px]">Study</button>
+<button class="text-gray-400 hover:text-white text-sm font-medium pb-4 -mb-[18px] transition-colors">Skill</button>
+<button class="text-gray-400 hover:text-white text-sm font-medium pb-4 -mb-[18px] transition-colors">My Rooms</button>
+<button class="text-gray-400 hover:text-white text-sm font-medium pb-4 -mb-[18px] transition-colors">Upcoming</button>
+</div>
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+<input class="w-full h-9 pl-9 pr-4 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-white/30 placeholder-gray-500" placeholder="Search rooms..." type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Room Card 1 -->
+<div class="rounded-2xl border border-white/10 bg-[#0d0d0d] p-5 flex flex-col gap-4 hover:border-white/30 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div class="px-2 py-1 rounded bg-white/10 text-white text-xs font-bold">UMaT Library</div>
+<div class="flex items-center gap-1 text-gray-400 text-xs">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>12/25</span>
+</div>
+</div>
+<div>
+<h4 class="text-white font-bold text-lg mb-1 group-hover:underline">Deep Work Session</h4>
+<p class="text-gray-400 text-sm line-clamp-2">Strict pomodoro 50/10. Mics muted, cams optional.</p>
+</div>
+</div>
+<!-- Room Card 2 -->
+<div class="rounded-2xl border border-white/10 bg-[#0d0d0d] p-5 flex flex-col gap-4 hover:border-white/30 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div class="px-2 py-1 rounded bg-white/10 text-white text-xs font-bold">Engineering</div>
+<div class="flex items-center gap-1 text-gray-400 text-xs">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>4/10</span>
+</div>
+</div>
+<div>
+<h4 class="text-white font-bold text-lg mb-1 group-hover:underline">Calculus II Prep</h4>
+<p class="text-gray-400 text-sm line-clamp-2">Working through past questions. Open discussion.</p>
+</div>
+</div>
+<!-- Room Card 3 -->
+<div class="rounded-2xl border border-white/10 bg-[#0d0d0d] p-5 flex flex-col gap-4 hover:border-white/30 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div class="px-2 py-1 rounded bg-white/10 text-white text-xs font-bold">Lofi Lounge</div>
+<div class="flex items-center gap-1 text-gray-400 text-xs">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>42/50</span>
+</div>
+</div>
+<div>
+<h4 class="text-white font-bold text-lg mb-1 group-hover:underline">Chill Study Stream</h4>
+<p class="text-gray-400 text-sm line-clamp-2">Lofi beats, relaxed atmosphere. Come hang out.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

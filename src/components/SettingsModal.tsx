@@ -83,7 +83,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-[#0a0b14]/80 backdrop-blur-sm animate-fade-in"
+                className="absolute inset-0 bg-[#000000]/80 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
             />
 
@@ -103,14 +103,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                 <div className="p-6">
                     {error && (
-                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
+                        <div className="mb-6 p-4 bg-white/10 border border-white/20 text-gray-300 text-sm rounded-xl flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-white/10 rounded-full shrink-0" />
                             {error}
                         </div>
                     )}
 
                     {successMessage && (
-                        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl flex items-center gap-2 animate-fade-in">
+                        <div className="mb-6 p-4 bg-white/10 border border-white/20 text-gray-300 text-sm rounded-xl flex items-center gap-2 animate-fade-in">
                             <CheckCircle2 className="w-5 h-5 shrink-0" />
                             {successMessage}
                         </div>
@@ -127,7 +127,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     placeholder="Your Name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white placeholder:text-gray-600 focus:bg-white/[0.08]"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-white/30 outline-none transition-all text-white placeholder:text-gray-600 focus:bg-white/[0.08]"
                                 />
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 <select
                                     value={faculty}
                                     onChange={(e) => setFaculty(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-white/30 outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
                                 >
                                     {FACULTIES.map(fac => (
                                         <option key={fac} value={fac} className="bg-brand-primary text-white">{fac}</option>
@@ -155,7 +155,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 <select
                                     value={level}
                                     onChange={(e) => setLevel(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-white/30 outline-none transition-all text-white focus:bg-white/[0.08] appearance-none"
                                 >
                                     {['100', '200', '300', '400'].map(lvl => (
                                         <option key={lvl} value={lvl} className="bg-brand-primary text-white">Level {lvl}</option>
@@ -169,7 +169,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             <button
                                 type="submit"
                                 disabled={isSaving || !!successMessage}
-                                className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(255, 255, 255, 0.1)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isSaving ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
