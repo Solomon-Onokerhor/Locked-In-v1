@@ -190,12 +190,11 @@ export function SoloTimer() {
         }, 250);
     };
 
-    const formatTimeSplit = (seconds: number) => {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        return { mins, secs };
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
-
 
     const handleCustomDurationSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -499,7 +498,6 @@ export function SoloTimer() {
             {timerState === 'ACTIVE' && renderActive()}
             {timerState === 'COMPLETION' && renderCompletion()}
             {timerState === 'STATS' && renderStats()}
-
         </div>
     );
 }
