@@ -49,9 +49,7 @@ export function Chat({ roomId, userProfile }: ChatProps) {
 
     // Resolve a sender info using ref (stable, no stale closure)
     const resolveSenderInfo = useCallback(async (senderId: string): Promise<SenderInfo> => {
-        console.log('Resolving sender info for ID:', senderId);
         if (senderRef.current[senderId]) {
-            console.log('Found in ref cache:', senderRef.current[senderId]);
             return senderRef.current[senderId];
         }
         if (senderId === userProfile?.id) {
@@ -61,19 +59,15 @@ export function Chat({ roomId, userProfile }: ChatProps) {
                 badge_label: userProfile?.badge_label
             };
             setSenderInfo(prev => ({ ...prev, [senderId]: info }));
-            console.log('Matched own profile:', info);
             return info;
         }
 
         try {
-            console.log('Fetching profile from Supabase for ID:', senderId);
             const { data, error } = await supabase
                 .from('profiles')
                 .select('name, is_verified, badge_label')
                 .eq('id', senderId)
                 .single();
-
-            console.log('Supabase profile fetch result:', { data, error });
 
             const info = {
                 name: data?.name || 'Unknown',

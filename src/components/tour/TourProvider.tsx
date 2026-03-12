@@ -5,77 +5,62 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export interface TourStep {
     id: string;
-    route: string;
     targetSelector: string;
     title: string;
     description: string;
     position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
+// All steps now stay on the dashboard — no cross-page navigation
 export const TOUR_STEPS: TourStep[] = [
     {
         id: 'welcome',
-        route: '/',
         targetSelector: '[data-tour="welcome"]',
         title: 'Welcome to Your Dashboard! 🏠',
-        description: 'This is your home base. You can see all active study & skill rooms here, and jump into any session.',
+        description: 'This is your home base. See all active study & skill rooms, and jump into any session.',
         position: 'bottom',
     },
     {
         id: 'solo-timer',
-        route: '/',
         targetSelector: '[data-tour="solo-timer"]',
         title: 'Solo Lock-In Timer ⏱️',
-        description: 'Don\'t need a room? Start a personal focus timer right here and track your solo study sessions.',
+        description: 'Start a personal focus timer right here. Track your solo study sessions and build streaks.',
         position: 'bottom',
     },
     {
         id: 'room-tabs',
-        route: '/',
         targetSelector: '[data-tour="room-tabs"]',
         title: 'Browse & Filter Rooms 📚',
-        description: 'Filter between Study rooms, Skill sessions, your own rooms, and upcoming sessions. Search by title or course code.',
-        position: 'bottom',
-    },
-    {
-        id: 'join-room',
-        route: '/',
-        targetSelector: '[data-tour="join-room"]',
-        title: 'Joining a Session 🎯',
-        description: 'Click on any room card here to view its details. From there, just hit the Lock In button to join the session!',
-        position: 'bottom',
-    },
-    {
-        id: 'leaderboard',
-        route: '/leaderboard',
-        targetSelector: '[data-tour="leaderboard"]',
-        title: 'Campus Leaderboard 🏆',
-        description: 'Compete with other students and faculties! Earn points for every minute you study. Can you reach the top?',
-        position: 'bottom',
-    },
-    {
-        id: 'buddies',
-        route: '/buddies',
-        targetSelector: '[data-tour="buddies"]',
-        title: 'Study Buddies 👥',
-        description: 'Find and connect with study partners. See when your buddies are locked in and join their rooms.',
-        position: 'bottom',
-    },
-    {
-        id: 'resources',
-        route: '/resources',
-        targetSelector: '[data-tour="resources"]',
-        title: 'Free Resources 📑',
-        description: 'Access past questions, lecture slides, and study materials. Upload your own to help fellow students.',
-        position: 'bottom',
+        description: 'Filter between Study rooms, Skill sessions, your rooms, and upcoming sessions.',
+        position: 'top',
     },
     {
         id: 'host-room',
-        route: '/',
         targetSelector: '[data-tour="host-room"]',
-        title: 'Ready to Lock In? 🔒',
-        description: 'Create your own study or skill-sharing room and invite others to join. You\'re all set — let\'s go!',
-        position: 'bottom',
+        title: 'Create Your Own Room 🔒',
+        description: 'Host a study or skill-sharing session and invite others to join. Tap the + button to get started!',
+        position: 'top',
+    },
+    {
+        id: 'nav-leaderboard',
+        targetSelector: '[data-tour="nav-leaderboard"]',
+        title: 'Campus Leaderboard 🏆',
+        description: 'Compete with other students! Earn points for every minute you study. Can you reach the top?',
+        position: 'top',
+    },
+    {
+        id: 'nav-buddies',
+        targetSelector: '[data-tour="nav-buddies"]',
+        title: 'Study Buddies 👥',
+        description: 'Find and connect with study partners. See when your buddies are locked in and join their rooms.',
+        position: 'top',
+    },
+    {
+        id: 'nav-resources',
+        targetSelector: '[data-tour="nav-resources"]',
+        title: 'Free Resources 📑',
+        description: 'Access past questions, lecture slides, and study materials shared by the community.',
+        position: 'top',
     },
 ];
 
@@ -125,8 +110,11 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     const startTour = useCallback(() => {
         setCurrentStepIndex(0);
         setIsTourActive(true);
-        router.push(TOUR_STEPS[0].route);
-    }, [router]);
+        // Navigate to dashboard if not already there
+        if (pathname !== '/') {
+            router.push('/?tour=1');
+        }
+    }, [router, pathname]);
 
     const nextStep = useCallback(() => {
         const nextIndex = currentStepIndex + 1;
@@ -135,21 +123,13 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
             return;
         }
         setCurrentStepIndex(nextIndex);
-        const nextStepData = TOUR_STEPS[nextIndex];
-        if (nextStepData.route !== pathname) {
-            router.push(nextStepData.route);
-        }
-    }, [currentStepIndex, pathname, router]);
+    }, [currentStepIndex]);
 
     const prevStep = useCallback(() => {
         const prevIndex = currentStepIndex - 1;
         if (prevIndex < 0) return;
         setCurrentStepIndex(prevIndex);
-        const prevStepData = TOUR_STEPS[prevIndex];
-        if (prevStepData.route !== pathname) {
-            router.push(prevStepData.route);
-        }
-    }, [currentStepIndex, pathname, router]);
+    }, [currentStepIndex]);
 
     const endTour = useCallback(() => {
         setIsTourActive(false);

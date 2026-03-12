@@ -8,11 +8,11 @@ import { useState } from 'react';
 import { SettingsModal } from './SettingsModal';
 
 const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-    { href: '/buddies', label: 'Buddies', icon: Users },
-    { href: '/create-room', label: 'Host Room', icon: PlusCircle },
-    { href: '/resources', label: 'Resources', icon: Library },
+    { href: '/', label: 'Dashboard', icon: Home, tourId: 'nav-dashboard' },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, tourId: 'nav-leaderboard' },
+    { href: '/buddies', label: 'Buddies', icon: Users, tourId: 'nav-buddies' },
+    { href: '/create-room', label: 'Host Room', icon: PlusCircle, tourId: 'nav-host' },
+    { href: '/resources', label: 'Resources', icon: Library, tourId: 'nav-resources' },
 ];
 
 export function Sidebar() {
@@ -55,6 +55,7 @@ export function Sidebar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                data-tour={item.tourId}
                                 className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${isActive
                                     ? 'text-gray-300 bg-white/10'
                                     : 'text-gray-500 hover:text-gray-400'
@@ -109,12 +110,13 @@ export function Sidebar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                data-tour={item.tourId}
                                 className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all duration-300 group overflow-hidden relative ${isActive
-                                    ? 'bg-white/10 text-brand-accent border border-white/20 shadow-[inset_0_0_20px_rgba(255, 255, 255, 0.1)]'
+                                    ? 'bg-white/10 text-brand-accent border border-white/20 shadow-[inset_0_0_20px_rgba(255_255_255_/_0.1)]'
                                     : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                                     }`}
                             >
-                                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(255, 255, 255, 0.1)]"></div>}
+                                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(255_255_255_/_0.1)]"></div>}
                                 <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'group-hover:scale-110'}`} />
                                 <span className="font-medium">{item.label}</span>
                             </Link>
@@ -155,7 +157,7 @@ export function Sidebar() {
                             const text = `⚠️ UMaT students are using this app to lock in and it's actually working...\\n\\n📈 Track your streaks, join study & skill sessions, and access free resources.\\n\\n🔗 Join before your mates do: ${shareUrl}\\n\\n#LockedIn 🔒🔥`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                         }}
-                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 bg-white/10 hover:bg-white/10 transition-all duration-300 border border-white/20 mt-6 shadow-[0_0_20px_rgba(255, 255, 255, 0.1)] hover:shadow-[0_0_30px_rgba(255, 255, 255, 0.1)] group hover:scale-[1.02]"
+                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 bg-white/10 hover:bg-white/10 transition-all duration-300 border border-white/20 mt-6 shadow-[0_0_20px_rgba(255_255_255_/_0.1)] hover:shadow-[0_0_30px_rgba(255_255_255_/_0.1)] group hover:scale-[1.02]"
                     >
                         <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
                         <span className="font-bold tracking-wide">Invite Friends</span>
@@ -217,7 +219,7 @@ export function Sidebar() {
                     ) : (
                         <Link
                             href="/auth"
-                            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold transition-all shadow-lg shadow-white/10 active:scale-95"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white hover:bg-gray-200 text-black font-bold transition-all shadow-lg shadow-white/10 active:scale-95"
                         >
                             <LogOut className="w-5 h-5 rotate-180" />
                             Sign In / Join

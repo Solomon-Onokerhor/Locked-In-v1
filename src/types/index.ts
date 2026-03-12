@@ -107,6 +107,10 @@ export interface SoloSession {
     id: string;
     user_id: string;
     label: string;
+    goal?: string;
     duration_minutes: number;
     completed_at: string;
+    completed_goal?: 'yes' | 'partial' | 'no' | null;
+    distraction_reason?: string;
+    quit_early?: boolean;
 }

@@ -166,7 +166,7 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
                                     disabled={isConnecting}
                                     className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isConnected
                                         ? 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/10'
-                                        : 'bg-brand-accent hover:bg-white/10 text-white shadow-lg shadow-white/10 hover:shadow-white/10'
+                                        : 'bg-white hover:bg-gray-200 text-black shadow-lg shadow-white/10 hover:shadow-white/10'
                                         }`}
                                 >
                                     {isConnecting ? (

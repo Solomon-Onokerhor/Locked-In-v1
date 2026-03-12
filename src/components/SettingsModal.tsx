@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { X, User, BookOpen, Save, CheckCircle2 } from 'lucide-react';
+import { useTour } from '@/components/tour/TourProvider';
+import { X, User, BookOpen, Save, CheckCircle2, HelpCircle } from 'lucide-react';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -21,6 +23,8 @@ const FACULTIES = [
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const { profile, refreshProfile } = useAuth();
+    const { startTour } = useTour();
+    const router = useRouter();
 
     const [name, setName] = useState('');
     const [faculty, setFaculty] = useState('Faculty of Engineering');
@@ -165,17 +169,27 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             <p className="text-[11px] text-gray-500 ml-1 mt-1">Required to participate in the Campus Leaderboards.</p>
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-2 flex flex-col gap-3">
                             <button
                                 type="submit"
                                 disabled={isSaving || !!successMessage}
-                                className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(255, 255, 255, 0.1)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full bg-white hover:bg-gray-200 text-black font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(255_255_255_/_0.1)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isSaving ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 ) : (
                                     <><Save className="w-5 h-5" /> Save Changes</>
                                 )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onClose();
+                                    router.push('/?tour=1');
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 text-gray-300 font-medium py-3 rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 text-sm"
+                            >
+                                <HelpCircle className="w-4 h-4" /> Restart App Tour
                             </button>
                         </div>
                     </form>

@@ -90,7 +90,6 @@ export function TourOverlay() {
     // Auto-scroll the tooltip into view so the text guide is always visible
     useEffect(() => {
         if (isVisible && tooltipRef.current) {
-            // Small delay to let the tooltip position settle
             const timer = setTimeout(() => {
                 tooltipRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
@@ -104,15 +103,14 @@ export function TourOverlay() {
     const isFirstStep = currentStepIndex === 0;
     const padding = 10;
 
-    // Calculate tooltip position — prefer below, flip to above if not enough space
-    const tooltipWidth = 340;
-    const tooltipHeight = 280; // approximate
-    const viewportH = typeof window !== 'undefined' ? window.innerHeight : 800;
+    // Responsive tooltip width — smaller on mobile
     const viewportW = typeof window !== 'undefined' ? window.innerWidth : 500;
+    const viewportH = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const tooltipWidth = Math.min(320, viewportW - 32); // 16px margin each side
+    const tooltipHeight = 240;
 
     let tooltipTop = 0;
     let tooltipLeft = 0;
-    let showBelow = true;
 
     if (targetRect) {
         const spaceBelow = viewportH - (targetRect.top + targetRect.height + padding);
@@ -120,22 +118,20 @@ export function TourOverlay() {
 
         if (spaceBelow >= tooltipHeight || spaceBelow >= spaceAbove) {
             tooltipTop = targetRect.top + targetRect.height + padding + 8;
-            showBelow = true;
         } else {
             tooltipTop = targetRect.top - padding - tooltipHeight;
-            showBelow = false;
         }
 
-        // Horizontal center on target, clamped to viewport
-        tooltipLeft = Math.max(12, Math.min(
+        // Horizontal center on target, clamped to viewport with 16px margin
+        tooltipLeft = Math.max(16, Math.min(
             targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            viewportW - tooltipWidth - 12
+            viewportW - tooltipWidth - 16
         ));
     }
 
     return (
         <div className="fixed inset-0 z-[9999]">
-            {/* Dark overlay with spotlight cutout — using viewport coordinates */}
+            {/* Dark overlay with spotlight cutout */}
             <svg className="fixed inset-0 w-full h-full" style={{ pointerEvents: 'auto' }}>
                 <defs>
                     <mask id="tour-spotlight-mask">
@@ -154,7 +150,7 @@ export function TourOverlay() {
                 </defs>
                 <rect
                     x="0" y="0" width="100%" height="100%"
-                    fill="rgba(0,0,0,0.7)"
+                    fill="rgba(0,0,0,0.75)"
                     mask="url(#tour-spotlight-mask)"
                     onClick={(e) => { e.stopPropagation(); }}
                 />
@@ -202,7 +198,7 @@ export function TourOverlay() {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-2.5">
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-gray-300" />
+                            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                             <span className="text-[11px] text-gray-300 font-bold uppercase tracking-wider">
                                 Step {currentStepIndex + 1} of {totalSteps}
                             </span>
@@ -219,14 +215,16 @@ export function TourOverlay() {
                     <h3 className="text-base font-bold text-white mb-1.5">{currentStep.title}</h3>
                     <p className="text-sm text-gray-400 leading-relaxed mb-4">{currentStep.description}</p>
 
-                    {/* Progress dots */}
-                    <div className="flex gap-1 mb-4">
+                    {/* Progress dots — FIXED: active dots are white, completed are blue, upcoming are dim */}
+                    <div className="flex gap-1.5 mb-4">
                         {Array.from({ length: totalSteps }).map((_, i) => (
                             <div
                                 key={i}
-                                className={`h-1 rounded-full transition-all duration-300 ${i <= currentStepIndex
-                                    ? 'bg-white/10 w-5'
-                                    : 'bg-white/10 w-2.5'
+                                className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStepIndex
+                                    ? 'bg-white w-6'
+                                    : i < currentStepIndex
+                                        ? 'bg-blue-500 w-3'
+                                        : 'bg-white/10 w-3'
                                     }`}
                             />
                         ))}
@@ -237,7 +235,7 @@ export function TourOverlay() {
                         {!isFirstStep && (
                             <button
                                 onClick={prevStep}
-                                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-1"
+                                className="px-3 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-1"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" />
                                 Back
@@ -246,7 +244,7 @@ export function TourOverlay() {
                         {isFirstStep && (
                             <button
                                 onClick={endTour}
-                                className="px-3 py-2 text-gray-500 hover:text-white text-sm font-medium transition-colors"
+                                className="px-3 py-2.5 text-gray-500 hover:text-white text-sm font-medium transition-colors"
                             >
                                 Skip
                             </button>
@@ -254,8 +252,8 @@ export function TourOverlay() {
                         <button
                             onClick={nextStep}
                             className={`flex-1 py-2.5 px-4 font-bold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${isLastStep
-                                ? 'bg-white hover:bg-gray-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
-                                : 'bg-white/10 hover:bg-white/10 text-white shadow-[0_0_12px_rgba(255, 255, 255, 0.1)]'
+                                ? 'bg-white hover:bg-gray-200 text-black shadow-[0_0_15px_rgba(255_255_255_/_0.15)]'
+                                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_12px_rgba(59_130_246_/_0.3)]'
                                 }`}
                         >
                             {isLastStep ? "Let's Go! 🔥" : 'Next'}
