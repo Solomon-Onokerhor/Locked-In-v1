@@ -15,8 +15,9 @@ export async function generateMetadata(
     const { id } = await searchParams;
     if (!id) {
         return {
-            title: 'Resources | Locked In',
-            description: 'Download high-quality study materials and resources shared by the community.',
+            title: 'Study Resources — UMaT Notes & Materials | Locked In',
+            description: 'Download high-quality study materials, past questions, and resources shared by UMaT engineering and science students in Tarkwa.',
+            keywords: ['UMaT study materials', 'UMaT past questions', 'Tarkwa study resources', 'engineering notes Ghana'],
         };
     }
 
