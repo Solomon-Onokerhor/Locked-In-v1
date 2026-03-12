@@ -1,6 +1,13 @@
 import { supabaseServer } from '@/lib/supabaseServer';
+import type { Metadata } from 'next';
 import type { Room } from '@/types';
 import { HomeSwitcher } from '@/components/HomeSwitcher';
+
+export const metadata: Metadata = {
+    title: 'Locked In — Study Together, Level Up Together | UMaT',
+    description: 'Locked In is the #1 study app for UMaT students in Tarkwa. Form study groups, use Pomodoro timers to track focus time, and stay accountable with your classmates at the University of Mines and Technology.',
+    keywords: ['study app for UMaT students', 'UMaT Tarkwa study groups', 'pomodoro timer for engineering students Ghana', 'UMaT study rooms', 'Tarkwa campus study app'],
+};
 
 export default async function Page() {
     // We still do the server-side room fetch to keep initial load fast

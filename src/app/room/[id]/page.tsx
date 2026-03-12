@@ -23,16 +23,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = `${room.title} ${room.course_code ? `(${room.course_code})` : ''} | Locked In.`;
     const description = room.description || 'Lock in to this study session and level up together.';
-    const imageUrl = room.image_url || 'https://lockedin-umat.vercel.app/og-image.jpg';
+    const imageUrl = room.image_url || 'https://lockedinumat.tech/og-image.jpg';
 
     return {
-        metadataBase: new URL("https://lockedin-umat.vercel.app"),
+        metadataBase: new URL("https://lockedinumat.tech"),
         title,
         description,
         openGraph: {
             title,
             description,
-            url: `https://lockedin-umat.vercel.app/room/${id}`,
+            url: `https://lockedinumat.tech/room/${id}`,
             images: [
                 {
                     url: imageUrl,
