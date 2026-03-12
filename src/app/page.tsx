@@ -1,9 +1,9 @@
 import { supabaseServer } from '@/lib/supabaseServer';
 import type { Room } from '@/types';
-import { DashboardClient } from '@/components/DashboardClient';
+import { HomeSwitcher } from '@/components/HomeSwitcher';
 
-export default async function DashboardPage() {
-    // Fetch rooms on the server for instant initial load
+export default async function Page() {
+    // We still do the server-side room fetch to keep initial load fast
     const { data: roomsData } = await supabaseServer
         .from('rooms')
         .select(`
@@ -17,5 +17,8 @@ export default async function DashboardPage() {
 
     const initialRooms = (roomsData as Room[]) || [];
 
-    return <DashboardClient initialRooms={initialRooms} />;
+    // The HomeSwitcher (client component) will decide between
+    // LandingPage vs DashboardClient based on the browser's auth session.
+    // This fixes the 'Auth - Home' redirect loop.
+    return <HomeSwitcher initialRooms={initialRooms} />;
 }

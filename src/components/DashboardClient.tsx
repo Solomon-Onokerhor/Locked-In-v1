@@ -103,6 +103,9 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         return matchesTab && matchesSearch;
     });
 
+    // Get display name — use profile name first, then email prefix, truncated
+    const displayName = profile?.name || session?.user?.email?.split('@')[0] || '';
+
     if (loading || !session) {
         return (
             <div className="min-h-screen bg-brand-primary flex items-center justify-center">
@@ -115,34 +118,60 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         <div className="min-h-screen bg-[#000000]">
             <Sidebar />
 
-            <main className="px-4 pt-20 pb-24 md:p-10 md:ml-[280px] relative z-10 animate-fade-in flex-1">
-                <div className="max-w-[1080px] mx-auto flex flex-col gap-10">
-                    {/* Header Section */}
-                    <header className="flex flex-col gap-2" data-tour="welcome">
-                        <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">Welcome back{session?.user?.email ? `, ${session.user.email.split('@')[0]}` : ''}</h2>
-                        <p className="text-[#888888] text-lg">Lock In. Level Up.</p>
+            <main className="px-4 pt-16 pb-24 md:p-10 md:ml-[280px] relative z-10 animate-fade-in flex-1">
+                <div className="max-w-[1080px] mx-auto flex flex-col gap-6 md:gap-10">
+                    {/* Header — compact on mobile */}
+                    <header className="flex items-center justify-between gap-3" data-tour="welcome">
+                        <div className="min-w-0">
+                            <h2 className="text-white text-2xl md:text-5xl font-black tracking-tight truncate">
+                                Welcome{displayName ? `, ${displayName}` : ''}
+                            </h2>
+                            <p className="text-[#888888] text-sm md:text-lg">Lock In. Level Up.</p>
+                        </div>
                     </header>
 
-                    {/* Banner */}
-                    <div className="w-full flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl border border-white/20 bg-[#0a0a0a] gap-4">
-                        <div className="flex flex-col gap-1">
-                            <h3 className="text-white text-xl font-bold tracking-tight">Campus Leaderboards are live! 🏆</h3>
-                            <p className="text-[#888888] text-sm">Check out where you stand among your peers.</p>
+                    {/* Quick Stats Row — horizontal on mobile, stacked on desktop sidebar */}
+                    <div className="grid grid-cols-2 md:hidden gap-3">
+                        <div onClick={() => router.push('/buddies')} className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform">
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                                <Users className="w-5 h-5 text-[#888888]" />
+                            </div>
+                            <div>
+                                <span className="text-white text-xl font-black block leading-none">{profile ? profile.study_buddies : '0'}</span>
+                                <span className="text-[#888888] text-[10px] font-bold uppercase">Buddies</span>
+                            </div>
                         </div>
-                        <Link href="/leaderboard" className="px-6 py-3 md:py-2 rounded-lg bg-white text-black text-sm font-bold hover:bg-gray-200 transition-colors text-center shrink-0">
-                            View Rankings
-                        </Link>
+                        <div className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
+                                <Trophy className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <span className="text-white text-xl font-black block leading-none">{profile ? profile.focus_score || 0 : '0'}</span>
+                                <span className="text-[#888888] text-[10px] font-bold uppercase">Focus Score</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Timer Card */}
-                        <div className="col-span-1 lg:col-span-2 rounded-2xl border border-white/20 bg-[#0d0d0d] p-8 flex flex-col gap-6" data-tour="solo-timer">
-                            <h3 className="text-white text-2xl font-bold tracking-tight">Solo Lock-In</h3>
+                    {/* Leaderboard Banner — compact on mobile */}
+                    <Link href="/leaderboard" className="flex items-center justify-between p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/10 bg-[#0a0a0a] hover:border-white/20 transition-colors group">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-xl md:text-2xl">🏆</span>
+                            <div className="min-w-0">
+                                <h3 className="text-white text-sm md:text-xl font-bold tracking-tight truncate">Campus Leaderboards are live!</h3>
+                                <p className="text-[#888888] text-xs md:text-sm hidden md:block">Check out where you stand among your peers.</p>
+                            </div>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-[#888888] group-hover:text-white shrink-0 transition-colors" />
+                    </Link>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                        {/* Timer Card — less padding on mobile */}
+                        <div className="col-span-1 lg:col-span-2 rounded-2xl border border-white/10 bg-[#0d0d0d] p-4 md:p-8 flex flex-col gap-4 md:gap-6" data-tour="solo-timer">
                             <SoloTimer />
                         </div>
 
-                        {/* Right Column Cards */}
-                        <div className="col-span-1 flex flex-col gap-6">
+                        {/* Right Column Cards — hidden on mobile (shown as compact row above) */}
+                        <div className="hidden md:flex col-span-1 flex-col gap-6">
                             <div onClick={() => router.push('/buddies')} className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between cursor-pointer group hover:border-white/40 transition-colors">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-white text-lg font-bold uppercase tracking-wider">Buddies</h3>
@@ -150,7 +179,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                                 </div>
                                 <div className="flex flex-col gap-1 mt-4">
                                     <span className="text-white text-4xl font-black">{profile ? profile.study_buddies : '0'}</span>
-                                    <span className="text-[#888888] text-sm">Online now</span>
+                                    <span className="text-[#888888] text-sm">Study Buddies</span>
                                 </div>
                                 <button className="mt-6 w-full py-2.5 rounded-lg border border-white/20 text-white text-sm font-bold hover:bg-white/10 transition-colors">
                                     Find Buddies
@@ -175,14 +204,14 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                     </div>
 
                     {/* Room Browser */}
-                    <div className="flex flex-col gap-6" data-tour="room-tabs">
+                    <div className="flex flex-col gap-4 md:gap-6" data-tour="room-tabs">
                         <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-4 gap-4">
-                            <div className="flex items-center gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                            <div className="flex items-center gap-4 md:gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
                                 {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab as any)}
-                                        className={`text-sm font-bold pb-4 -mb-[18px] transition-colors whitespace-nowrap ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-[#888888] hover:text-white'}`}
+                                        className={`text-xs md:text-sm font-bold pb-4 -mb-[18px] transition-colors whitespace-nowrap ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-[#888888] hover:text-white'}`}
                                     >
                                         {tab === 'my_rooms' ? 'My Rooms' : tab === 'upcoming' ? 'Upcoming' : tab === 'all' ? 'All Rooms' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
@@ -203,16 +232,16 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                         <section>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {filteredRooms.length === 0 ? (
-                                    <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-white/20 rounded-2xl">
-                                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                                            {activeTab === 'upcoming' ? <Calendar className="w-8 h-8 text-[#888888]" /> : <BookOpen className="w-8 h-8 text-[#888888]" />}
+                                    <div className="col-span-full flex flex-col items-center justify-center py-14 md:py-20 px-4 text-center border-2 border-dashed border-white/20 rounded-2xl">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 md:mb-6">
+                                            {activeTab === 'upcoming' ? <Calendar className="w-7 h-7 md:w-8 md:h-8 text-[#888888]" /> : <BookOpen className="w-7 h-7 md:w-8 md:h-8 text-[#888888]" />}
                                         </div>
-                                        <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                                        <h3 className="text-lg md:text-xl font-bold text-white mb-2 tracking-tight">
                                             {activeTab === 'my_rooms' ? "You haven't joined any rooms yet" :
                                                 activeTab === 'upcoming' ? "No upcoming sessions found" :
                                                     "No sessions found"}
                                         </h3>
-                                        <p className="text-[#888888] max-w-sm mx-auto mb-8 text-sm">
+                                        <p className="text-[#888888] max-w-sm mx-auto mb-6 md:mb-8 text-xs md:text-sm">
                                             {activeTab === 'my_rooms' ? "Join a room or host your own to see them here!" :
                                                 activeTab === 'upcoming' ? "You don't have any sessions scheduled for the future." :
                                                     "Be the first to lock in! Host a new study or skill-sharing session and invite others to join."}

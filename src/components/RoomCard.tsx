@@ -68,7 +68,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
 
                 {/* Buddy Activity Indicator */}
                 {(buddyCount || 0) > 0 && (
-                    <div className="absolute top-3 right-3 bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 origin-top-right z-20">
+                    <div className="absolute bottom-3 right-14 bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 z-20">
                         <Users className="w-3 h-3" />
                         {buddyCount} {buddyCount === 1 ? 'Buddy' : 'Buddies'} Inside
                     </div>

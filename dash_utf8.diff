@@ -1,0 +1,64 @@
+﻿diff --git a/src/components/DashboardClient.tsx b/src/components/DashboardClient.tsx
+index 99f5e24..fb151be 100644
+--- a/src/components/DashboardClient.tsx
++++ b/src/components/DashboardClient.tsx
+@@ -20,6 +20,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
+     const [rooms, setRooms] = useState<Room[]>(initialRooms);
+     const [myRoomIds, setMyRoomIds] = useState<Set<string>>(new Set());
+     const [buddyRoomCounts, setBuddyRoomCounts] = useState<Record<string, number>>({});
++    const [activeSoloCount, setActiveSoloCount] = useState(0);
+     const [activeTab, setActiveTab] = useState<'all' | 'study' | 'skill' | 'my_rooms' | 'upcoming'>('all');
+     const [searchQuery, setSearchQuery] = useState('');
+     const router = useRouter();
+@@ -43,6 +44,15 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
+             setMyRoomIds(new Set(memberData.map(m => m.room_id)));
+         }
+ 
++        // Fetch active solo lockers (recent 30 mins)
++        const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
++        const { count } = await supabase
++            .from('solo_sessions')
++            .select('*', { count: 'exact', head: true })
++            .gt('completed_at', thirtyMinsAgo);
++
++        setActiveSoloCount(count || 0);
++
+         // Fetch buddy activity
+         const { data: buddiesData } = await supabase
+             .from('buddy_connections')
+@@ -143,8 +153,17 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
+                     </Link>
+                 </header>
+ 
+-                {/* Solo Lock-In Timer */}
++                {/* Solo Lock-In Timer & Community Counter */}
+                 <div className="mb-6 md:mb-10">
++                    <div className="flex items-center gap-2 mb-4 ml-2 animate-pulse">
++                        <span className="relative flex h-2 w-2">
++                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
++                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
++                        </span>
++                        <span className="text-amber-500/90 text-xs font-bold uppercase tracking-[0.2em]">
++                            {activeSoloCount + 4} Students Locked In Right Now
++                        </span>
++                    </div>
+                     <SoloTimer />
+                 </div>
+ 
+@@ -168,13 +187,13 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
+                         <div className="flex items-center justify-between w-full">
+                             <div className="flex items-center gap-2.5 text-gray-400 text-xs font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">
+                                 <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+-                                    <BookOpen className="w-4 h-4 text-amber-400" />
++                                    <Trophy className="w-4 h-4 text-amber-400" />
+                                 </div>
+-                                Streak
++                                Focus Score
+                             </div>
+                         </div>
+                         <div className="text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">
+-                            {profile ? `${profile.current_streak} Days` : '0 Days'}
++                            {profile ? profile.focus_score || 0 : '0'}
+                         </div>
+                     </div>
+                 </div>
