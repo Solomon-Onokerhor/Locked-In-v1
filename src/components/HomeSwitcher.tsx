@@ -3,6 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { DashboardClient } from './DashboardClient';
 import { LandingPage } from './LandingPage';
+import { useState, useEffect } from 'react';
 import type { Room } from '@/types';
 
 interface HomeSwitcherProps {
@@ -11,10 +12,15 @@ interface HomeSwitcherProps {
 
 export function HomeSwitcher({ initialRooms }: HomeSwitcherProps) {
     const { session, loading } = useAuth();
+    const [mounted, setMounted] = useState(false);
 
-    // While loading auth state, show a clean black screen or simple spinner
-    // to avoid flickering between landing and dashboard
-    if (loading) {
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Always show loading state on first render (matches server output) 
+    // and while auth is still loading
+    if (!mounted || loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white/20" />
@@ -30,3 +36,4 @@ export function HomeSwitcher({ initialRooms }: HomeSwitcherProps) {
     // If user is logged in, show the app dashboard
     return <DashboardClient initialRooms={initialRooms} />;
 }
+

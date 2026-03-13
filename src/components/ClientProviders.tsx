@@ -3,6 +3,8 @@
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { TourProvider, useTour } from "@/components/tour/TourProvider";
 import { TourOverlay } from "@/components/tour/TourOverlay";
+import { TimerProvider } from "@/components/TimerContext";
+import { FloatingTimer } from "@/components/FloatingTimer";
 import { Suspense, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -33,9 +35,12 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
         <AuthProvider>
             <Suspense fallback={null}>
                 <TourProvider>
-                    <OnboardingEnforcer />
-                    {children}
-                    <TourOverlay />
+                    <TimerProvider>
+                        <OnboardingEnforcer />
+                        {children}
+                        <TourOverlay />
+                        <FloatingTimer />
+                    </TimerProvider>
                 </TourProvider>
             </Suspense>
         </AuthProvider>

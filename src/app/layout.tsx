@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         "online study rooms Ghana",
     ],
     manifest: "/manifest.json",
-    themeColor: "#000000",
+
     alternates: {
         canonical: "https://www.lockedinumat.tech/",
     },
