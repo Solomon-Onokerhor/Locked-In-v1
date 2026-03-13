@@ -25,48 +25,57 @@ export function LeaderboardClient() {
         }
     }, [session, loading, router]);
 
+    // Helper: combined ranking score — Focus Points + (Streak × 10)
+    const getCombinedScore = (focusScore?: number | null, streak?: number | null) => {
+        return (focusScore || 0) + (streak || 0) * 10;
+    };
+
     const fetchLeaderboards = async () => {
         setIsLoadingData(true);
         try {
-            // Fetch Top Students (by current_streak)
+            // Fetch Top Students (we'll sort client-side by combined score)
             const { data: studentsData, error: studentsError } = await supabase
                 .from('profiles')
                 .select('*')
-                .order('current_streak', { ascending: false })
-                .limit(50);
+                .limit(100);
 
             if (studentsError) throw studentsError;
-            setTopStudents(studentsData as Profile[]);
 
-            // Fetch Top Faculties 
-            // We use a query to aggregate streaks by faculty manually since we don't have a view
+            // Sort by combined score: focus_score + (streak × 10)
+            const sorted = (studentsData as Profile[]).sort((a, b) => {
+                return getCombinedScore(b.focus_score, b.current_streak) - getCombinedScore(a.focus_score, a.current_streak);
+            }).slice(0, 50);
+
+            setTopStudents(sorted);
+
+            // Fetch Top Faculties — aggregate combined score by faculty
             const { data: allProfiles, error: allProfilesError } = await supabase
                 .from('profiles')
-                .select('faculty, current_streak')
+                .select('faculty, focus_score, current_streak')
                 .not('faculty', 'is', null)
-                .not('faculty', 'eq', '')
-                .gt('current_streak', 0);
+                .not('faculty', 'eq', '');
 
             if (allProfilesError) throw allProfilesError;
 
             if (allProfiles) {
-                const facultyMap: Record<string, { total_streak: number; active_students: number }> = {};
+                const facultyMap: Record<string, { total_score: number; active_students: number }> = {};
                 allProfiles.forEach(p => {
                     const fac = p.faculty || 'Unknown Faculty';
+                    const combined = getCombinedScore(p.focus_score, p.current_streak);
+                    if (combined <= 0) return; // Skip inactive students
                     if (!facultyMap[fac]) {
-                        facultyMap[fac] = { total_streak: 0, active_students: 0 };
+                        facultyMap[fac] = { total_score: 0, active_students: 0 };
                     }
-                    facultyMap[fac].total_streak += p.current_streak;
+                    facultyMap[fac].total_score += combined;
                     facultyMap[fac].active_students += 1;
                 });
 
                 const facultiesArray = Object.keys(facultyMap).map(fac => ({
                     faculty: fac,
-                    total_streak: facultyMap[fac].total_streak,
+                    total_streak: facultyMap[fac].total_score,
                     active_students: facultyMap[fac].active_students
                 }));
 
-                // Sort by total streak
                 facultiesArray.sort((a, b) => b.total_streak - a.total_streak);
                 setTopFaculties(facultiesArray);
             }
@@ -182,11 +191,23 @@ export function LeaderboardClient() {
                                                     </p>
                                                 </div>
 
-                                                <div className="text-right shrink-0">
+                                                <div className="flex flex-col items-end shrink-0 gap-1">
                                                     <span className={`flex justify-end items-center gap-1.5 ${scoreClasses}`}>
-                                                        <Flame className={flameClasses} />
-                                                        {student.current_streak}
+                                                        {getCombinedScore(student.focus_score, student.current_streak)}
+                                                        <span className="text-xs font-bold text-[#9da6b9]">pts</span>
                                                     </span>
+                                                    <div className="flex items-center gap-2">
+                                                        {(student.focus_score || 0) !== 0 && (
+                                                            <span className="flex items-center gap-0.5 text-[10px] md:text-xs text-blue-400 font-bold bg-blue-500/10 px-1.5 py-0.5 rounded">
+                                                                ⚡ {student.focus_score || 0}
+                                                            </span>
+                                                        )}
+                                                        {(student.current_streak || 0) > 0 && (
+                                                            <span className="flex items-center gap-0.5 text-[10px] md:text-xs text-orange-400 font-bold bg-orange-500/10 px-1.5 py-0.5 rounded">
+                                                                <Flame className="w-3 h-3" /> {student.current_streak}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );

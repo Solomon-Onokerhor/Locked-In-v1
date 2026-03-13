@@ -265,16 +265,6 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                                         <RoomCard key={room.room_id} room={room} buddyCount={buddyRoomCounts[room.room_id] || 0} />
                                     ))
                                 )}
-
-                                <Link href="/create-room" data-tour="host-room" className="hidden md:flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-white/40 bg-transparent hover:bg-white/5 transition-all p-8 cursor-pointer group min-h-[220px]">
-                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                                        <PlusCircle className="w-8 h-8 text-[#888888] group-hover:text-white transition-colors" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h4 className="text-white font-bold text-lg tracking-tight group-hover:text-white transition-colors">Create New Room</h4>
-                                        <p className="text-[#888888] text-sm">Start your own session</p>
-                                    </div>
-                                </Link>
                             </div>
                         </section>
                     </div>
