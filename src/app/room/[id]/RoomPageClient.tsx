@@ -166,8 +166,17 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const isAdmin = profile?.role === 'admin';
     const canDelete = isCreator || isAdmin;
 
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        // Update the current time every 10 seconds to keep the UI fresh without manual refresh
+        const interval = setInterval(() => {
+            setNow(new Date());
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     const sessionDate = new Date(room.date_time);
-    const now = new Date();
     const startTime = sessionDate.getTime();
     const endTime = startTime + (room.duration_minutes || 60) * 60000;
     const tenMinutesBefore = startTime - 10 * 60000;
@@ -244,32 +253,27 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         </div>
                     )}
 
-                    <div className="flex-1 flex flex-col items-center justify-center min-h-[350px] bg-white/[0.02] border border-white/5 rounded-3xl p-8 mb-8 relative overflow-hidden">
-
-                        {/* Circular Timer Display */}
-                        <div className="relative flex items-center justify-center mb-8">
-                            <svg className="w-56 h-56 md:w-72 md:h-72 transform -rotate-90" viewBox="0 0 100 100">
-                                <circle className="text-white/10" cx="50" cy="50" fill="none" r="48" stroke="currentColor" strokeWidth="2"></circle>
-                                <circle className="text-brand-accent transition-all duration-1000 ease-linear" cx="50" cy="50" fill="none" r="48" stroke="currentColor" strokeDasharray="301.59" strokeDashoffset={sessionStatus === 'live' ? '150' : '0'} strokeWidth="2"></circle>
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                {sessionStatus === 'upcoming' ? (
-                                    <>
-                                        <span className="text-4xl md:text-5xl font-black tracking-tighter text-white">READY</span>
-                                        <span className="text-brand-accent text-xs mt-2 uppercase tracking-widest font-bold">Starts Soon</span>
-                                    </>
-                                ) : sessionStatus === 'live' ? (
-                                    <>
-                                        <span className="text-4xl md:text-5xl font-black tracking-tighter text-white animate-pulse">LIVE</span>
-                                        <span className="text-brand-accent text-xs mt-2 uppercase tracking-widest font-bold">In Progress</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="text-4xl md:text-5xl font-black tracking-tighter text-white/50">ENDED</span>
-                                        <span className="text-gray-500 text-xs mt-2 uppercase tracking-widest font-bold">Session Over</span>
-                                    </>
-                                )}
-                            </div>
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] bg-white/[0.02] border border-white/5 rounded-3xl p-8 mb-8 relative overflow-hidden">
+                        
+                        <div className="flex flex-col items-center mb-6 text-center">
+                            {sessionStatus === 'upcoming' ? (
+                                <div className="inline-flex flex-col items-center">
+                                    <span className="text-sm font-bold tracking-[0.2em] text-brand-accent uppercase mb-2">Starts Soon</span>
+                                    <h3 className="text-2xl md:text-3xl font-black text-white">Get Ready to Lock In</h3>
+                                </div>
+                            ) : sessionStatus === 'live' ? (
+                                <div className="inline-flex flex-col items-center">
+                                    <span className="text-sm font-bold tracking-[0.2em] text-red-500 uppercase mb-2 animate-pulse flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-red-500"></span> Live Now
+                                    </span>
+                                    <h3 className="text-2xl md:text-3xl font-black text-white">Session in Progress</h3>
+                                </div>
+                            ) : (
+                                <div className="inline-flex flex-col items-center opacity-50">
+                                    <span className="text-sm font-bold tracking-[0.2em] text-gray-500 uppercase mb-2">Session Over</span>
+                                    <h3 className="text-2xl md:text-3xl font-black text-white">Ended</h3>
+                                </div>
+                            )}
                         </div>
 
                         {/* Lock In / Join Actions */}
@@ -309,12 +313,12 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
 
                             {/* Location info if in person */}
                             {room.session_mode === 'in_person' && (
-                                <div className="mt-4 flex flex-col items-center text-center gap-1">
-                                    <div className="flex items-center gap-2 text-gray-300">
-                                        <MapPin className="w-4 h-4" />
-                                        <span className="font-bold">{room.physical_location}</span>
+                                <div className="mt-2 p-4 w-full bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center text-center gap-1">
+                                    <div className="flex items-center gap-2 text-white">
+                                        <MapPin className="w-4 h-4 text-brand-accent" />
+                                        <span className="font-bold text-sm">{room.physical_location}</span>
                                     </div>
-                                    {room.location_note && <span className="text-xs text-gray-500">{room.location_note}</span>}
+                                    {room.location_note && <span className="text-xs text-gray-400 mt-1">{room.location_note}</span>}
                                 </div>
                             )}
                         </div>

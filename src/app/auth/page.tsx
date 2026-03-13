@@ -60,6 +60,10 @@ export default function AuthPage() {
                         { id: data.user.id, name, email, role: 'student' },
                     ]);
                     if (profileError) throw profileError;
+
+                    // Force explicit redirect immediately instead of waiting for AuthProvider state sync
+                    router.push('/onboarding');
+                    return;
                 }
             }
             // Redirection is handled by the useEffect above

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check, Users, Trophy, Settings } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SettingsModal } from './SettingsModal';
 
 const navItems = [
@@ -19,6 +19,11 @@ export function Sidebar() {
     const pathname = usePathname();
     const { profile, signOut } = useAuth();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     return (
         <>
@@ -27,22 +32,24 @@ export function Sidebar() {
                 <Link href="/" className="flex items-center">
                     <span className="text-xl font-bold tracking-tight text-white">Locked In<span className="text-gray-300">.</span></span>
                 </Link>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
-                        title="Settings"
-                    >
-                        <Settings className="w-4 h-4 text-gray-400" />
-                    </button>
-                    <button
-                        onClick={signOut}
-                        className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
-                        title="Sign Out"
-                    >
-                        <User className="w-4 h-4 text-gray-400" />
-                    </button>
-                </div>
+                {isMounted && (
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
+                            title="Settings"
+                        >
+                            <Settings className="w-4 h-4 text-gray-400" />
+                        </button>
+                        <button
+                            onClick={signOut}
+                            className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
+                            title="Sign Out"
+                        >
+                            <User className="w-4 h-4 text-gray-400" />
+                        </button>
+                    </div>
+                )}
             </header>
 
             {/* ═══ MOBILE: Premium Bottom Tab Bar ═══ */}
@@ -71,7 +78,7 @@ export function Sidebar() {
                         );
                     })}
                     {/* Admin tab - only for admins */}
-                    {profile?.role === 'admin' && (
+                    {isMounted && profile?.role === 'admin' && (
                         <Link
                             href="/admin"
                             className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${pathname === '/admin'
@@ -137,7 +144,7 @@ export function Sidebar() {
                     )}
 
                     {/* Admin link - only visible to admins */}
-                    {profile?.role === 'admin' && (
+                    {isMounted && profile?.role === 'admin' && (
                         <Link
                             href="/admin"
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all mt-2 ${pathname === '/admin'
@@ -165,8 +172,8 @@ export function Sidebar() {
                 </nav>
 
                 {/* User Profile / Auth Action */}
-                <div className="mt-auto pt-6 border-t border-white/10">
-                    {profile ? (
+                <div className="mt-auto pt-6 border-t border-white/10 min-h-[140px]">
+                    {isMounted && (profile ? (
                         <>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
@@ -224,7 +231,7 @@ export function Sidebar() {
                             <LogOut className="w-5 h-5 rotate-180" />
                             Sign In / Join
                         </Link>
-                    )}
+                    ))}
                 </div>
             </aside>
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
