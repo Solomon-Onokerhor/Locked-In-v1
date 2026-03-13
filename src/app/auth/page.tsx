@@ -60,6 +60,18 @@ export default function AuthPage() {
                         { id: data.user.id, name, email, role: 'student' },
                     ]);
                     if (profileError) throw profileError;
+
+                    // Send the welcome email
+                    try {
+                        await fetch('/api/send-welcome', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, name }),
+                        });
+                    } catch (emailErr) {
+                        console.error('Failed to send welcome email:', emailErr);
+                        // We don't throw here because the user is already signed up successfully
+                    }
                 }
             }
             // Redirection is handled by the useEffect above

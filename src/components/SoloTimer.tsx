@@ -47,16 +47,20 @@ export function SoloTimer() {
     const [countdown, setCountdown] = useState(3);
     const [isPaused, setIsPaused] = useState(false);
     const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-
+    
     // -- Completion Data --
     const [completedGoal, setCompletedGoal] = useState<'yes' | 'partial' | 'no' | null>(null);
     const [distraction, setDistraction] = useState('');
+
+    // Timer Refs for precise background tracking
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const expectedEndTimeRef = useRef<number | null>(null);
 
     // Sync timeLeft when duration changes in SETUP
     useEffect(() => {
         if (timerState === 'SETUP') {
             setTimeLeft(duration * 60);
+            expectedEndTimeRef.current = null;
         }
     }, [duration, timerState]);
 
@@ -72,33 +76,46 @@ export function SoloTimer() {
         }
     }, [timerState, countdown]);
 
-    // Handle Active Timer
+    // Handle Active & Break Timers with Absolute Timestamp
     useEffect(() => {
-        if (timerState === 'ACTIVE' && !isPaused) {
-            if (timeLeft > 0) {
-                timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-            } else if (timeLeft === 0) {
-                handleTimerFinished();
+        const isTimerActive = (timerState === 'ACTIVE' || timerState === 'BREAK');
+        
+        if (isTimerActive && !isPaused) {
+            // Set expected end time if not set (e.g. just started or just unpaused)
+            if (!expectedEndTimeRef.current) {
+                expectedEndTimeRef.current = Date.now() + (timeLeft * 1000);
             }
-        }
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, [timerState, isPaused, timeLeft]);
 
-    // Handle Break Timer
-    useEffect(() => {
-        if (timerState === 'BREAK' && !isPaused) {
-            if (timeLeft > 0) {
-                timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-            } else if (timeLeft === 0) {
-                handleBreakFinished();
-            }
+            timerRef.current = setInterval(() => {
+                if (!expectedEndTimeRef.current) return;
+                
+                const now = Date.now();
+                const remaining = Math.round((expectedEndTimeRef.current - now) / 1000);
+
+                if (remaining > 0) {
+                    setTimeLeft(remaining);
+                } else {
+                    // Timer finished exactly
+                    setTimeLeft(0);
+                    expectedEndTimeRef.current = null;
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    
+                    if (timerState === 'ACTIVE') {
+                        handleTimerFinished();
+                    } else {
+                        handleBreakFinished();
+                    }
+                }
+            }, 1000); // Check every second
+        } else {
+            // User paused, clear the expected end time so it recalculates on resume
+            expectedEndTimeRef.current = null;
         }
+
         return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [timerState, isPaused, timeLeft]);
+    }, [timerState, isPaused]); // Removed timeLeft dependency to prevent re-renders restarting interval
 
     // -- Audio Functions --
     const playCompletionSound = useCallback(() => {
@@ -188,6 +205,8 @@ export function SoloTimer() {
         }
         setPomodoroRound(1);
         setCountdown(3);
+        expectedEndTimeRef.current = null;
+        setTimeLeft(duration * 60);
         setTimerState('COUNTDOWN');
     };
 
@@ -206,9 +225,9 @@ export function SoloTimer() {
 
     const handleBreakFinished = () => {
         playBreakSound();
-        // Start next round
         setPomodoroRound(r => r + 1);
         setTimeLeft(duration * 60);
+        expectedEndTimeRef.current = null;
         setCountdown(3);
         setTimerState('COUNTDOWN');
     };
@@ -220,7 +239,8 @@ export function SoloTimer() {
 
     const handleQuitEarly = async () => {
         setIsSaving(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        expectedEndTimeRef.current = null;
 
         try {
             // Log failed session
@@ -303,6 +323,7 @@ export function SoloTimer() {
         setIsPaused(false);
         setShowQuitConfirm(false);
         setPomodoroRound(1);
+        expectedEndTimeRef.current = null;
     };
 
     const triggerConfetti = () => {
