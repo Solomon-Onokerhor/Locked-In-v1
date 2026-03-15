@@ -1,1 +1,48 @@
-﻿src/lib/resend.ts(1,24): error TS2307: Cannot find module 'resend' or its corresponding type declarations.
+﻿src/components/SoloTimer.tsx(6,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(11,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(16,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(25,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(71,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(77,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(104,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(109,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(116,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(304,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(313,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(316,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(391,97): error TS1005: '</' expected.
+src/components/SoloTimer.tsx(392,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(393,13): error TS2657: JSX expressions must have one parent element.
+src/components/SoloTimer.tsx(395,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(398,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(421,9): error TS1128: Declaration or statement expected.
+src/components/SoloTimer.tsx(422,5): error TS1109: Expression expected.
+src/components/SoloTimer.tsx(476,91): error TS1005: '</' expected.
+src/components/SoloTimer.tsx(477,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(481,1): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,2): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,3): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,4): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,5): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,6): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(481,7): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(487,27): error TS17002: Expected corresponding JSX closing tag for 'button'.
+src/components/SoloTimer.tsx(488,21): error TS1128: Declaration or statement expected.
+src/components/SoloTimer.tsx(489,17): error TS1109: Expression expected.
+src/components/SoloTimer.tsx(489,19): error TS1128: Declaration or statement expected.
+src/components/SoloTimer.tsx(510,13): error TS1128: Declaration or statement expected.
+src/components/SoloTimer.tsx(511,9): error TS1109: Expression expected.
+src/components/SoloTimer.tsx(512,5): error TS1128: Declaration or statement expected.
+src/components/SoloTimer.tsx(567,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(579,17): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,1): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,2): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,3): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,4): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,5): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,6): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(581,7): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/SoloTimer.tsx(607,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(613,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(615,1): error TS1185: Merge conflict marker encountered.
+src/components/SoloTimer.tsx(649,1): error TS1128: Declaration or statement expected.
