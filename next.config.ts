@@ -37,11 +37,6 @@ const nextConfig: NextConfig = {
         destination: '/404',
         permanent: true,
       },
-      {
-        source: '/admin',
-        destination: '/404',
-        permanent: true,
-      },
     ];
   },
   async headers() {
