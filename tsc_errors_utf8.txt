@@ -1,0 +1,1 @@
+﻿src/lib/resend.ts(1,24): error TS2307: Cannot find module 'resend' or its corresponding type declarations.

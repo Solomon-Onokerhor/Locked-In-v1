@@ -61,6 +61,17 @@ export default function AuthPage() {
                     ]);
                     if (profileError) throw profileError;
 
+                    // Send the welcome email
+                    try {
+                        await fetch('/api/send-welcome', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, name }),
+                        });
+                    } catch (emailErr) {
+                        console.error('Failed to send welcome email:', emailErr);
+                        // We don't throw here because the user is already signed up successfully
+                    }
                     // Force explicit redirect immediately instead of waiting for AuthProvider state sync
                     router.push('/onboarding');
                     return;

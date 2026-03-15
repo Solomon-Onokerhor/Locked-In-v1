@@ -21,6 +21,7 @@ export default function OnboardingPage() {
     const [faculty, setFaculty] = useState("");
     const [programme, setProgramme] = useState("");
     const [level, setLevel] = useState("");
+    const [whatsappNumber, setWhatsappNumber] = useState("");
 
     useEffect(() => {
         const checkUser = async () => {
@@ -37,7 +38,7 @@ export default function OnboardingPage() {
                 // Fetch existing profile if they have one (in case they refresh)
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("faculty, programme, level")
+                    .select("faculty, programme, level, whatsapp_number")
                     .eq("id", user.id)
                     .single();
 
@@ -45,9 +46,10 @@ export default function OnboardingPage() {
                     if (profile.faculty) setFaculty(profile.faculty);
                     if (profile.programme) setProgramme(profile.programme);
                     if (profile.level) setLevel(profile.level);
+                    if (profile.whatsapp_number) setWhatsappNumber(profile.whatsapp_number);
 
                     // If they already have these set, they shouldn't be here
-                    if (profile.faculty && profile.programme && profile.level) {
+                    if (profile.faculty && profile.programme && profile.level && profile.whatsapp_number) {
                         router.push("/");
                         return;
                     }
@@ -64,7 +66,7 @@ export default function OnboardingPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!faculty.trim() || !programme.trim() || !level.trim()) {
+        if (!faculty.trim() || !programme.trim() || !level.trim() || !whatsappNumber.trim()) {
             setError("Please fill out all fields to continue.");
             return;
         }
@@ -86,7 +88,8 @@ export default function OnboardingPage() {
                     .update({
                         faculty: faculty.trim(),
                         programme: programme.trim(),
-                        level: level.trim()
+                        level: level.trim(),
+                        whatsapp_number: whatsappNumber.trim()
                     })
                     .eq('id', userId);
                 if (updateError) throw updateError;
@@ -104,6 +107,7 @@ export default function OnboardingPage() {
                         faculty: faculty.trim(),
                         programme: programme.trim(),
                         level: level.trim(),
+                        whatsapp_number: whatsappNumber.trim(),
                         role: 'student'
                     });
                 if (insertError) throw insertError;
@@ -194,6 +198,19 @@ export default function OnboardingPage() {
                             </select>
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none">▼</span>
                         </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-white text-base font-medium" htmlFor="whatsapp">WhatsApp Number</label>
+                        <input
+                            id="whatsapp"
+                            type="tel"
+                            value={whatsappNumber}
+                            onChange={(e) => setWhatsappNumber(e.target.value)}
+                            placeholder="e.g. +233 50 123 4567"
+                            className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
+                            required
+                        />
                     </div>
 
                     {error && (

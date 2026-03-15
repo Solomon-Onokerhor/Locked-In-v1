@@ -15,6 +15,7 @@ const DISTRACTION_REASONS = ['Social Media', 'Phone / Messages', 'Noise / Enviro
 export function SoloTimer() {
     const { profile, session } = useAuth();
     const router = useRouter();
+    const timer = useSoloTimer();
 
     // -- Global Timer State --
     const {

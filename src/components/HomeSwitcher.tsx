@@ -3,6 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { DashboardClient } from './DashboardClient';
 import { LandingPage } from './LandingPage';
+import { useState, useEffect } from 'react';
 import type { Room } from '@/types';
 
 interface HomeSwitcherProps {
@@ -11,6 +12,7 @@ interface HomeSwitcherProps {
 
 export function HomeSwitcher({ initialRooms }: HomeSwitcherProps) {
     const { session, loading } = useAuth();
+    const [mounted, setMounted] = useState(false);
 
     // To prevent hydration errors (where server renders Dashboard but client renders Loading),
     // we never render a loading spinner from here that replaces the whole layout tree.
@@ -28,3 +30,4 @@ export function HomeSwitcher({ initialRooms }: HomeSwitcherProps) {
     // during SSR, Hydration, and active auth sessions.
     return <DashboardClient initialRooms={initialRooms} />;
 }
+

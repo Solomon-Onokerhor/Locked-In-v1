@@ -18,9 +18,26 @@ export function TourOverlay() {
     const retryRef = useRef<NodeJS.Timeout | null>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
 
+    const getVisibleTarget = useCallback((selector: string): Element | null => {
+        const elements = document.querySelectorAll(selector);
+        for (let i = 0; i < elements.length; i++) {
+            const el = elements[i] as HTMLElement;
+            const style = window.getComputedStyle(el);
+            // Check if element is fundamentally visible via CSS
+            if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                const rect = el.getBoundingClientRect();
+                // Ensure it actually occupies physical space
+                if (rect.width > 0 && rect.height > 0) {
+                    return el;
+                }
+            }
+        }
+        return null;
+    }, []);
+
     const updateRect = useCallback(() => {
         if (!currentStep) return;
-        const el = document.querySelector(currentStep.targetSelector);
+        const el = getVisibleTarget(currentStep.targetSelector);
         if (el) {
             const rect = el.getBoundingClientRect();
             setTargetRect({
@@ -40,10 +57,21 @@ export function TourOverlay() {
         }
 
         const findTarget = (attempts = 0) => {
-            const el = document.querySelector(currentStep.targetSelector);
+            const el = getVisibleTarget(currentStep.targetSelector);
             if (el) {
-                // Scroll element into view
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Ensure element is actually out of bounds before forcing a scroll
+                const rect = el.getBoundingClientRect();
+                const isFullyVisible = (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+                
+                // Only scroll if it's off-screen (prevents jank on fixed bottom nav bars)
+                if (!isFullyVisible && attempts === 0) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
 
                 // Wait for scroll to settle, then measure
                 setTimeout(() => {
