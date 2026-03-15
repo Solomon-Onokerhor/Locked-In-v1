@@ -148,50 +148,51 @@ export function LeaderboardClient() {
                     let scoreClasses = '';
 
                     if (index === 0) {
-                        rankClasses = 'p-6 rounded-2xl bg-white/10 border border-white/20';
-                        rankNumberClasses = 'w-12 h-12 bg-white text-black font-black text-xl rounded-full';
-                        avatarClasses = 'w-14 h-14 border-2 border-white bg-white/20';
-                        nameClasses = 'text-xl text-white';
-                        scoreClasses = 'text-2xl text-white font-black';
+                        rankClasses = 'p-4 md:p-6 rounded-2xl bg-white/10 border border-white/20';
+                        rankNumberClasses = 'w-7 h-7 md:w-12 md:h-12 bg-white text-black font-black text-xs md:text-xl rounded-full shrink-0';
+                        avatarClasses = 'w-9 h-9 md:w-14 md:h-14 border-2 border-white bg-white/20 text-sm md:text-base';
+                        nameClasses = 'text-base md:text-xl text-white';
+                        scoreClasses = 'text-lg md:text-2xl text-white font-black';
                     } else if (index === 1 || index === 2) {
-                        rankClasses = 'p-5 rounded-2xl border border-white/10 hover:bg-white/5 transition-colors';
-                        rankNumberClasses = 'w-12 h-12 text-slate-400 font-bold text-xl';
-                        avatarClasses = 'w-12 h-12 bg-white/10';
-                        nameClasses = 'text-lg text-white';
-                        scoreClasses = 'text-xl text-white font-bold';
+                        rankClasses = 'p-3 md:p-5 rounded-2xl border border-white/10 hover:bg-white/5 transition-colors';
+                        rankNumberClasses = 'w-7 h-7 md:w-12 md:h-12 text-slate-400 font-bold text-xs md:text-xl shrink-0';
+                        avatarClasses = 'w-8 h-8 md:w-12 md:h-12 bg-white/10 text-sm md:text-base';
+                        nameClasses = 'text-sm md:text-lg text-white';
+                        scoreClasses = 'text-base md:text-xl text-white font-bold';
                     } else {
-                        rankClasses = 'p-4 rounded-2xl border border-transparent hover:border-white/5 hover:bg-white/5 transition-all';
-                        rankNumberClasses = 'w-12 h-12 text-slate-500 font-medium text-lg';
-                        avatarClasses = 'w-10 h-10 bg-white/5';
-                        nameClasses = 'text-base text-gray-100';
-                        scoreClasses = 'text-lg text-gray-300 font-bold';
+                        rankClasses = 'p-3 md:p-4 rounded-2xl border border-transparent hover:border-white/5 hover:bg-white/5 transition-all';
+                        rankNumberClasses = 'w-7 h-7 md:w-12 md:h-12 text-slate-500 font-medium text-xs md:text-lg shrink-0';
+                        avatarClasses = 'w-8 h-8 md:w-10 md:h-10 bg-white/5 text-xs md:text-sm';
+                        nameClasses = 'text-sm md:text-base text-gray-100';
+                        scoreClasses = 'text-sm md:text-lg text-gray-300 font-bold';
                     }
 
                     return (
-                        <div key={student.id} className={`flex items-center gap-4 md:gap-6 ${rankClasses}`}>
-                            <div className={`flex items-center justify-center shrink-0 ${rankNumberClasses}`}>
+                        <div key={student.id} className={`flex items-center gap-2 md:gap-6 ${rankClasses}`}>
+                            <div className={`flex items-center justify-center ${rankNumberClasses}`}>
                                 #{index + 1}
                             </div>
                             <div className={`rounded-full flex items-center justify-center text-white font-bold shrink-0 ${avatarClasses}`}>
                                 {student.name.charAt(0).toUpperCase()}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className={`font-bold truncate ${nameClasses}`}>{student.name}</h3>
-                                <p className={`truncate mt-0.5 ${index === 0 ? 'text-sm text-gray-400' : 'text-xs md:text-sm text-gray-500'}`}>
+                            {/* Name — must have min-w-0 so truncate works inside flex */}
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                                <h3 className={`font-bold truncate leading-tight ${nameClasses}`}>{student.name}</h3>
+                                <p className="truncate mt-0.5 text-xs text-gray-500">
                                     {student.faculty || 'Unknown Faculty'}
                                 </p>
                             </div>
-                            <div className="flex flex-col items-end shrink-0 gap-1">
-                                <span className={`flex items-center gap-1.5 ${scoreClasses}`}>
-                                    {leaderboardMode === 'weekly' ? (
-                                        <>{student.focus_score}<span className="text-xs font-bold text-[#9da6b9]">mins</span></>
-                                    ) : (
-                                        <>{student.focus_score}<span className="text-xs font-bold text-[#9da6b9]">pts</span></>
-                                    )}
+                            <div className="flex flex-col items-end shrink-0 gap-1 ml-1">
+                                <span className={`flex items-center gap-1 ${scoreClasses}`}>
+                                    {student.focus_score}
+                                    <span className="text-[10px] md:text-xs font-bold text-[#9da6b9]">
+                                        {leaderboardMode === 'weekly' ? 'm' : 'pts'}
+                                    </span>
                                 </span>
                                 {(student.current_streak || 0) > 0 && (
-                                    <span className="flex items-center gap-0.5 text-[10px] md:text-xs text-orange-400 font-bold bg-orange-500/10 px-1.5 py-0.5 rounded">
-                                        <Flame className="w-3 h-3" /> {student.current_streak}d streak
+                                    <span className="flex items-center gap-0.5 text-[9px] md:text-xs text-orange-400 font-bold bg-orange-500/10 px-1 md:px-1.5 py-0.5 rounded">
+                                        <Flame className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                                        <span>{student.current_streak}<span className="hidden md:inline">d streak</span></span>
                                     </span>
                                 )}
                             </div>
