@@ -1,160 +1,64 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Play, Pause, Square, Flame, CheckCircle2, Clock, Target, AlertTriangle, ArrowRight, XCircle, History, Coffee, Volume2, VolumeX, RotateCcw } from 'lucide-react';
+import { Play, Pause, Square, Flame, CheckCircle2, Clock, Target, AlertTriangle, ArrowRight, XCircle, History, Coffee, Volume2, VolumeX, RotateCcw, Loader2 as Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import confetti from 'canvas-confetti';
 import type { SoloSession } from '@/types';
-
-type TimerState = 'SETUP' | 'COUNTDOWN' | 'ACTIVE' | 'BREAK' | 'COMPLETION' | 'STATS';
+import { useSoloTimer } from '@/lib/SoloTimerContext';
 
 const DURATIONS = [25, 45, 60];
 const BREAK_DURATIONS = [5, 10, 15];
 const DISTRACTION_REASONS = ['Social Media', 'Phone / Messages', 'Noise / Environment', 'Daydreaming', 'Other', 'Nothing! I was locked in 🔒'];
 
 export function SoloTimer() {
-    const { profile, session, refreshProfile } = useAuth();
+    const { profile, session } = useAuth();
     const router = useRouter();
 
-    // -- App State --
-    const [timerState, setTimerState] = useState<TimerState>('SETUP');
-    const [isSaving, setIsSaving] = useState(false);
+    // -- Global Timer State --
+    const {
+        timerState,
+        isSaving,
+        duration,
+        setDuration,
+        label,
+        setLabel,
+        goal,
+        setGoal,
+        pomodoroEnabled,
+        setPomodoroEnabled,
+        breakDuration,
+        setBreakDuration,
+        pomodoroRound,
+        setTotalRounds,
+        totalRounds,
+        soundEnabled,
+        setSoundEnabled,
+        timeLeft,
+        countdown,
+        isPaused,
+        setIsPaused,
+        handleStartSequence,
+        handleQuitEarly,
+        submitCompletion,
+        resetAll,
+        skipBreak
+    } = useSoloTimer();
+
+    // -- Local Component State (UI only) --
     const [showHistory, setShowHistory] = useState(false);
     const [sessionHistory, setSessionHistory] = useState<SoloSession[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
-
-    // -- Setup Data --
-    const [duration, setDuration] = useState(25); // minutes
+    
+    // Setup View specific local state
     const [isCustomDuration, setIsCustomDuration] = useState(false);
     const [customDurationInput, setCustomDurationInput] = useState('');
-    const [label, setLabel] = useState('');
-    const [goal, setGoal] = useState('');
-
-    // -- Pomodoro Mode --
-    const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
-    const [breakDuration, setBreakDuration] = useState(5); // minutes
-    const [pomodoroRound, setPomodoroRound] = useState(1);
-    const [totalRounds, setTotalRounds] = useState(4);
-
-    // -- Audio --
-    const [soundEnabled, setSoundEnabled] = useState(true);
-    const audioContextRef = useRef<AudioContext | null>(null);
-
-    // -- Timer State --
-    const [timeLeft, setTimeLeft] = useState(duration * 60);
-    const [countdown, setCountdown] = useState(3);
-    const [isPaused, setIsPaused] = useState(false);
     const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // -- Completion Data --
+    // Completion View specific local state
     const [completedGoal, setCompletedGoal] = useState<'yes' | 'partial' | 'no' | null>(null);
     const [distraction, setDistraction] = useState('');
-
-    // Sync timeLeft when duration changes in SETUP
-    useEffect(() => {
-        if (timerState === 'SETUP') {
-            setTimeLeft(duration * 60);
-        }
-    }, [duration, timerState]);
-
-    // Handle Countdown
-    useEffect(() => {
-        if (timerState === 'COUNTDOWN') {
-            if (countdown > 0) {
-                const id = setTimeout(() => setCountdown(c => c - 1), 1000);
-                return () => clearTimeout(id);
-            } else {
-                setTimerState('ACTIVE');
-            }
-        }
-    }, [timerState, countdown]);
-
-    // Handle Active Timer
-    useEffect(() => {
-        if (timerState === 'ACTIVE' && !isPaused) {
-            if (timeLeft > 0) {
-                timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-            } else if (timeLeft === 0) {
-                handleTimerFinished();
-            }
-        }
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, [timerState, isPaused, timeLeft]);
-
-    // Handle Break Timer
-    useEffect(() => {
-        if (timerState === 'BREAK' && !isPaused) {
-            if (timeLeft > 0) {
-                timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-            } else if (timeLeft === 0) {
-                handleBreakFinished();
-            }
-        }
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, [timerState, isPaused, timeLeft]);
-
-    // -- Audio Functions --
-    const playCompletionSound = useCallback(() => {
-        if (!soundEnabled) return;
-
-        try {
-            if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            }
-            const ctx = audioContextRef.current;
-
-            // Play a pleasant "ding-ding-ding" chime
-            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-            notes.forEach((freq, i) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = freq;
-                osc.type = 'sine';
-                gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.2);
-                gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.2 + 0.05);
-                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.2 + 0.5);
-                osc.start(ctx.currentTime + i * 0.2);
-                osc.stop(ctx.currentTime + i * 0.2 + 0.5);
-            });
-        } catch {
-            // Audio not available, fail silently
-        }
-    }, [soundEnabled]);
-
-    const playBreakSound = useCallback(() => {
-        if (!soundEnabled) return;
-        try {
-            if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            }
-            const ctx = audioContextRef.current;
-            // Two gentle tones for break
-            [440, 523.25].forEach((freq, i) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = freq;
-                osc.type = 'triangle';
-                gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.3);
-                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + i * 0.3 + 0.05);
-                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.3 + 0.4);
-                osc.start(ctx.currentTime + i * 0.3);
-                osc.stop(ctx.currentTime + i * 0.3 + 0.4);
-            });
-        } catch {
-            // Fail silently
-        }
-    }, [soundEnabled]);
 
     // -- Fetch Session History --
     const fetchHistory = useCallback(async () => {
@@ -181,157 +85,13 @@ export function SoloTimer() {
         }
     }, [showHistory, session, fetchHistory]);
 
-    const handleStartSequence = () => {
-        if (!session) {
-            router.push('/auth');
-            return;
-        }
-        setPomodoroRound(1);
-        setCountdown(3);
-        setTimerState('COUNTDOWN');
-    };
-
-    const handleTimerFinished = () => {
-        playCompletionSound();
-        if (pomodoroEnabled && pomodoroRound < totalRounds) {
-            // Transition to break
-            setTimeLeft(breakDuration * 60);
-            setTimerState('BREAK');
-        } else {
-            // Final completion
-            setTimerState('COMPLETION');
-            triggerConfetti();
-        }
-    };
-
-    const handleBreakFinished = () => {
-        playBreakSound();
-        // Start next round
-        setPomodoroRound(r => r + 1);
-        setTimeLeft(duration * 60);
-        setCountdown(3);
-        setTimerState('COUNTDOWN');
-    };
-
-    const skipBreak = () => {
-        if (timerRef.current) clearTimeout(timerRef.current);
-        handleBreakFinished();
-    };
-
-    const handleQuitEarly = async () => {
-        setIsSaving(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-
-        try {
-            // Log failed session
-            await supabase.from('solo_sessions').insert({
-                user_id: session!.user.id,
-                label: label || 'Solo Session',
-                goal: goal,
-                duration_minutes: duration,
-                completed_at: new Date().toISOString(),
-                quit_early: true
-            });
-
-            // Update focus score negatively
-            await supabase.rpc('update_focus_score', { score_delta: -5, user_uuid: session!.user.id });
-
-            await refreshProfile();
-        } catch (error) {
-            console.error('Error quitting early:', error);
-        } finally {
-            setIsSaving(false);
-            resetAll();
-        }
-    };
-
-    const submitCompletion = async () => {
-        if (!completedGoal || !distraction) return;
-        setIsSaving(true);
-        try {
-            const actualDuration = pomodoroEnabled ? duration * pomodoroRound : duration;
-
-            // 1. Log Session
-            await supabase.from('solo_sessions').insert({
-                user_id: session!.user.id,
-                label: label || 'Solo Session',
-                goal: goal,
-                duration_minutes: actualDuration,
-                completed_goal: completedGoal,
-                distraction_reason: distraction,
-                completed_at: new Date().toISOString(),
-                quit_early: false
-            });
-
-            // 2. Calculate Base Metrics
-            let scoreUpdate = 10; // Base score for completion
-            if (completedGoal === 'yes') scoreUpdate += 5;
-            if (distraction === 'Nothing! I was locked in 🔒') scoreUpdate += 5;
-            if (actualDuration >= 60) scoreUpdate += 10; // Bonus for long sessions
-            if (pomodoroEnabled) scoreUpdate += 5; // Pomodoro bonus
-
-            // Update profile
-            await supabase.from('profiles')
-                .update({
-                    total_focus_time_minutes: (profile?.total_focus_time_minutes || 0) + actualDuration,
-                    sessions_completed: (profile?.sessions_completed || 0) + 1,
-                    focus_score: (profile?.focus_score || 0) + scoreUpdate
-                })
-                .eq('id', session!.user.id);
-
-            // 3. Trigger streak
-            await supabase.rpc('update_user_activity');
-            await refreshProfile();
-
-            setTimerState('STATS');
-        } catch (error) {
-            console.error('Error saving completion:', error);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const resetAll = () => {
-        setTimerState('SETUP');
-        setDuration(25);
-        setIsCustomDuration(false);
-        setCustomDurationInput('');
-        setLabel('');
-        setGoal('');
-        setCompletedGoal(null);
-        setDistraction('');
-        setIsPaused(false);
-        setShowQuitConfirm(false);
-        setPomodoroRound(1);
-    };
-
-    const triggerConfetti = () => {
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
-
-        const interval: any = setInterval(function () {
-            const timeLeft = animationEnd - Date.now();
-
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
-            }
-
-            const particleCount = 50 * (timeLeft / duration);
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
-    };
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         const secs = (seconds % 60).toString().padStart(2, '0');
         return `${mins}:${secs}`;
     };
 
-    const handleCustomDurationSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleCustomDurationSubmit = (e: React.KeyboardEvent<HTMLInputElement> | { key: string }) => {
         if (e.key === 'Enter') {
             const val = parseInt(customDurationInput);
             if (!isNaN(val) && val > 0 && val <= 180) {
@@ -438,7 +198,7 @@ export function SoloTimer() {
                                     value={customDurationInput}
                                     onChange={(e) => setCustomDurationInput(e.target.value)}
                                     onKeyDown={handleCustomDurationSubmit}
-                                    onBlur={() => handleCustomDurationSubmit({ key: 'Enter' } as any)}
+                                    onBlur={() => handleCustomDurationSubmit({ key: 'Enter' })}
                                     className="w-24 px-4 py-3 rounded-xl bg-black/40 border border-brand-accent text-white text-center font-bold outline-none focus:ring-2 focus:ring-brand-accent"
                                 />
                             ) : (
@@ -516,7 +276,13 @@ export function SoloTimer() {
                     {/* Start Button */}
                     <div className="pt-4">
                         <button
-                            onClick={handleStartSequence}
+                            onClick={() => {
+                                if (!session) {
+                                    router.push('/auth');
+                                    return;
+                                }
+                                handleStartSequence();
+                            }}
                             disabled={!label || !goal}
                             className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black text-xl shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:shadow-[0_0_40px_rgba(79,70,229,0.6)] transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group flex items-center justify-center gap-3"
                         >
@@ -566,7 +332,7 @@ export function SoloTimer() {
                                     {s.goal && <span className="text-gray-600 text-xs truncate">• {s.goal}</span>}
                                 </div>
                             </div>
-                            <span className="text-gray-600 text-xs font-medium shrink-0">{timeAgo(s.completed_at)}</span>
+                            <span className="text-gray-600 text-xs font-medium shrink-0">{timeAgo(s.completed_at || new Date().toISOString())}</span>
                         </div>
                     ))}
                 </div>
@@ -593,7 +359,7 @@ export function SoloTimer() {
                 <Coffee className="w-10 h-10 text-amber-400" />
             </div>
             <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Break Time ☕</h2>
-            <p className="text-gray-400 mb-2">Round {pomodoroRound} of {totalRounds} complete</p>
+            <p className="text-gray-400 mb-2">Round {pomodoroRound - 1} of {totalRounds} complete</p>
             <p className="text-amber-400 font-bold mb-8 text-sm">Relax, stretch, hydrate — you've earned it</p>
 
             <div className="text-6xl md:text-7xl font-light tracking-tighter tabular-nums text-amber-400 font-mono mb-8">
@@ -673,7 +439,7 @@ export function SoloTimer() {
                     <div className="flex flex-col items-center gap-4 bg-red-500/10 p-5 rounded-3xl border border-red-500/30 animate-fade-in-up md:w-auto w-[90%]">
                         <p className="text-white font-bold text-center">Are you sure? This logs as a failed session!</p>
                         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            <button onClick={handleQuitEarly} className="px-6 py-3 bg-red-500 hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all w-full sm:w-auto">
+                            <button onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }} className="px-6 py-3 bg-red-500 hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all w-full sm:w-auto">
                                 Yes, I&apos;m a loser
                             </button>
                             <button onClick={() => setShowQuitConfirm(false)} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all border border-white/20 w-full sm:w-auto">
@@ -759,11 +525,13 @@ export function SoloTimer() {
                 </div>
 
                 <button
-                    onClick={submitCompletion}
+                    onClick={() => {
+                        if (completedGoal && distraction) submitCompletion(completedGoal, distraction);
+                    }}
                     disabled={!completedGoal || !distraction || isSaving}
                     className="w-full py-4 mt-4 bg-white text-brand-primary hover:bg-gray-100 rounded-2xl font-black text-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                 >
-                    {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : 'SAVE REFLECTION'}
+                    {isSaving ? <Loader2Icon className="w-6 h-6 animate-spin" /> : 'SAVE REFLECTION'}
                 </button>
             </div>
         </div>
@@ -789,7 +557,11 @@ export function SoloTimer() {
 
             <div className="flex flex-col gap-3">
                 <button
-                    onClick={resetAll}
+                    onClick={() => {
+                        setCompletedGoal(null);
+                        setDistraction('');
+                        resetAll();
+                    }}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-lg shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all active:scale-95"
                 >
                     START ANOTHER SESSION

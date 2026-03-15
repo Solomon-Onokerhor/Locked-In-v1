@@ -12,21 +12,19 @@ interface HomeSwitcherProps {
 export function HomeSwitcher({ initialRooms }: HomeSwitcherProps) {
     const { session, loading } = useAuth();
 
-    // While loading auth state, show a clean black screen or simple spinner
-    // to avoid flickering between landing and dashboard
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white/20" />
-            </div>
-        );
-    }
-
-    // If no session, show the high-conversion landing page
-    if (!session) {
+    // To prevent hydration errors (where server renders Dashboard but client renders Loading),
+    // we never render a loading spinner from here that replaces the whole layout tree.
+    // Instead, we default to the LandingPage if we know we are unauthenticated,
+    // otherwise we default to DashboardClient (which handles its own internal loading states)
+    // if we haven't confirmed auth failure yet.
+    // This ensures the DOM tree structure remains stable during the hydration pass.
+    
+    // Once loading finishes, if there's genuinely no session, show landing page.
+    if (!loading && !session) {
         return <LandingPage />;
     }
 
-    // If user is logged in, show the app dashboard
+    // Default to the dashboard view (which can render the sidebar skeletons)
+    // during SSR, Hydration, and active auth sessions.
     return <DashboardClient initialRooms={initialRooms} />;
 }

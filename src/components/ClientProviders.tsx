@@ -3,6 +3,8 @@
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { TourProvider, useTour } from "@/components/tour/TourProvider";
 import { TourOverlay } from "@/components/tour/TourOverlay";
+import { SoloTimerProvider } from '@/lib/SoloTimerContext';
+import { FloatingTimer } from '@/components/FloatingTimer';
 import { Suspense, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -31,13 +33,16 @@ function OnboardingEnforcer() {
 export function ClientProviders({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <Suspense fallback={null}>
-                <TourProvider>
-                    <OnboardingEnforcer />
-                    {children}
-                    <TourOverlay />
-                </TourProvider>
-            </Suspense>
+            <SoloTimerProvider>
+                <Suspense fallback={null}>
+                    <TourProvider>
+                        <OnboardingEnforcer />
+                        {children}
+                        <FloatingTimer />
+                        <TourOverlay />
+                    </TourProvider>
+                </Suspense>
+            </SoloTimerProvider>
         </AuthProvider>
     );
 }
