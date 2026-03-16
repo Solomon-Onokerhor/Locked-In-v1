@@ -49,6 +49,19 @@ export default function AuthPage() {
 
         try {
             if (isResetPassword) {
+                // Verify the email belongs to an existing account
+                const { data: userProfile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('email')
+                    .eq('email', email)
+                    .single();
+                
+                if (profileError || !userProfile) {
+                    setError('No account found with this email address.');
+                    setAuthLoading(false);
+                    return;
+                }
+
                 const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: `${window.location.origin}/auth/update-password`,
                 });
@@ -68,11 +81,13 @@ export default function AuthPage() {
                     options: { data: { full_name: name } },
                 });
                 if (signUpError) throw signUpError;
+                
                 if (data.user) {
                     const { error: profileError } = await supabase.from('profiles').insert([
                         { id: data.user.id, name, email, role: 'student' },
                     ]);
-                    if (profileError) throw profileError;
+                    // Ignore profile error if they already exist (e.g. they tried signing up again without verifying)
+                    if (profileError && profileError.code !== '23505') throw profileError;
 
                     // Send the welcome email
                     try {
@@ -85,12 +100,20 @@ export default function AuthPage() {
                         console.error('Failed to send welcome email:', emailErr);
                         // We don't throw here because the user is already signed up successfully
                     }
+                    // Check if we need email verification (session is null on sign up if confirm email is enabled in Supabase)
+                    if (!data.session) {
+                        setSuccessMessage('Account created! Please check your email for a verification link to sign in.');
+                        setAuthLoading(false);
+                        return; // Stop here, don't try to redirect
+                    }
+                    
                     // Force explicit redirect immediately instead of waiting for AuthProvider state sync
                     router.push('/onboarding');
                     return;
                 }
             }
             // Redirection is handled by the useEffect above
+
 
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');

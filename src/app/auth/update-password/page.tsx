@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -13,17 +14,16 @@ export default function UpdatePasswordPage() {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+    const { session, loading: authLoading } = useAuth();
+
     // Make sure we have a session to update password for
     useEffect(() => {
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // Not authenticated via the email link, redirect to login
-                router.push('/auth');
-            }
-        };
-        checkSession();
-    }, [router]);
+        // Wait until the auth provider finishes attempting to load a session from the URL hash
+        if (!authLoading && !session) {
+            // Not authenticated via the email link, redirect to login
+            router.push('/auth');
+        }
+    }, [session, authLoading, router]);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
