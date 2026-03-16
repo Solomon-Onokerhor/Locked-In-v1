@@ -18,6 +18,8 @@ export default function AuthPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
+    const [isResetPassword, setIsResetPassword] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 
 
@@ -43,8 +45,19 @@ export default function AuthPage() {
 
         setAuthLoading(true);
         setError(null);
+        setSuccessMessage(null);
 
         try {
+            if (isResetPassword) {
+                const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/auth/update-password`,
+                });
+                if (resetError) throw resetError;
+                setSuccessMessage('Password reset link sent to your email.');
+                setAuthLoading(false);
+                return;
+            }
+
             if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
@@ -125,8 +138,8 @@ export default function AuthPage() {
                 <div className="flex w-full border-b border-white/10 mb-8">
                     <button
                         type="button"
-                        onClick={() => setIsLogin(true)}
-                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${isLogin
+                        onClick={() => { setIsLogin(true); setIsResetPassword(false); setError(null); setSuccessMessage(null); }}
+                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${isLogin && !isResetPassword
                                 ? 'border-white text-white'
                                 : 'border-transparent text-[#888888] hover:text-gray-300'
                             }`}
@@ -135,8 +148,8 @@ export default function AuthPage() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setIsLogin(false)}
-                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${!isLogin
+                        onClick={() => { setIsLogin(false); setIsResetPassword(false); setError(null); setSuccessMessage(null); }}
+                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${!isLogin && !isResetPassword
                                 ? 'border-white text-white'
                                 : 'border-transparent text-[#888888] hover:text-gray-300'
                             }`}
@@ -151,8 +164,13 @@ export default function AuthPage() {
                             {error}
                         </div>
                     )}
+                    {successMessage && (
+                        <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium rounded-lg flex items-center gap-2">
+                            {successMessage}
+                        </div>
+                    )}
 
-                    {!isLogin && (
+                    {!isLogin && !isResetPassword && (
                         <label className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-gray-300">Full Name</span>
                             <input
@@ -178,31 +196,43 @@ export default function AuthPage() {
                         />
                     </label>
 
-                    <label className="flex flex-col gap-2 relative">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-300">Password</span>
-                            {isLogin && (
-                                <button type="button" className="text-xs text-[#888888] hover:text-white transition-colors">Forgot?</button>
-                            )}
-                        </div>
-                        <div className="relative flex items-center">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                required
-                                placeholder={isLogin ? "Enter your password" : "Create a password"}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
-                            >
-                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
-                        </div>
-                    </label>
+                    {!isResetPassword && (
+                        <label className="flex flex-col gap-2 relative">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-300">Password</span>
+                                {isLogin && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            setIsResetPassword(true);
+                                            setError(null);
+                                            setSuccessMessage(null);
+                                        }}
+                                        className="text-xs text-[#888888] hover:text-white transition-colors"
+                                    >
+                                        Forgot?
+                                    </button>
+                                )}
+                            </div>
+                            <div className="relative flex items-center">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    required={!isResetPassword}
+                                    placeholder={isLogin ? "Enter your password" : "Create a password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </label>
+                    )}
 
                     <button
                         type="submit"
@@ -211,12 +241,27 @@ export default function AuthPage() {
                     >
                         {authLoading ? (
                             <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : isResetPassword ? (
+                            'Send Reset Link'
                         ) : isLogin ? (
                             'Sign In'
                         ) : (
                             'Create Account'
                         )}
                     </button>
+                    
+                    {isResetPassword && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsResetPassword(false);
+                                setError(null);
+                            }}
+                            className="w-full text-center text-sm text-[#888888] hover:text-white transition-colors mt-2"
+                        >
+                            Back to Sign In
+                        </button>
+                    )}
                 </form>
 
 
