@@ -58,12 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        // Intercept password recovery hash before Supabase processes it, routing it to the correct page
-        if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
-            window.location.replace('/auth/update-password' + window.location.hash);
-            return;
-        }
-
         supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
             setSession(session);
             if (session) fetchProfile(session.user.id);
