@@ -85,6 +85,9 @@ export default function AuthPage() {
                         console.error('Failed to send welcome email:', emailErr);
                         // We don't throw here because the user is already signed up successfully
                     }
+                    // Force explicit redirect immediately instead of waiting for AuthProvider state sync
+                    router.push('/onboarding');
+                    return;
                 }
             }
             // Redirection is handled by the useEffect above

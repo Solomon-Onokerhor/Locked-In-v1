@@ -3,8 +3,8 @@
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { TourProvider, useTour } from "@/components/tour/TourProvider";
 import { TourOverlay } from "@/components/tour/TourOverlay";
-import { TimerProvider } from "@/components/TimerContext";
-import { FloatingTimer } from "@/components/FloatingTimer";
+import { SoloTimerProvider } from '@/lib/SoloTimerContext';
+import { FloatingTimer } from '@/components/FloatingTimer';
 import { Suspense, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -19,7 +19,7 @@ function OnboardingEnforcer() {
         if (isTourActive) return;
 
         if (!loading && session && profile) {
-            const isProfileComplete = profile.faculty && profile.programme && profile.level;
+            const isProfileComplete = profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
             
             if (!isProfileComplete && pathname !== '/onboarding' && pathname !== '/auth') {
                 router.replace('/onboarding');
@@ -33,16 +33,16 @@ function OnboardingEnforcer() {
 export function ClientProviders({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <Suspense fallback={null}>
-                <TourProvider>
-                    <TimerProvider>
+            <SoloTimerProvider>
+                <Suspense fallback={null}>
+                    <TourProvider>
                         <OnboardingEnforcer />
                         {children}
-                        <TourOverlay />
                         <FloatingTimer />
-                    </TimerProvider>
-                </TourProvider>
-            </Suspense>
+                        <TourOverlay />
+                    </TourProvider>
+                </Suspense>
+            </SoloTimerProvider>
         </AuthProvider>
     );
 }

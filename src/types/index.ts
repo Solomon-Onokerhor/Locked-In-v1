@@ -24,6 +24,7 @@ export interface Profile {
     last_active_date: string;
     is_verified?: boolean;
     badge_label?: string;
+    whatsapp_number?: string;
     created_at: string;
 }
 
