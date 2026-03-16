@@ -21,7 +21,7 @@ function OnboardingEnforcer() {
         if (!loading && session && profile) {
             const isProfileComplete = profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
             
-            if (!isProfileComplete && pathname !== '/onboarding' && pathname !== '/auth') {
+            if (!isProfileComplete && pathname !== '/onboarding' && !pathname.startsWith('/auth')) {
                 router.replace('/onboarding');
             }
         }

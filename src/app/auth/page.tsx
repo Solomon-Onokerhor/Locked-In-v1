@@ -62,17 +62,29 @@ export default function AuthPage() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
             } else {
+                // Email validation to prevent obvious dummy emails
+                const EMAIL_BLOCKLIST = ['example.com', 'test.com', 'dummy.com', 'fake.com', 'email.com', 'fakemail.com'];
+                const domain = email.split('@')[1]?.toLowerCase() || '';
+                
+                if (EMAIL_BLOCKLIST.includes(domain)) {
+                    setError('Please use a real email address to sign up.');
+                    setAuthLoading(false);
+                    return;
+                }
+
                 const { data, error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
                     options: { data: { full_name: name } },
                 });
                 if (signUpError) throw signUpError;
+                
                 if (data.user) {
                     const { error: profileError } = await supabase.from('profiles').insert([
                         { id: data.user.id, name, email, role: 'student' },
                     ]);
-                    if (profileError) throw profileError;
+                    // Ignore profile error if they already exist (e.g. they tried signing up again without verifying)
+                    if (profileError && profileError.code !== '23505') throw profileError;
 
                     // Send the welcome email
                     try {
@@ -85,6 +97,14 @@ export default function AuthPage() {
                         console.error('Failed to send welcome email:', emailErr);
                         // We don't throw here because the user is already signed up successfully
                     }
+
+                    // Check if we need email verification (session is null on sign up if confirm email is enabled in Supabase)
+                    if (!data.session) {
+                        setSuccessMessage('Account created! Please check your email for a verification link to sign in.');
+                        setAuthLoading(false);
+                        return; // Stop here, don't try to redirect
+                    }
+
                     // Force explicit redirect immediately instead of waiting for AuthProvider state sync
                     router.push('/onboarding');
                     return;
