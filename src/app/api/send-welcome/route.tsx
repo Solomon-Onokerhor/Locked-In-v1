@@ -1,6 +1,7 @@
 import { resend } from '@/lib/resend';
 import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
 import { NextResponse } from 'next/server';
+import { render } from '@react-email/render';
 
 import * as React from 'react';
 
@@ -12,11 +13,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    const emailHtml = await render(<WelcomeEmail name={name || 'Student'} />);
+
     const { data, error } = await resend.emails.send({
       from: 'Locked In <hello@contact.lockedinumat.tech>',
       to: [email],
       subject: 'Welcome to Locked In',
-      react: WelcomeEmail({ name: name || 'Student' }) as React.ReactElement,
+      html: emailHtml,
     });
 
     if (error) {
