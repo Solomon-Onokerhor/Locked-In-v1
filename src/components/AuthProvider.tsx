@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthContextType {
     session: Session | null;
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setProfile(res.data as Profile);
                 // --- STREAK HEARTBEAT ---
                 // Trigger activity update silently in the background
-                supabase.rpc('update_user_activity').then(({ error }) => {
+                supabase.rpc('update_user_activity').then(({ error }: { error: any }) => {
                     if (error) console.error('Streak update error:', error);
                 });
             }
@@ -58,13 +58,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        // Intercept password recovery hash before Supabase processes it, routing it to the correct page
+        if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+            window.location.replace('/auth/update-password' + window.location.hash);
+            return;
+        }
+
+        supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
             setSession(session);
             if (session) fetchProfile(session.user.id);
             else setLoading(false);
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
             setSession(session);
             if (session) fetchProfile(session.user.id);
             else {
