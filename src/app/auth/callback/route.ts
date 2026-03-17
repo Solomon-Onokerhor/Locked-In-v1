@@ -32,10 +32,22 @@ export async function GET(request: NextRequest) {
             }
         );
 
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-            // Redirect to the `next` param (e.g., /auth/update-password for recovery)
+            // Check if this was a password recovery flow by inspecting the session's AMR
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const session = data?.session as any;
+            const isRecovery = session?.amr?.some(
+                (factor: { method: string }) => factor.method === 'recovery' || factor.method === 'otp'
+            );
+
+            if (isRecovery || next === '/auth/update-password') {
+                // Always redirect to update-password for recovery sessions
+                return NextResponse.redirect(new URL('/auth/update-password', requestUrl.origin));
+            }
+
+            // For other flows, redirect to `next` param
             return NextResponse.redirect(new URL(next, requestUrl.origin));
         }
     }
