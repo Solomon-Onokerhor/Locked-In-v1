@@ -8,7 +8,9 @@ import { Eye, EyeOff } from 'lucide-react';
 export default function UpdatePasswordPage() {
     const router = useRouter();
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -30,6 +32,18 @@ export default function UpdatePasswordPage() {
         setLoading(true);
         setError(null);
         setSuccessMessage(null);
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            setLoading(false);
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            setLoading(false);
+            return;
+        }
 
         try {
             const { error: updateError } = await supabase.auth.updateUser({
@@ -91,6 +105,27 @@ export default function UpdatePasswordPage() {
                                 className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
                             >
                                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                        </div>
+                    </label>
+
+                    <label className="flex flex-col gap-2 relative">
+                        <span className="text-sm font-medium text-gray-300">Confirm New Password</span>
+                        <div className="relative flex items-center">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                required
+                                placeholder="Confirm your new password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
+                            >
+                                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
                         </div>
                     </label>
