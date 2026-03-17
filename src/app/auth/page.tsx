@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { BookOpen, LogIn, UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, LogIn, UserPlus, Mail, Lock, User, Eye, EyeOff, KeyRound, Send } from 'lucide-react';
 
 export default function AuthPage() {
     const { session, loading, profile } = useAuth();
@@ -18,8 +18,10 @@ export default function AuthPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
-    const [isResetPassword, setIsResetPassword] = useState(false);
+    const [resetMode, setResetMode] = useState<'choose' | 'magic-link' | 'change-password' | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
 
 
@@ -48,13 +50,39 @@ export default function AuthPage() {
         setSuccessMessage(null);
 
         try {
-            if (isResetPassword) {
+            if (resetMode === 'magic-link') {
                 const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
                 });
                 if (resetError) throw resetError;
-                setSuccessMessage('Password reset link sent to your email.');
+                setSuccessMessage('Password reset link sent to your email. Check your inbox!');
                 setAuthLoading(false);
+                return;
+            }
+
+            if (resetMode === 'change-password') {
+                if (newPassword.length < 6) {
+                    setError('New password must be at least 6 characters.');
+                    setAuthLoading(false);
+                    return;
+                }
+                // Step 1: Sign in with current password to verify identity
+                const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+                if (signInError) {
+                    setError('Current password is incorrect.');
+                    setAuthLoading(false);
+                    return;
+                }
+                // Step 2: Update to the new password
+                const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+                if (updateError) throw updateError;
+                setSuccessMessage('Password changed successfully! You are now signed in.');
+                setNewPassword('');
+                setPassword('');
+                setResetMode(null);
+                setAuthLoading(false);
+                // They are now logged in from step 1, so redirect
+                setTimeout(() => router.push('/'), 1500);
                 return;
             }
 
@@ -158,8 +186,8 @@ export default function AuthPage() {
                 <div className="flex w-full border-b border-white/10 mb-8">
                     <button
                         type="button"
-                        onClick={() => { setIsLogin(true); setIsResetPassword(false); setError(null); setSuccessMessage(null); }}
-                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${isLogin && !isResetPassword
+                        onClick={() => { setIsLogin(true); setResetMode(null); setError(null); setSuccessMessage(null); }}
+                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${isLogin && !resetMode
                                 ? 'border-white text-white'
                                 : 'border-transparent text-[#888888] hover:text-gray-300'
                             }`}
@@ -168,8 +196,8 @@ export default function AuthPage() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => { setIsLogin(false); setIsResetPassword(false); setError(null); setSuccessMessage(null); }}
-                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${!isLogin && !isResetPassword
+                        onClick={() => { setIsLogin(false); setResetMode(null); setError(null); setSuccessMessage(null); }}
+                        className={`flex-1 pb-3 text-center border-b-2 text-sm font-bold transition-colors ${!isLogin && !resetMode
                                 ? 'border-white text-white'
                                 : 'border-transparent text-[#888888] hover:text-gray-300'
                             }`}
@@ -190,7 +218,42 @@ export default function AuthPage() {
                         </div>
                     )}
 
-                    {!isLogin && !isResetPassword && (
+                    {resetMode === 'choose' && (
+                        <div className="w-full flex flex-col gap-3">
+                            <p className="text-sm text-gray-400 text-center mb-1">How would you like to reset your password?</p>
+                            <button
+                                type="button"
+                                onClick={() => { setResetMode('magic-link'); setError(null); }}
+                                className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 flex items-center gap-3 hover:border-white/30 transition-colors"
+                            >
+                                <Send className="w-5 h-5 text-[#888888]" />
+                                <div className="text-left">
+                                    <span className="text-sm font-medium">Send Reset Link</span>
+                                    <p className="text-xs text-[#888888]">We'll email you a link</p>
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setResetMode('change-password'); setError(null); }}
+                                className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 flex items-center gap-3 hover:border-white/30 transition-colors"
+                            >
+                                <KeyRound className="w-5 h-5 text-[#888888]" />
+                                <div className="text-left">
+                                    <span className="text-sm font-medium">Change Password</span>
+                                    <p className="text-xs text-[#888888]">Enter current & new password</p>
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setResetMode(null); setError(null); }}
+                                className="w-full text-center text-sm text-[#888888] hover:text-white transition-colors mt-1"
+                            >
+                                Back to Sign In
+                            </button>
+                        </div>
+                    )}
+
+                    {!isLogin && !resetMode && (
                         <label className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-gray-300">Full Name</span>
                             <input
@@ -216,70 +279,105 @@ export default function AuthPage() {
                         />
                     </label>
 
-                    {!isResetPassword && (
-                        <label className="flex flex-col gap-2 relative">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-300">Password</span>
-                                {isLogin && (
-                                    <button 
-                                        type="button" 
-                                        onClick={() => {
-                                            setIsResetPassword(true);
-                                            setError(null);
-                                            setSuccessMessage(null);
-                                        }}
-                                        className="text-xs text-[#888888] hover:text-white transition-colors"
-                                    >
-                                        Forgot?
-                                    </button>
-                                )}
-                            </div>
-                            <div className="relative flex items-center">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required={!isResetPassword}
-                                    placeholder={isLogin ? "Enter your password" : "Create a password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
-                        </label>
+                    {resetMode !== 'choose' && (
+                        <>
+                            {(resetMode === 'change-password' || !resetMode) && (
+                                <label className="flex flex-col gap-2 relative">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-300">
+                                            {resetMode === 'change-password' ? 'Current Password' : 'Password'}
+                                        </span>
+                                        {isLogin && !resetMode && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    setResetMode('choose');
+                                                    setError(null);
+                                                    setSuccessMessage(null);
+                                                }}
+                                                className="text-xs text-[#888888] hover:text-white transition-colors"
+                                            >
+                                                Forgot?
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            placeholder={resetMode === 'change-password' ? 'Enter your current password' : isLogin ? 'Enter your password' : 'Create a password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </label>
+                            )}
+
+                            {resetMode === 'change-password' && (
+                                <label className="flex flex-col gap-2 relative">
+                                    <span className="text-sm font-medium text-gray-300">New Password</span>
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            required
+                                            placeholder="Enter your new password"
+                                            minLength={6}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="w-full h-14 bg-[#111] border border-white/10 text-white rounded px-4 pr-12 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors text-base placeholder:text-[#888888]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-0 top-0 bottom-0 px-4 text-[#888888] hover:text-white flex items-center justify-center transition-colors"
+                                        >
+                                            {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </label>
+                            )}
+                        </>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={authLoading}
-                        className="w-full h-14 bg-white text-black font-bold text-lg mt-2 rounded hover:bg-gray-200 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {authLoading ? (
-                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        ) : isResetPassword ? (
-                            'Send Reset Link'
-                        ) : isLogin ? (
-                            'Sign In'
-                        ) : (
-                            'Create Account'
-                        )}
-                    </button>
+                    {resetMode !== 'choose' && (
+                        <button
+                            type="submit"
+                            disabled={authLoading}
+                            className="w-full h-14 bg-white text-black font-bold text-lg mt-2 rounded hover:bg-gray-200 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {authLoading ? (
+                                <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                            ) : resetMode === 'magic-link' ? (
+                                'Send Reset Link'
+                            ) : resetMode === 'change-password' ? (
+                                'Change Password'
+                            ) : isLogin ? (
+                                'Sign In'
+                            ) : (
+                                'Create Account'
+                            )}
+                        </button>
+                    )}
                     
-                    {isResetPassword && (
+                    {(resetMode === 'magic-link' || resetMode === 'change-password') && (
                         <button
                             type="button"
                             onClick={() => {
-                                setIsResetPassword(false);
+                                setResetMode('choose');
                                 setError(null);
+                                setSuccessMessage(null);
                             }}
                             className="w-full text-center text-sm text-[#888888] hover:text-white transition-colors mt-2"
                         >
-                            Back to Sign In
+                            ← Back to Options
                         </button>
                     )}
                 </form>
