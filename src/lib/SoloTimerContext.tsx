@@ -283,37 +283,27 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
         try {
             const actualDuration = pomodoroEnabled ? duration * pomodoroRound : duration;
 
-            await supabase.from('solo_sessions').insert({
-                user_id: session!.user.id,
-                label: label || 'Solo Session',
-                goal: goal,
-                duration_minutes: actualDuration,
-                completed_goal: completedGoal,
-                distraction_reason: distraction,
-                completed_at: new Date().toISOString(),
-                quit_early: false
+            const { data, error } = await supabase.rpc('submit_solo_session', {
+                p_label: label,
+                p_goal: goal,
+                p_duration: actualDuration,
+                p_completed_goal: completedGoal,
+                p_distraction: distraction,
+                p_is_pomodoro: pomodoroEnabled
             });
 
-            let scoreUpdate = 10;
-            if (completedGoal === 'yes') scoreUpdate += 5;
-            if (distraction === 'Nothing! I was locked in 🔒') scoreUpdate += 5;
-            if (actualDuration >= 60) scoreUpdate += 10;
-            if (pomodoroEnabled) scoreUpdate += 5;
+            if (error) throw error;
+            
+            // Handle custom error response from RPC
+            if (data && data.success === false) {
+                throw new Error(data.error || 'Unknown error saving session');
+            }
 
-            await supabase.from('profiles')
-                .update({
-                    total_focus_time_minutes: (profile?.total_focus_time_minutes || 0) + actualDuration,
-                    sessions_completed: (profile?.sessions_completed || 0) + 1,
-                    focus_score: (profile?.focus_score || 0) + scoreUpdate
-                })
-                .eq('id', session!.user.id);
-
-            await supabase.rpc('update_user_activity');
             await refreshProfile();
-
             setTimerState('STATS');
         } catch (error) {
             console.error('Error saving completion:', error);
+            alert('Failed to save session. ensure database functions are updated.');
         } finally {
             setIsSaving(false);
         }
