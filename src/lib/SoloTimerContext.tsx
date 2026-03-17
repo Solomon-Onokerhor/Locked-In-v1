@@ -87,8 +87,8 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTickRef = useRef<number>(Date.now()); // For background sync
 
-    // Determine if floating timer should show (if active AND not on dashboard)
-    const isTimerVisible = (timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN') && pathname !== '/';
+    // Determine if floating timer should show (if active/break/completion/stats AND not on dashboard)
+    const isTimerVisible = (timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN' || timerState === 'COMPLETION' || timerState === 'STATS') && pathname !== '/';
 
     // Sync timeLeft when duration changes in SETUP
     useEffect(() => {
