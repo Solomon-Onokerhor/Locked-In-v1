@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   images: {
@@ -66,7 +67,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://rwiitcwutjjokkltqqlw.supabase.co wss://rwiitcwutjjokkltqqlw.supabase.co; frame-ancestors 'none';",
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://rwiitcwutjjokkltqqlw.supabase.co wss://rwiitcwutjjokkltqqlw.supabase.co https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:; frame-ancestors 'none';",
           },
           // CORS Lockdown
           {
@@ -79,4 +80,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+
+
+export default withSentryConfig(nextConfig, {
+  org: "kaizen-x",
+  project: "javascript-nextjs",
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+  silent: !process.env.CI,
+});

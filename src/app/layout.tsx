@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
 
@@ -95,13 +96,24 @@ export default function RootLayout({
     return (
         <html lang="en" className={inter.variable}>
             <body className="antialiased">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-                <ClientProviders>
-                    {children}
-                </ClientProviders>
+                <ClerkProvider>
+                    <header className="flex justify-end items-center p-4 gap-4 h-16 absolute top-0 right-0 z-50">
+                        <Show when="signed-out">
+                            <SignInButton />
+                            <SignUpButton />
+                        </Show>
+                        <Show when="signed-in">
+                            <UserButton />
+                        </Show>
+                    </header>
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                    />
+                    <ClientProviders>
+                        {children}
+                    </ClientProviders>
+                </ClerkProvider>
             </body>
         </html>
     );

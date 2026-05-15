@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabaseServer';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 import type { Metadata } from 'next';
 import type { Room } from '@/types';
 import { HomeSwitcher } from '@/components/HomeSwitcher';
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+    const supabaseServer = await getSupabaseServer();
     // We still do the server-side room fetch to keep initial load fast
     const { data: roomsData } = await supabaseServer
         .from('rooms')

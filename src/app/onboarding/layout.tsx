@@ -1,3 +1,5 @@
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -5,6 +7,10 @@ export const metadata: Metadata = {
     description: 'Set up your academic profile to get personalized study recommendations and connect with students in your faculty at UMaT.',
 };
 
-export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
-    return children;
+export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
+    if ((await auth()).sessionClaims?.metadata?.onboardingComplete === true) {
+        redirect('/')
+    }
+
+    return <>{children}</>
 }

@@ -4,20 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
-import { StepCard } from "@/components/onboarding/StepCard";
+import { useUser } from "@clerk/nextjs";
 import { ArrowRight, LogOut } from "lucide-react";
 import { FACULTIES } from "@/lib/constants";
+import { completeOnboarding } from "./_actions";
 
 export default function OnboardingPage() {
     const router = useRouter();
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, signOut } = useAuth();
+    const { user } = useUser();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
 
     // Profile Data
-    const [userId, setUserId] = useState("");
-    const [email, setEmail] = useState("");
     const [faculty, setFaculty] = useState("");
     const [programme, setProgramme] = useState("");
     const [level, setLevel] = useState("");
@@ -26,14 +26,10 @@ export default function OnboardingPage() {
     useEffect(() => {
         const checkUser = async () => {
             try {
-                const { data: { user }, error: authError } = await supabase.auth.getUser();
-                if (authError || !user) {
-                    router.push("/auth");
+                if (!user) {
+                    setLoading(false);
                     return;
                 }
-
-                setUserId(user.id);
-                setEmail(user.email || "");
 
                 // Fetch existing profile if they have one (in case they refresh)
                 const { data: profile } = await supabase
@@ -47,12 +43,6 @@ export default function OnboardingPage() {
                     if (profile.programme) setProgramme(profile.programme);
                     if (profile.level) setLevel(profile.level);
                     if (profile.whatsapp_number) setWhatsappNumber(profile.whatsapp_number);
-
-                    // If they already have these set, they shouldn't be here
-                    if (profile.faculty && profile.programme && profile.level && profile.whatsapp_number) {
-                        router.push("/");
-                        return;
-                    }
                 }
             } catch (err) {
                 console.error("Error checking user:", err);
@@ -62,7 +52,7 @@ export default function OnboardingPage() {
         };
 
         checkUser();
-    }, [router]);
+    }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -71,15 +61,20 @@ export default function OnboardingPage() {
             return;
         }
 
+        if (!user) {
+            setError("Not signed in.");
+            return;
+        }
+
         setSubmitting(true);
         setError("");
 
         try {
-            // First, check if the profile exists to decide between update and insert
+                // First, check if the profile exists to decide between update and insert
             const { data: existingProfile } = await supabase
                 .from("profiles")
                 .select("id")
-                .eq("id", userId)
+                .eq("id", user.id)
                 .single();
 
             if (existingProfile) {
@@ -91,18 +86,20 @@ export default function OnboardingPage() {
                         level: level.trim(),
                         whatsapp_number: whatsappNumber.trim()
                     })
-                    .eq('id', userId);
+                    .eq('id', user.id);
                 if (updateError) throw updateError;
             } else {
-                // If profile is missing (e.g. failed insert during signup), create it
-                const { data: authUser } = await supabase.auth.getUser();
-                const userName = authUser.user?.user_metadata?.full_name || "Scholar";
+                // If profile is missing, create it
+                const userName = user.fullName || user.firstName || "Scholar";
+                
+                // Debugging: Call RPC to see what tokens are sent
+                await supabase.rpc('log_debug_info');
 
                 const { error: insertError } = await supabase
                     .from("profiles")
                     .insert({
-                        id: userId,
-                        email: email,
+                        id: user.id,
+                        email: user.primaryEmailAddress?.emailAddress || "",
                         name: userName,
                         faculty: faculty.trim(),
                         programme: programme.trim(),
@@ -113,7 +110,23 @@ export default function OnboardingPage() {
                 if (insertError) throw insertError;
             }
 
-            // Refresh the global profile state so OnboardingEnforcer sees a complete profile
+            // Mark onboarding as complete in Clerk's publicMetadata
+            const formData = new FormData();
+            formData.set('faculty', faculty.trim());
+            formData.set('programme', programme.trim());
+            formData.set('level', level.trim());
+            const res = await completeOnboarding(formData);
+
+            if (res?.error) {
+                setError(res.error);
+                setSubmitting(false);
+                return;
+            }
+
+            // Forces a token refresh so middleware sees onboardingComplete
+            await user.reload();
+
+            // Refresh the global profile state
             await refreshProfile();
 
             // Redirect to dashboard with tour active
@@ -237,13 +250,13 @@ export default function OnboardingPage() {
             <div className="mt-6 flex flex-col items-center gap-4">
                 <button
                     onClick={async () => {
-                        await supabase.auth.signOut();
-                        router.push('/auth');
+                        await signOut();
+                        router.push('/sign-in');
                     }}
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                 >
                     <LogOut className="w-4 h-4" />
-                    Sign out & use a different account
+                    Sign out &amp; use a different account
                 </button>
                 <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">

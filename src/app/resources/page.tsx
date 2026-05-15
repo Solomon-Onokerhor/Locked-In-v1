@@ -1,6 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import { supabase } from '@/lib/supabase';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 import ResourcesClient from './ResourcesClient';
 import type { Resource } from '@/types';
 
@@ -21,7 +21,12 @@ export async function generateMetadata(
         };
     }
 
-    const { data: resource } = await supabase
+    // Server-side fetching in generateMetadata doesn't currently use getSupabaseServer()
+    // It's using client supabase exported from lib, but since it's SSR context, it works for public data.
+    // For RLS protected data, it should be changed. Let's change it.
+    const supabaseServer = await getSupabaseServer();
+
+    const { data: resource } = await supabaseServer
         .from('resources')
         .select('*')
         .eq('resource_id', id)
@@ -54,6 +59,7 @@ export async function generateMetadata(
 }
 
 export default async function ResourcesPage() {
+    const supabaseServer = await getSupabaseServer();
     // Pre-fetch resources on the server
     const { data } = await supabaseServer
         .from('resources')
