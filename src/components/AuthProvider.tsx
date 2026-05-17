@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
-    session: any | null; // Using any to represent the mock session
+    session: Session | null;
     profile: Profile | null;
     loading: boolean;
     signOut: () => Promise<void>;
@@ -24,11 +24,9 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const { user, isLoaded, isSignedIn } = useUser();
-    const { signOut: clerkSignOut } = useClerk();
-    
+    const [session, setSession] = useState<Session | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [dbLoading, setDbLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     const fetchProfile = async (uid: string) => {
         try {
@@ -45,48 +43,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (error) console.error('Streak update error:', error);
                 });
             } else {
-                // If profile is strictly missing in keyless mode onboarding
                 setProfile(null);
             }
         } catch (err) {
             console.error('Error fetching profile:', err);
-        } finally {
-            setDbLoading(false);
         }
     };
 
     const refreshProfile = async () => {
-        if (isSignedIn && user?.id) {
-            await fetchProfile(user.id);
+        if (session?.user?.id) {
+            await fetchProfile(session.user.id);
         }
     };
 
     useEffect(() => {
-        if (!isLoaded) return;
-        
-        if (isSignedIn && user) {
-            fetchProfile(user.id);
-        } else {
-            setProfile(null);
-            setDbLoading(false);
-        }
-    }, [isLoaded, isSignedIn, user]);
+        const initializeAuth = async () => {
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            setSession(currentSession);
+            
+            if (currentSession?.user?.id) {
+                await fetchProfile(currentSession.user.id);
+            }
+            setLoading(false);
+        };
+
+        initializeAuth();
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+            setSession(newSession);
+            if (newSession?.user?.id) {
+                await fetchProfile(newSession.user.id);
+            } else {
+                setProfile(null);
+            }
+        });
+
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
+    }, []);
 
     const signOut = async () => {
-        await clerkSignOut();
+        await supabase.auth.signOut();
+        setSession(null);
         setProfile(null);
     };
-
-    // Proxy the Clerk user object format to the Supabase session structure
-    // so existing code (session.user.id) doesn't break
-    const session = isSignedIn && user ? {
-        user: {
-            id: user.id,
-            email: user.primaryEmailAddress?.emailAddress,
-        }
-    } : null;
-
-    const loading = !isLoaded || (isSignedIn && dbLoading);
 
     return (
         <AuthContext.Provider value={{ session, profile, loading, signOut, refreshProfile }}>
