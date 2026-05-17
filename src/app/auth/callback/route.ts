@@ -31,6 +31,8 @@ export async function GET(request: Request) {
         }
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth?error=true`)
+    // If there's no ?code= param, Supabase might be using implicit flow (hash fragments).
+    // Browsers preserve hash fragments during redirects, so we redirect to the home page
+    // where the client-side Supabase client will detect and process the session.
+    return NextResponse.redirect(`${origin}/`)
 }
