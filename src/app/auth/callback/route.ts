@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import type { CookieOptions } from '@supabase/ssr'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
@@ -7,7 +9,7 @@ export async function GET(request: Request) {
     const next = searchParams.get('next') ?? '/'
 
     if (code) {
-        const cookieStore = require('next/headers').cookies()
+        const cookieStore = await cookies()
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,8 +33,7 @@ export async function GET(request: Request) {
         }
     }
 
-    // If there's no ?code= param, Supabase might be using implicit flow (hash fragments).
-    // Browsers preserve hash fragments during redirects, so we redirect to the home page
-    // where the client-side Supabase client will detect and process the session.
+    // If there's no ?code= param, redirect to home where the client-side
+    // Supabase client will detect and process the session from the URL hash.
     return NextResponse.redirect(`${origin}/`)
 }
