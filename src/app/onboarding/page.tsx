@@ -4,18 +4,17 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
-import { useUser } from "@clerk/nextjs";
 import { ArrowRight, LogOut } from "lucide-react";
 import { FACULTIES } from "@/lib/constants";
-import { completeOnboarding } from "./_actions";
 
 export default function OnboardingPage() {
     const router = useRouter();
-    const { refreshProfile, signOut } = useAuth();
-    const { user } = useUser();
+    const { refreshProfile } = useAuth();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [userId, setUserId] = useState("");
+    const [email, setEmail] = useState("");
 
     // Profile Data
     const [faculty, setFaculty] = useState("");
@@ -26,12 +25,14 @@ export default function OnboardingPage() {
     useEffect(() => {
         const checkUser = async () => {
             try {
-                if (!user) {
-                    setLoading(false);
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                if (authError || !user) {
+                    router.push("/auth");
                     return;
                 }
+                setUserId(user.id);
+                setEmail(user.email || "");
 
-                // Fetch existing profile if they have one (in case they refresh)
                 const { data: profile } = await supabase
                     .from("profiles")
                     .select("faculty, programme, level, whatsapp_number")
@@ -43,6 +44,11 @@ export default function OnboardingPage() {
                     if (profile.programme) setProgramme(profile.programme);
                     if (profile.level) setLevel(profile.level);
                     if (profile.whatsapp_number) setWhatsappNumber(profile.whatsapp_number);
+
+                    if (profile.faculty && profile.programme && profile.level && profile.whatsapp_number) {
+                        router.push("/");
+                        return;
+                    }
                 }
             } catch (err) {
                 console.error("Error checking user:", err);
@@ -50,9 +56,8 @@ export default function OnboardingPage() {
                 setLoading(false);
             }
         };
-
         checkUser();
-    }, [user]);
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,7 +66,7 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (!user) {
+        if (!userId) {
             setError("Not signed in.");
             return;
         }
@@ -70,11 +75,10 @@ export default function OnboardingPage() {
         setError("");
 
         try {
-                // First, check if the profile exists to decide between update and insert
-            const { data: existingProfile } = await supabase
+                const { data: existingProfile } = await supabase
                 .from("profiles")
                 .select("id")
-                .eq("id", user.id)
+                .eq("id", userId)
                 .single();
 
             if (existingProfile) {
@@ -86,20 +90,17 @@ export default function OnboardingPage() {
                         level: level.trim(),
                         whatsapp_number: whatsappNumber.trim()
                     })
-                    .eq('id', user.id);
+                    .eq('id', userId);
                 if (updateError) throw updateError;
             } else {
-                // If profile is missing, create it
-                const userName = user.fullName || user.firstName || "Scholar";
-                
-                // Debugging: Call RPC to see what tokens are sent
-                await supabase.rpc('log_debug_info');
+                const { data: authUser } = await supabase.auth.getUser();
+                const userName = authUser.user?.user_metadata?.full_name || "Scholar";
 
                 const { error: insertError } = await supabase
                     .from("profiles")
                     .insert({
-                        id: user.id,
-                        email: user.primaryEmailAddress?.emailAddress || "",
+                        id: userId,
+                        email: email,
                         name: userName,
                         faculty: faculty.trim(),
                         programme: programme.trim(),
@@ -110,26 +111,7 @@ export default function OnboardingPage() {
                 if (insertError) throw insertError;
             }
 
-            // Mark onboarding as complete in Clerk's publicMetadata
-            const formData = new FormData();
-            formData.set('faculty', faculty.trim());
-            formData.set('programme', programme.trim());
-            formData.set('level', level.trim());
-            const res = await completeOnboarding(formData);
-
-            if (res?.error) {
-                setError(res.error);
-                setSubmitting(false);
-                return;
-            }
-
-            // Forces a token refresh so middleware sees onboardingComplete
-            await user.reload();
-
-            // Refresh the global profile state
             await refreshProfile();
-
-            // Redirect to dashboard with tour active
             router.push("/?tour=1");
 
         } catch (err: any) {
@@ -250,8 +232,8 @@ export default function OnboardingPage() {
             <div className="mt-6 flex flex-col items-center gap-4">
                 <button
                     onClick={async () => {
-                        await signOut();
-                        router.push('/sign-in');
+                        await supabase.auth.signOut();
+                        router.push('/auth');
                     }}
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                 >
