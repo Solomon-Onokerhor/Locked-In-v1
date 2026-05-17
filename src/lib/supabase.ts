@@ -1,10 +1,17 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// We use createBrowserClient from @supabase/ssr so it automatically synchronizes
-// the session with the cookies set by the Next.js server (e.g. during PKCE auth callbacks).
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
-
-
+// Using vanilla supabase-js (not SSR package) so that signInWithOtp uses the
+// implicit flow. This means the magic link redirects with #access_token= in the
+// URL hash, which Supabase auto-detects via detectSessionInUrl: true.
+// This avoids the PKCE code-verifier storage issue.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'implicit',
+    },
+});
