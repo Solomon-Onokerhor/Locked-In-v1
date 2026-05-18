@@ -51,14 +51,15 @@ export async function POST(request: NextRequest) {
 
         const waMessage =
             `Hi ${name.trim()}! 👋 Solomon here from *Locked-In*.\n\n` +
-            `Your *UMaT Academic Arsenal* is ready! 🚀\n\n` +
-            `📥 Download it here:\n${PDF_LINK}\n\n` +
-            `Inside you'll find:\n` +
-            `💻 4 copy-paste AI engineering prompts\n` +
-            `🔥 The Locked-In Focus Protocol\n` +
-            `📊 An automated semester planner (Google Sheets)\n\n` +
-            `This is your semester to lock in. If you ever need anything, just reply to this message.\n\n` +
-            `Also — come check out the full platform 👉 https://lockedinumat.tech`;
+            `Your *UMaT Academic Arsenal* is ready — download it now 👇\n\n` +
+            `📥 ${PDF_LINK}\n\n` +
+            `Here's what's inside:\n` +
+            `🧠 4 AI engineering prompts (copy-paste into ChatGPT or Gemini)\n` +
+            `📐 The Calculus Survival Kit — differentiation, integration, limits & DEs\n` +
+            `🔥 The Locked-In Focus Protocol — the 50/10 study system\n` +
+            `🤖 The AI Student Stack — NotebookLM, Claude, Perplexity & more\n\n` +
+            `This is your semester to lock in. 💪\n\n` +
+            `If you have any questions, just reply to this message — I read every one.`;
 
         try {
             await fetch(`${BRAIN_URL}/send_lead_message`, {
