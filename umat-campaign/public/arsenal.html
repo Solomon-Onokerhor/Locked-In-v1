@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>UMaT Academic Arsenal — Locked-In</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--black:#050505;--white:#ffffff;--blue:#2563eb;--blue-light:#dbeafe;--gray:#6b7280;--light:#f9fafb;--border:#e5e7eb}
+  body{font-family:'Inter',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.6}
+  .page{width:210mm;min-height:297mm;margin:0 auto;background:#fff}
+
+  /* ── COVER ── */
+  .cover{min-height:297mm;background:var(--black);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:60px 56px;page-break-after:always}
+  .cover-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.3);border-radius:999px;padding:6px 16px;font-size:11px;font-weight:700;color:#60a5fa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:48px;width:fit-content}
+  .cover-badge span{width:7px;height:7px;border-radius:50%;background:#3b82f6;display:inline-block}
+  .cover h1{font-size:64px;font-weight:900;line-height:1;letter-spacing:-.02em;margin-bottom:24px}
+  .cover h1 em{color:#3b82f6;font-style:normal}
+  .cover p{font-size:18px;color:rgba(255,255,255,.6);max-width:400px;line-height:1.7}
+  .cover-meta{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center}
+  .cover-meta .brand{font-size:20px;font-weight:900;letter-spacing:-.02em}
+  .cover-meta .brand em{color:#3b82f6;font-style:normal}
+  .cover-meta .info{font-size:11px;color:rgba(255,255,255,.35);font-family:'Space Mono',monospace;text-align:right;line-height:1.8}
+  .cover-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:40px}
+  .cover-pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 18px;font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
+
+  /* ── SECTION PAGES ── */
+  .section-page{min-height:297mm;padding:56px;page-break-after:always;display:flex;flex-direction:column}
+  .section-label{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--blue);margin-bottom:12px}
+  .section-title{font-size:40px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-bottom:10px}
+  .section-sub{font-size:15px;color:var(--gray);max-width:480px;margin-bottom:40px;line-height:1.7}
+  .divider{height:1px;background:var(--border);margin:32px 0}
+
+  /* ── PROMPT CARDS ── */
+  .prompt-card{background:var(--light);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+  .prompt-card-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .prompt-emoji{font-size:24px;width:44px;height:44px;background:#fff;border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .prompt-title{font-size:15px;font-weight:800;color:var(--black)}
+  .prompt-usage{font-size:11px;color:var(--gray);font-weight:500;margin-top:2px}
+  .prompt-box{background:#fff;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:14px 16px;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;color:#374151}
+  .prompt-tip{margin-top:12px;font-size:11px;color:var(--gray);display:flex;gap:6px}
+  .prompt-tip strong{color:var(--black)}
+
+  /* ── FOCUS PROTOCOL ── */
+  .protocol-item{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid var(--border)}
+  .protocol-item:last-child{border-bottom:none}
+  .protocol-num{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .protocol-body h4{font-size:14px;font-weight:800;margin-bottom:4px}
+  .protocol-body p{font-size:13px;color:#4b5563;line-height:1.65}
+  .protocol-callout{background:var(--black);color:#fff;border-radius:14px;padding:20px 24px;margin-top:28px}
+  .protocol-callout h4{font-size:13px;font-weight:800;margin-bottom:8px;color:#60a5fa}
+  .protocol-callout ul{padding-left:16px}
+  .protocol-callout ul li{font-size:12px;color:rgba(255,255,255,.75);margin-bottom:6px;line-height:1.6}
+
+  /* ── PLANNER (REPURPOSED FOR AI TOOLS) ── */
+  .planner-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .planner-card{background:var(--light);border:1px solid var(--border);border-radius:14px;padding:20px}
+  .planner-card h4{font-size:13px;font-weight:800;margin-bottom:6px}
+  .planner-card p{font-size:12px;color:var(--gray);line-height:1.6}
+  .planner-card .icon{font-size:22px;margin-bottom:10px}
+  .planner-link{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none;margin-top:28px}
+
+  /* ── BACK COVER ── */
+  .back{min-height:297mm;background:var(--black);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px;text-align:center;page-break-after:always}
+  .back h2{font-size:48px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px}
+  .back h2 em{color:#3b82f6;font-style:normal}
+  .back p{font-size:16px;color:rgba(255,255,255,.55);max-width:380px;line-height:1.7;margin-bottom:40px}
+  .back-url{font-family:'Space Mono',monospace;font-size:14px;color:#60a5fa;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);border-radius:999px;padding:12px 28px}
+  .back-footer{margin-top:60px;font-size:11px;color:rgba(255,255,255,.2);font-family:'Space Mono',monospace}
+
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page{margin:0}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ COVER ══ -->
+<div class="cover">
+  <div>
+    <div class="cover-badge"><span></span>Free for UMaT Students · 2026</div>
+    <h1>The UMaT<br/><em>Academic</em><br/>Arsenal.</h1>
+    <p>AI prompts, a focus protocol, a calculus survival kit, and the best AI tools — built specifically for engineers and scientists at UMaT.</p>
+    <div class="cover-pills">
+      <span class="cover-pill">🧠 4 AI Engineering Prompts</span>
+      <span class="cover-pill">🔥 Locked-In Focus Protocol</span>
+      <span class="cover-pill">📐 Calculus Survival Kit</span>
+      <span class="cover-pill">🤖 The AI Student Stack</span>
+    </div>
+  </div>
+  <div class="cover-meta">
+    <div class="brand">Locked In<em>.</em></div>
+    <div class="info">lockedinumat.tech<br/>© 2026 Locked-In · Tarkwa, Ghana</div>
+  </div>
+</div>
+
+<!-- ══ PAGE 2: AI PROMPTS ══ -->
+<div class="section-page">
+  <div class="section-label">Section 01</div>
+  <div class="section-title">AI Engineering<br/>Prompts.</div>
+  <div class="section-sub">Copy-paste these into ChatGPT or Gemini. Each one is calibrated for the exact way UMaT engineering and science exams are structured.</div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">🧠</div>
+      <div>
+        <div class="prompt-title">The Concept Breakdown Prompt</div>
+        <div class="prompt-usage">Use when: Studying a new topic for the first time</div>
+      </div>
+    </div>
+    <div class="prompt-box">"Act as an MIT professor teaching UMaT students. Explain [INSERT TOPIC, e.g. Thermodynamics / Signal Processing / Structural Analysis] using simple real-world analogies. List the core formulas, explain when to use each, and give me the 3 most common exam mistakes students make on this topic."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> Replace [INSERT TOPIC] with your exact lecture title. The more specific you are, the better the output.</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">💻</div>
+      <div>
+        <div class="prompt-title">The Code Debugger Prompt</div>
+        <div class="prompt-usage">Use when: Your lab code is throwing errors</div>
+      </div>
+    </div>
+    <div class="prompt-box">"I wrote this [C++/Python/MATLAB] code for my lab and it throws [PASTE ERROR]. Do NOT just fix it — point out the exact line where the logic breaks and explain WHY it fails, so I actually understand it. Then show the corrected version with comments on every change."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> Paste your full code block after the prompt. The "explain WHY" instruction stops AI from just patching without teaching.</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">📝</div>
+      <div>
+        <div class="prompt-title">The Past Questions Analyst</div>
+        <div class="prompt-usage">Use when: Preparing for exams using past papers</div>
+      </div>
+    </div>
+    <div class="prompt-box">"Here is a past exam question from my [COURSE NAME] paper: [PASTE QUESTION]. Walk me through the full solution step by step, showing every formula substitution. Then explain the underlying concept so I can solve any similar question independently."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> After getting the answer, ask: "Give me 3 variations of this question at increasing difficulty."</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">🗓️</div>
+      <div>
+        <div class="prompt-title">The Study Plan Generator</div>
+        <div class="prompt-usage">Use when: Exams are approaching and you're behind</div>
+      </div>
+    </div>
+    <div class="prompt-box">"I have [X] days before my [SUBJECT] exam. My weak areas are [LIST THEM]. My strongest area is [LIST IT]. Build me a day-by-day study schedule that prioritises my weakest topics first, includes 30-minute daily review sessions for strong topics, and builds in rest days so I don't burn out."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> Be honest about your weak areas. The schedule only works if it's calibrated to your actual gaps.</span></div>
+  </div>
+</div>
+
+<!-- ══ PAGE 3: FOCUS PROTOCOL ══ -->
+<div class="section-page">
+  <div class="section-label">Section 02</div>
+  <div class="section-title">The Locked-In<br/>Focus Protocol.</div>
+  <div class="section-sub">A daily system used by high-performing UMaT students to study harder, retain more, and avoid the crash that comes from grinding without a system.</div>
+
+  <div class="protocol-item">
+    <div class="protocol-num">1</div>
+    <div class="protocol-body">
+      <h4>The 50/10 Deep Work Rule</h4>
+      <p>Study in 50-minute locked-in blocks followed by a strict 10-minute rest. During the 50 minutes: phone in another room, one tab open, one task only. During the 10 minutes: stand up, walk, drink water — no social media. This single habit doubles retention compared to marathon unfocused sessions.</p>
+    </div>
+  </div>
+
+  <div class="protocol-item">
+    <div class="protocol-num">2</div>
+    <div class="protocol-body">
+      <h4>Environment Design — Turn Your Phone Into a Dumb Phone</h4>
+      <p>Before each study block: set your phone to Airplane Mode, place it face-down outside the room. Use a physical timer (or the Locked-In platform timer) instead. Notifications are engineered to break focus — remove the option entirely. Your room should have one thing visible: your notes.</p>
+    </div>
+  </div>
+
+  <div class="protocol-item">
+    <div class="protocol-num">3</div>
+    <div class="protocol-body">
+      <h4>The Night-Before Ritual (5 Minutes)</h4>
+      <p>Every night before sleep, write down the single most important topic you need to master tomorrow. Just one. Lay your notes out. Set a start time alarm — not a "wake up" alarm. This small ritual eliminates morning decision fatigue and cuts 2 hours of wasted time per week.</p>
+    </div>
+  </div>
+
+  <div class="protocol-item">
+    <div class="protocol-num">4</div>
+    <div class="protocol-body">
+      <h4>Active Recall — Never Re-Read Passively</h4>
+      <p>After every 50-minute block, close your notes and spend 5 minutes writing down everything you remember. This is called active recall — it forces your brain to retrieve information under conditions similar to an exam. Students who use active recall score 50% higher than those who re-read the same notes repeatedly.</p>
+    </div>
+  </div>
+
+  <div class="protocol-item">
+    <div class="protocol-num">5</div>
+    <div class="protocol-body">
+      <h4>The Weekly Review (Sunday, 20 Minutes)</h4>
+      <p>Every Sunday, review the week: which topics did you cover? What still feels shaky? Plan your 3 most important study blocks for the coming week. Students who do weekly reviews are 3x less likely to be caught off-guard by exams.</p>
+    </div>
+  </div>
+
+  <div class="protocol-callout">
+    <h4>⚡ The Locked-In Streak System</h4>
+    <ul>
+      <li>Track your focus blocks daily on the Locked-In platform — each day you complete 3+ blocks builds your streak</li>
+      <li>Streaks create identity: you stop being someone trying to study, and start being someone who studies</li>
+      <li>Share your streak on the Locked-In community board to create public accountability</li>
+      <li>Miss a day? The protocol is simple: restart. No guilt, no drama. Just restart.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══ PAGE 4: AI TOOLS ══ -->
+<div class="section-page">
+  <div class="section-label">Section 03</div>
+  <div class="section-title">The Ultimate AI<br/>Student Stack.</div>
+  <div class="section-sub">The best free AI tools to use alongside your prompts to dominate your engineering courses. No setup required.</div>
+
+  <div class="planner-row">
+    <div class="planner-card">
+      <div class="icon">📚</div>
+      <h4>NotebookLM (Google)</h4>
+      <p>Upload all your course PDFs and lecture slides. It becomes an expert on your specific course material. Ask it questions directly from your notes instead of guessing what's in the slides.</p>
+    </div>
+    <div class="planner-card">
+      <div class="icon">⚡</div>
+      <h4>Claude 3.5 Sonnet</h4>
+      <p>Significantly better at writing clean code (C++, Python) and solving complex engineering math than standard ChatGPT. Use it for your lab reports and hard calculations.</p>
+    </div>
+  </div>
+  <div class="planner-row">
+    <div class="planner-card">
+      <div class="icon">🔍</div>
+      <h4>Perplexity AI</h4>
+      <p>An AI-powered search engine that cites its sources. Use this for research projects and finding real case studies. It stops AI hallucination by grounding answers in the web.</p>
+    </div>
+    <div class="planner-card">
+      <div class="icon">🎨</div>
+      <h4>Gamma App</h4>
+      <p>Generate beautiful, formatted presentations for your group projects in seconds just by giving it an outline. Saves hours of PowerPoint formatting.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Pro Strategy</div>
+  <p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:4px"><strong>The Loop:</strong> Use <em>NotebookLM</em> to understand your slides → Use <em>Claude</em> to write your lab code → Use <em>Perplexity</em> to research your report references. This stack cuts study time by 60%.</p>
+
+  <div class="divider"></div>
+  <div class="section-label">Platform integration</div>
+  <p style="font-size:13px;color:#374151;line-height:1.7">On the Locked-In platform at <strong>lockedinumat.tech</strong>, we are exploring ways to bring these workflows directly into your study dashboard. Stay active and lock in!</p>
+</div>
+
+<!-- ══ PAGE 4: CALCULUS SURVIVAL KIT ══ -->
+<div class="section-page">
+  <div class="section-label">Section 04</div>
+  <div class="section-title">The Calculus<br/>Survival Kit.</div>
+  <div class="section-sub">Calculus kills more engineering students than any other course. These prompts are built to explain it clearly, step by step, the way your lecturer sometimes can't.</div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">📉</div>
+      <div>
+        <div class="prompt-title">The Differentiation Explainer</div>
+        <div class="prompt-usage">Use when: You don't understand why or how to differentiate</div>
+      </div>
+    </div>
+    <div class="prompt-box">"I'm a UMaT engineering student struggling with differentiation. Explain the concept of a derivative from scratch using a real-world speed/distance example. Then show me step-by-step how to differentiate [INSERT FUNCTION e.g. f(x) = 3x³ + 2x² - 5x + 1] using the power rule, product rule, and chain rule where applicable. Highlight which rule applies at each step."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> Paste the exact function from your assignment or past question for a worked solution you can study.</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">∫</div>
+      <div>
+        <div class="prompt-title">The Integration Solver</div>
+        <div class="prompt-usage">Use when: You're stuck on an integration problem</div>
+      </div>
+    </div>
+    <div class="prompt-box">"Solve this integral for me: [PASTE INTEGRAL]. Show every single step — do not skip any algebra. After solving it, tell me which integration technique you used (substitution, by parts, partial fractions, etc.) and explain in one sentence WHY that technique was the right choice for this type of problem."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> After solving, ask "Give me 3 similar integrals that use the same technique so I can practise." This builds pattern recognition fast.</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">📈</div>
+      <div>
+        <div class="prompt-title">The Limits & L'Hôpital Prompt</div>
+        <div class="prompt-usage">Use when: You get 0/0 or ∞/∞ and don't know what to do</div>
+      </div>
+    </div>
+    <div class="prompt-box">"Evaluate this limit: [PASTE LIMIT PROBLEM]. First check if direct substitution works. If it gives an indeterminate form (0/0 or ∞/∞), apply L'Hôpital's Rule and explain each step. If L'Hôpital doesn't apply, show the algebraic manipulation needed. End with a one-line explanation of what this limit represents physically."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> Understanding what a limit "means physically" (e.g. the speed of an object at an instant) locks in the concept far better than just memorising the rule.</span></div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-emoji">〰️</div>
+      <div>
+        <div class="prompt-title">The Differential Equations Breakdown</div>
+        <div class="prompt-usage">Use when: You have a DE and have no idea where to start</div>
+      </div>
+    </div>
+    <div class="prompt-box">"I have this differential equation: [PASTE DE]. First, classify it — is it ordinary or partial? What is its order and degree? Is it linear or non-linear? Then solve it step-by-step showing all working. If there are initial conditions, apply them to find the particular solution. Finally, tell me one real engineering scenario where this type of DE appears."</div>
+    <div class="prompt-tip">💡 <span><strong>Pro tip:</strong> The "classify it first" instruction forces the AI to identify the correct solving method before jumping in — this mirrors how your exam expects you to approach DEs.</span></div>
+  </div>
+</div>
+
+<!-- ══ BACK COVER ══ -->
+<div class="back">
+  <div>
+    <div class="brand" style="font-size:22px;font-weight:900;letter-spacing:-.02em;margin-bottom:32px">Locked In<em style="color:#3b82f6;font-style:normal">.</em></div>
+    <h2>Ready to<br/><em>Lock In?</em></h2>
+    <p>The platform that turns these tools into a daily system — focus timer, streak tracker, study rooms, and community.</p>
+    <div class="back-url">lockedinumat.tech</div>
+    <div class="back-footer" style="margin-top:48px">Built for UMaT students · Tarkwa, Ghana · © 2026 Locked-In</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
