@@ -82,7 +82,7 @@ export const lookupProfileByEmail = async (email: string) => {
         const { data } = await supabaseAdmin
             .from('profiles')
             .select('faculty, programme, level, whatsapp_number')
-            .eq('email', email)
+            .ilike('email', email)
             .limit(1)
             .maybeSingle()
         return { profile: data }

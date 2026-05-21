@@ -278,7 +278,7 @@ export default function OnboardingPage() {
 
                 // 2. Fallback: look up by email for old Supabase auth accounts using server action to bypass RLS
                 if (!profile) {
-                    const email = user.primaryEmailAddress?.emailAddress;
+                    const email = (user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress)?.toLowerCase();
                     if (email) {
                         const { profile: profileByEmail } = await lookupProfileByEmail(email);
                         if (profileByEmail) profile = profileByEmail;
@@ -288,7 +288,10 @@ export default function OnboardingPage() {
                 if (profile) {
                     if (profile.faculty) setFaculty(profile.faculty);
                     if (profile.programme) setProgramme(profile.programme);
-                    if (profile.level) setLevel(profile.level);
+                    if (profile.level) {
+                        const lvlStr = profile.level.toString();
+                        setLevel(lvlStr.startsWith("Level") ? lvlStr : `Level ${lvlStr}`);
+                    }
                     if (profile.whatsapp_number) {
                         setWhatsappNumber(profile.whatsapp_number);
                         setIsOtpVerified(true);
