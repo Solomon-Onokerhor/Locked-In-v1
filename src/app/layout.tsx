@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { AuthHeader } from "@/components/AuthHeader";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
 
@@ -95,13 +97,16 @@ export default function RootLayout({
     return (
         <html lang="en" className={inter.variable}>
             <body className="antialiased">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-                <ClientProviders>
-                    {children}
-                </ClientProviders>
+                <ClerkProvider>
+                    <AuthHeader />
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                    />
+                    <ClientProviders>
+                        {children}
+                    </ClientProviders>
+                </ClerkProvider>
             </body>
         </html>
     );
