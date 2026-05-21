@@ -7,7 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useUser, useSession } from "@clerk/nextjs";
 import { ArrowRight, LogOut } from "lucide-react";
 import { FACULTIES } from "@/lib/constants";
-import { completeOnboarding } from "./_actions";
+import { completeOnboarding, lookupProfileByEmail } from "./_actions";
 
 const COUNTRY_CODES = [
     { code: 'AF', dial: '+93',   flag: '🇦🇫', name: 'Afghanistan' },
@@ -276,15 +276,11 @@ export default function OnboardingPage() {
                     .eq("id", user.id)
                     .maybeSingle();
 
-                // 2. Fallback: look up by email for old Supabase auth accounts
+                // 2. Fallback: look up by email for old Supabase auth accounts using server action to bypass RLS
                 if (!profile) {
                     const email = user.primaryEmailAddress?.emailAddress;
                     if (email) {
-                        const { data: profileByEmail } = await supabase
-                            .from("profiles")
-                            .select("faculty, programme, level, whatsapp_number")
-                            .eq("email", email)
-                            .maybeSingle();
+                        const { profile: profileByEmail } = await lookupProfileByEmail(email);
                         if (profileByEmail) profile = profileByEmail;
                     }
                 }

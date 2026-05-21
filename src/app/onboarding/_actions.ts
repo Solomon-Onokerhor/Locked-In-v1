@@ -1,16 +1,93 @@
-'use server';
+'use server'
+
+import { auth, clerkClient } from '@clerk/nextjs/server'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 /**
- * Server action stub for onboarding completion.
- * This marks onboarding as complete and is called after the Supabase profile is updated.
+ * Completes the user onboarding flow:
+ * 1. Writes academic metadata to Clerk publicMetadata
+ * 2. Upserts the Supabase `profiles` row with the same data
+ *
+ * Uses supabaseAdmin (service role) so this works even if RLS
+ * would otherwise block a new user from writing their own profile.
  */
-export async function completeOnboarding(formData: FormData): Promise<{ error?: string } | void> {
+export const completeOnboarding = async (formData: FormData) => {
+    const { isAuthenticated, userId } = await auth()
+
+    if (!isAuthenticated || !userId) {
+        return { error: 'No signed-in user' }
+    }
+
+    const faculty = formData.get('faculty') as string
+    const programme = formData.get('programme') as string
+    const level = formData.get('level') as string
+    const whatsappNumber = formData.get('whatsappNumber') as string | null
+
+    // --- 1. Update Clerk public metadata ---
     try {
-        // Profile is already saved to Supabase in the onboarding page component.
-        // This server action is a no-op stub — onboarding state is controlled
-        // by the presence of faculty/programme/level/whatsapp_number in the profile.
-        return;
-    } catch (err: any) {
-        return { error: err?.message || 'Failed to complete onboarding.' };
+        const client = await clerkClient()
+        const clerkUser = await client.users.getUser(userId)
+
+        await client.users.updateUser(userId, {
+            publicMetadata: {
+                ...clerkUser.publicMetadata,
+                onboardingComplete: true,
+                faculty,
+                programme,
+                level,
+            },
+        })
+    } catch (err) {
+        console.error('[completeOnboarding] Clerk metadata update failed:', err)
+        return { error: 'Failed to save onboarding data to Clerk.' }
+    }
+
+    // --- 2. Upsert Supabase profile row ---
+    try {
+        // Re-fetch user to get name/email for the upsert (avoids a second API call
+        // by reusing what we already fetched above — hoisted to outer scope below)
+        const client = await clerkClient()
+        const clerkUser = await client.users.getUser(userId)
+        const name = clerkUser.fullName || clerkUser.firstName || clerkUser.username || 'Scholar'
+        const email = clerkUser.primaryEmailAddress?.emailAddress ?? ''
+
+        const updatePayload: Record<string, any> = {
+            id: userId,
+            name,
+            email,
+            faculty,
+            programme,
+            level,
+        }
+        if (whatsappNumber) updatePayload.whatsapp_number = whatsappNumber
+
+        const { error: dbError } = await supabaseAdmin
+            .from('profiles')
+            .upsert(updatePayload, { onConflict: 'id', ignoreDuplicates: false })
+
+        if (dbError) {
+            console.error('[completeOnboarding] Supabase upsert failed:', dbError)
+            return { error: 'Failed to save profile data. Please try again.' }
+        }
+    } catch (err) {
+        console.error('[completeOnboarding] Supabase error:', err)
+        return { error: 'Database error. Please try again.' }
+    }
+
+    return { message: { onboardingComplete: true, faculty, programme, level } }
+}
+
+export const lookupProfileByEmail = async (email: string) => {
+    try {
+        const { data } = await supabaseAdmin
+            .from('profiles')
+            .select('faculty, programme, level, whatsapp_number')
+            .eq('email', email)
+            .limit(1)
+            .maybeSingle()
+        return { profile: data }
+    } catch (err) {
+        console.error('[lookupProfileByEmail] error:', err)
+        return { profile: null }
     }
 }
