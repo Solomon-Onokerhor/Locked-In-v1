@@ -377,11 +377,6 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (!user) {
-            setError("Not signed in.");
-            return;
-        }
-
         setSubmitting(true);
         setError("");
 
@@ -405,7 +400,7 @@ export default function OnboardingPage() {
 
             try {
                 // Forces a token refresh so middleware sees onboardingComplete
-                await user.reload();
+                await user?.reload();
                 await session?.getToken({ skipCache: true });
             } catch (tokenErr) {
                 console.warn("[onboarding] Non-fatal error refreshing Clerk token:", tokenErr);
