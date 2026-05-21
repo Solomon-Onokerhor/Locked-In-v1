@@ -223,6 +223,9 @@ export default function OnboardingPage() {
     const [whatsappNumber, setWhatsappNumber] = useState("");
     const [dialCode, setDialCode] = useState("+233"); // Default Ghana
 
+    // Whether the academic fields are already filled (old account — only needs WhatsApp)
+    const [academicProfileComplete, setAcademicProfileComplete] = useState(false);
+
     // OTP States
     const [otp, setOtp] = useState("");
     const [isOtpSent, setIsOtpSent] = useState(false);
@@ -266,12 +269,25 @@ export default function OnboardingPage() {
                     return;
                 }
 
-                // Fetch existing profile if they have one (in case they refresh)
-                const { data: profile } = await supabase
+                // 1. Try to find profile by Clerk user ID (new accounts)
+                let { data: profile } = await supabase
                     .from("profiles")
                     .select("faculty, programme, level, whatsapp_number")
                     .eq("id", user.id)
-                    .single();
+                    .maybeSingle();
+
+                // 2. Fallback: look up by email for old Supabase auth accounts
+                if (!profile) {
+                    const email = user.primaryEmailAddress?.emailAddress;
+                    if (email) {
+                        const { data: profileByEmail } = await supabase
+                            .from("profiles")
+                            .select("faculty, programme, level, whatsapp_number")
+                            .eq("email", email)
+                            .maybeSingle();
+                        if (profileByEmail) profile = profileByEmail;
+                    }
+                }
 
                 if (profile) {
                     if (profile.faculty) setFaculty(profile.faculty);
@@ -280,6 +296,11 @@ export default function OnboardingPage() {
                     if (profile.whatsapp_number) {
                         setWhatsappNumber(profile.whatsapp_number);
                         setIsOtpVerified(true);
+                    }
+
+                    // If all academic fields are already filled, only show WhatsApp step
+                    if (profile.faculty && profile.programme && profile.level) {
+                        setAcademicProfileComplete(true);
                     }
                 }
             } catch (err) {
@@ -420,64 +441,78 @@ export default function OnboardingPage() {
                         <div className="h-1.5 flex-1 rounded-full bg-blue-500"></div>
                         <div className="h-1.5 flex-1 rounded-full bg-white/10"></div>
                     </div>
-                    <h1 className="text-white text-[28px] md:text-[32px] font-bold leading-tight mb-2 tracking-tight">Complete Your Profile</h1>
-                    <p className="text-[#888888] text-sm font-normal">Tell us a bit about your academics to personalize your experience</p>
+                    {academicProfileComplete ? (
+                        <>
+                            <h1 className="text-white text-[28px] md:text-[32px] font-bold leading-tight mb-2 tracking-tight">One Last Step</h1>
+                            <p className="text-[#888888] text-sm font-normal">Verify your WhatsApp number to receive study room notifications</p>
+                        </>
+                    ) : (
+                        <>
+                            <h1 className="text-white text-[28px] md:text-[32px] font-bold leading-tight mb-2 tracking-tight">Complete Your Profile</h1>
+                            <p className="text-[#888888] text-sm font-normal">Tell us a bit about your academics to personalize your experience</p>
+                        </>
+                    )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-white text-base font-medium" htmlFor="faculty">Faculty</label>
-                        <div className="relative">
-                            <select
-                                id="faculty"
-                                value={faculty}
-                                onChange={(e) => setFaculty(e.target.value)}
-                                className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors"
-                                required
-                            >
-                                <option value="" disabled className="text-[#888888]">Select Faculty</option>
-                                {FACULTIES.map(fac => (
-                                    <option key={fac} value={fac}>{fac}</option>
-                                ))}
-                            </select>
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none">▼</span>
-                        </div>
-                    </div>
+                    {/* Only show academic fields for new accounts — old accounts already have these */}
+                    {!academicProfileComplete && (
+                        <>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-white text-base font-medium" htmlFor="faculty">Faculty</label>
+                                <div className="relative">
+                                    <select
+                                        id="faculty"
+                                        value={faculty}
+                                        onChange={(e) => setFaculty(e.target.value)}
+                                        className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors"
+                                        required
+                                    >
+                                        <option value="" disabled className="text-[#888888]">Select Faculty</option>
+                                        {FACULTIES.map(fac => (
+                                            <option key={fac} value={fac}>{fac}</option>
+                                        ))}
+                                    </select>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none">▼</span>
+                                </div>
+                            </div>
 
-                    <div className="flex flex-col gap-2">
-                        <label className="text-white text-base font-medium" htmlFor="programme">Programme</label>
-                        <input
-                            id="programme"
-                            type="text"
-                            value={programme}
-                            onChange={(e) => setProgramme(e.target.value)}
-                            placeholder="e.g. BSc Computer Science"
-                            className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
-                            required
-                        />
-                    </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-white text-base font-medium" htmlFor="programme">Programme</label>
+                                <input
+                                    id="programme"
+                                    type="text"
+                                    value={programme}
+                                    onChange={(e) => setProgramme(e.target.value)}
+                                    placeholder="e.g. BSc Computer Science"
+                                    className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
+                                    required
+                                />
+                            </div>
 
-                    <div className="flex flex-col gap-2">
-                        <label className="text-white text-base font-medium" htmlFor="level">Level</label>
-                        <div className="relative">
-                            <select
-                                id="level"
-                                value={level}
-                                onChange={(e) => setLevel(e.target.value)}
-                                className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors"
-                                required
-                            >
-                                <option value="" disabled className="text-[#888888]">Select Level</option>
-                                <option value="Level 100">Level 100 / Freshman</option>
-                                <option value="Level 200">Level 200 / Sophomore</option>
-                                <option value="Level 300">Level 300 / Junior</option>
-                                <option value="Level 400">Level 400 / Senior</option>
-                                <option value="Postgraduate">Postgraduate</option>
-                                <option value="Alumni">Alumni</option>
-                            </select>
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none">▼</span>
-                        </div>
-                    </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-white text-base font-medium" htmlFor="level">Level</label>
+                                <div className="relative">
+                                    <select
+                                        id="level"
+                                        value={level}
+                                        onChange={(e) => setLevel(e.target.value)}
+                                        className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors"
+                                        required
+                                    >
+                                        <option value="" disabled className="text-[#888888]">Select Level</option>
+                                        <option value="Level 100">Level 100 / Freshman</option>
+                                        <option value="Level 200">Level 200 / Sophomore</option>
+                                        <option value="Level 300">Level 300 / Junior</option>
+                                        <option value="Level 400">Level 400 / Senior</option>
+                                        <option value="Postgraduate">Postgraduate</option>
+                                        <option value="Alumni">Alumni</option>
+                                    </select>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none">▼</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <div className="flex flex-col gap-2">
                         <label className="text-white text-base font-medium" htmlFor="whatsapp">WhatsApp Number</label>
