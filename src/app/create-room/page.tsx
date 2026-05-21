@@ -132,6 +132,26 @@ export default function CreateRoomPage() {
                 setSuccess(true);
                 setCreating(false);
                 // No redirect - session is pending admin approval
+                
+                // Trigger WhatsApp notification asynchronously
+                fetch('/api/whatsapp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: 'ROOM_CREATED',
+                        payload: { title }
+                    })
+                }).catch(console.error);
+
+                // Trigger Email notification asynchronously
+                fetch('/api/send-email/room-submitted', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: profile?.email || session.user.email,
+                        roomTitle: title
+                    })
+                }).catch(console.error);
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to create room');

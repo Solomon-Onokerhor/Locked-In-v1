@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { Send, Check, Clock, MessageCircle, ChevronDown } from 'lucide-react';
+import { Send, Check, Clock, MessageCircle, ChevronDown, Zap } from 'lucide-react';
 import { UserProfileModal } from './UserProfileModal';
 
 interface ChatMessage {
@@ -26,9 +26,10 @@ interface SenderInfo {
 interface ChatProps {
     roomId: string;
     userProfile: Profile | null;
+    isCreator?: boolean;
 }
 
-export function Chat({ roomId, userProfile }: ChatProps) {
+export function Chat({ roomId, userProfile, isCreator }: ChatProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -245,21 +246,22 @@ export function Chat({ roomId, userProfile }: ChatProps) {
 
         setLoading(true);
         try {
-            const { error } = await supabase
-                .from('messages')
-                .insert([
-                    {
-                        room_id: roomId,
-                        sender_id: userProfile.id,
-                        text: trimmedMessage,
-                    }
-                ]);
+            const res = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId, text: trimmedMessage }),
+            });
 
-            if (error) throw error;
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to send message');
+            }
+
             lastMessageTime.current = now;
             setNewMessage('');
         } catch (err) {
             console.error('Error sending message:', err);
+            alert('Failed to send message. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -398,31 +400,39 @@ export function Chat({ roomId, userProfile }: ChatProps) {
 
 
             {/* Message Input */}
-            <form
-                onSubmit={handleSendMessage}
-                className="px-4 py-3 border-t border-white/[0.06] bg-white/[0.03] flex items-center gap-3"
-            >
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type a message..."
-                    maxLength={500}
-                    className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all"
-                />
-                <button
-                    type="submit"
-                    disabled={loading || !newMessage.trim()}
-                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/10 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-white/10"
+            <div className="border-t border-white/[0.06] bg-white/[0.03]">
+                {isCreator && (
+                    <div className="px-4 pt-2 pb-1 text-[10px] text-brand-accent/80 font-medium flex items-center gap-1.5">
+                        <Zap className="w-3 h-3" />
+                        Tip: Start your message with <strong>ANNOUNCEMENT:</strong> to blast it to all members on WhatsApp.
+                    </div>
+                )}
+                <form
+                    onSubmit={handleSendMessage}
+                    className="px-4 py-3 flex items-center gap-3"
                 >
-                    {loading ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                        <Send className="w-4 h-4" />
-                    )}
-                </button>
-            </form>
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Type a message..."
+                        maxLength={500}
+                        className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all"
+                    />
+                    <button
+                        type="submit"
+                        disabled={loading || !newMessage.trim()}
+                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/10 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-white/10"
+                    >
+                        {loading ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Send className="w-4 h-4" />
+                        )}
+                    </button>
+                </form>
+            </div>
 
             <UserProfileModal
                 isOpen={!!selectedUserId}

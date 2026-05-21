@@ -1,103 +1,114 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-// Lightweight In-Memory Rate Limiter for Edge
-// Maps IP to { count, timestamp }
-const rateLimitMap = new Map<string, { count: number; timer: number }>();
-const LIMIT = 10;
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/',
+  '/api/webhooks(.*)',
+  '/api/admin/maintenance(.*)', // allow reading maintenance status publicly
+  '/maintenance',
+  '/favicon.ico',
+  '/icon.png',
+]);
 
-export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+async function isMaintenanceModeActive(): Promise<boolean> {
+  // Fall back to env var if Supabase isn't configured
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return process.env.MAINTENANCE_MODE === 'true';
+  }
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/app_config?key=eq.maintenance_mode&select=value`,
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-    });
-
-    const path = request.nextUrl.pathname;
-
-    // 0. MAINTENANCE MODE
-    const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
-    if (
-        isMaintenanceMode &&
-        !path.startsWith('/maintenance') &&
-        !path.startsWith('/_next') &&
-        !path.startsWith('/api') && // allow webhooks
-        path !== '/favicon.ico' &&
-        path !== '/icon.png' // allow app icon
-    ) {
-        const maintenanceUrl = new URL('/maintenance', request.url);
-        return NextResponse.redirect(maintenanceUrl);
-    }
-
-    // 1. RATE LIMITING for Auth & API Endpoints
-    if (path.startsWith('/api/') || path.includes('/auth/')) {
-        const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-        const now = Date.now();
-        const record = rateLimitMap.get(ip);
-
-        if (!record || now > record.timer + WINDOW_MS) {
-            rateLimitMap.set(ip, { count: 1, timer: now });
-        } else {
-            record.count += 1;
-            if (record.count > LIMIT) {
-                return new NextResponse(
-                    JSON.stringify({ error: 'Too many requests from this IP. Please try again after 15 minutes.' }),
-                    { status: 429, headers: { 'Content-Type': 'application/json' } }
-                );
-            }
-        }
-    }
-
-    // 2. SUPABASE SESSION REFRESH (required for PKCE auth flow)
-    // This ensures the Supabase session cookies are refreshed on every request,
-    // which is critical for the password recovery callback to work.
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll();
-                },
-                setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-                    cookiesToSet.forEach(({ name, value }) =>
-                        request.cookies.set(name, value)
-                    );
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    );
-                },
-            },
-        }
+        next: { revalidate: 30 }, // cache for 30 seconds to avoid hammering Supabase
+      }
     );
-
-    // Refresh the session - this is important for PKCE code exchange
-    await supabase.auth.getUser();
-
-    // 3. HEADERS (Fallback application for dynamic routes, NextConfig handles static edge)
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-
-    return response;
+    if (!res.ok) return process.env.MAINTENANCE_MODE === 'true';
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return false;
+    return rows[0].value === 'true';
+  } catch {
+    // On error, fall back to env var
+    return process.env.MAINTENANCE_MODE === 'true';
+  }
 }
 
+export default clerkMiddleware(async (auth, req) => {
+  const path = req.nextUrl.pathname;
+
+  // Skip maintenance check for static assets and Next.js internals
+  const isAsset = path.startsWith('/_next') || path.startsWith('/api') || path === '/favicon.ico' || path === '/icon.png';
+
+  // Maintenance mode — skip assets, the maintenance page, and the admin panel
+  if (!isAsset && !path.startsWith('/maintenance') && !path.startsWith('/admin')) {
+    const maintenanceActive = await isMaintenanceModeActive();
+    if (maintenanceActive) {
+      // Check if user is admin to bypass maintenance
+      const { userId } = await auth();
+      let isAdmin = false;
+      
+      if (userId && SUPABASE_URL && SUPABASE_ANON_KEY) {
+        try {
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=role`,
+            {
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+            }
+          );
+          if (res.ok) {
+            const rows = await res.json();
+            if (rows && rows.length > 0 && rows[0].role === 'admin') {
+              isAdmin = true;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to check admin role for maintenance bypass", e);
+        }
+      }
+
+      if (!isAdmin) {
+        const maintenanceUrl = new URL('/maintenance', req.url);
+        return NextResponse.redirect(maintenanceUrl);
+      }
+    }
+  }
+
+  // Auth protection — redirect unauthenticated users to sign-in
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+
+  // Onboarding gate — signed-in users who haven't completed onboarding
+  // are redirected to /onboarding (checked via Clerk publicMetadata in JWT).
+  // REQUIRES: Clerk Dashboard → Sessions → Customize session token →
+  //   add: { "metadata": "{{user.public_metadata}}" }
+  const { userId, sessionClaims } = await auth();
+  if (userId && path !== '/onboarding' && !path.startsWith('/sign-') && !path.startsWith('/api')) {
+    // sessionClaims.metadata is populated only if the session token is customized in Clerk Dashboard
+    const meta = (sessionClaims as any)?.metadata as Record<string, unknown> | undefined;
+    // Only gate if we have metadata in the token AND onboardingComplete is explicitly false
+    if (meta !== undefined && !meta.onboardingComplete) {
+      const onboardingUrl = new URL('/onboarding', req.url);
+      return NextResponse.redirect(onboardingUrl);
+    }
+  }
+});
+
 export const config = {
-    matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Feel free to modify this pattern to include more paths.
-         */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    ],
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
 };
+

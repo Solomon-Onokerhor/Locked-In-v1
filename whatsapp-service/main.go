@@ -20,6 +20,7 @@ import (
 )
 
 var client *whatsmeow.Client
+var currentQR string
 
 func connectWithRetry(ctx context.Context) {
 	for {
@@ -40,8 +41,9 @@ func connectWithRetry(ctx context.Context) {
 			}
 			for evt := range qrChan {
 				if evt.Event == "code" {
+					currentQR = evt.Code
 					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-					fmt.Println("Scan the QR code above to login.")
+					fmt.Println("Scan the QR code above to login. Or go to http://localhost:8081/api/qr in your browser.")
 				} else {
 					fmt.Println("Login event:", evt.Event)
 				}
@@ -140,6 +142,47 @@ func main() {
 		}
 	}()
 
+	// ── Reminders Cron: Ping the Next.js API every 5 minutes ────────────────
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if client.IsConnected() {
+					// Build the API URL (use env var or fallback to local dev)
+					apiURL := os.Getenv("NEXT_PUBLIC_APP_URL")
+					if apiURL == "" {
+						apiURL = "http://localhost:3000"
+					}
+					cronEndpoint := fmt.Sprintf("%s/api/cron/reminders", apiURL)
+					
+					// If using a CRON_SECRET, you can add it to the request header
+					req, err := http.NewRequest("GET", cronEndpoint, nil)
+					if err != nil {
+						fmt.Println("Cron setup failed:", err)
+						continue
+					}
+					
+					cronSecret := os.Getenv("CRON_SECRET")
+					if cronSecret != "" {
+						req.Header.Set("Authorization", "Bearer "+cronSecret)
+					}
+
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						fmt.Println("Cron ping failed:", err)
+					} else {
+						fmt.Println("Cron ping triggered successfully, status:", resp.StatusCode)
+						resp.Body.Close()
+					}
+				}
+			}
+		}
+	}()
+
 	// ── HTTP server ───────────────────────────────────────────────
 	http.HandleFunc("/api/send", handleSendMessage)
 	http.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +193,36 @@ func main() {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			w.Write([]byte(`{"status":"degraded","connected":false}`))
 		}
+	})
+	http.HandleFunc("/api/qr", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		if client != nil && client.IsConnected() {
+			w.Write([]byte(`<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f0f2f5;"><h1 style="color:green">✅ Connected to WhatsApp!</h1></body></html>`))
+			return
+		}
+		if currentQR == "" {
+			w.Write([]byte(`<html><head><meta http-equiv="refresh" content="3"></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f0f2f5;"><h2>Loading QR code... please wait</h2></body></html>`))
+			return
+		}
+		// Use Google Charts API to render the QR as a plain image — no JS required
+		qrImageURL := fmt.Sprintf(
+			"https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=%s&choe=UTF-8",
+			currentQR,
+		)
+		html := fmt.Sprintf(`
+			<html>
+			<head><meta http-equiv="refresh" content="10"></head>
+			<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f0f2f5;gap:16px;">
+				<h2 style="margin:0">Scan with WhatsApp</h2>
+				<p style="margin:0;color:#555">Settings &gt; Linked Devices &gt; Link a Device</p>
+				<div style="background:white;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+					<img src="%s" width="300" height="300" alt="WhatsApp QR Code" />
+				</div>
+				<p style="color:#999;font-size:13px;">This page refreshes automatically every 10 seconds</p>
+			</body>
+			</html>
+		`, qrImageURL)
+		w.Write([]byte(html))
 	})
 
 	port := os.Getenv("PORT")

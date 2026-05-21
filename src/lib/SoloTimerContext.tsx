@@ -301,6 +301,20 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
 
             await refreshProfile();
             setTimerState('STATS');
+
+            // Trigger WhatsApp notification asynchronously
+            fetch('/api/whatsapp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'SOLO_SESSION_COMPLETE',
+                    payload: { 
+                        duration: actualDuration, 
+                        goal: completedGoal || goal || label || 'Study session'
+                    }
+                })
+            }).catch(console.error);
+
         } catch (error) {
             console.error('Error saving completion:', error);
             alert('Failed to save session. ensure database functions are updated.');

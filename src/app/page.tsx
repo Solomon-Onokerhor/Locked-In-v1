@@ -1,7 +1,9 @@
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import type { Metadata } from 'next';
 import type { Room } from '@/types';
-import { HomeSwitcher } from '@/components/HomeSwitcher';
+import { auth } from '@clerk/nextjs/server';
+import { DashboardClient } from '@/components/DashboardClient';
+import { LandingPage } from '@/components/LandingPage';
 
 export const metadata: Metadata = {
     title: 'Locked In — Study Together, Level Up Together | UMaT',
@@ -10,23 +12,38 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-    const supabaseServer = await getSupabaseServer();
-    // We still do the server-side room fetch to keep initial load fast
-    const { data: roomsData } = await supabaseServer
-        .from('rooms')
-        .select(`
-            room_id, room_type, session_mode, title, description, image_url,
-            created_by, date_time, duration_minutes, physical_location, 
-            location_note, max_members, is_paid, price, commission_rate, 
-            status, tags, course_code, created_at
-        `)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+    let userId: string | null = null;
+    let initialRooms: Room[] = [];
 
-    const initialRooms = (roomsData as Room[]) || [];
+    try {
+        const authResult = await auth();
+        userId = authResult.userId;
+    } catch (e) {
+        console.error('[page] Clerk auth() failed — rendering as guest:', e);
+    }
 
-    // The HomeSwitcher (client component) will decide between
-    // LandingPage vs DashboardClient based on the browser's auth session.
-    // This fixes the 'Auth - Home' redirect loop.
-    return <HomeSwitcher initialRooms={initialRooms} />;
+    try {
+        const supabaseServer = await getSupabaseServer();
+        const { data: roomsData } = await supabaseServer
+            .from('rooms')
+            .select(`
+                room_id, room_type, session_mode, title, description, image_url,
+                created_by, date_time, duration_minutes, physical_location, 
+                location_note, max_members, is_paid, price, commission_rate, 
+                status, tags, course_code, created_at
+            `)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+
+        initialRooms = (roomsData as Room[]) || [];
+    } catch (e) {
+        console.error('[page] Supabase rooms fetch failed:', e);
+    }
+
+    if (userId) {
+        return <DashboardClient initialRooms={initialRooms} />;
+    }
+
+    return <LandingPage />;
 }
+

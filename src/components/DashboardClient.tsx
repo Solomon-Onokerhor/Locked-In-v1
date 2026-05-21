@@ -103,10 +103,16 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         return matchesTab && matchesSearch;
     });
 
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Get display name — use profile name first, then email prefix, truncated
     const displayName = profile?.name || session?.user?.email?.split('@')[0] || '';
 
-    if (loading || !session) {
+    if (!mounted || loading || !session) {
         return (
             <div className="min-h-screen bg-brand-primary flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent" />

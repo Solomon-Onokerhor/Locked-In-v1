@@ -10,10 +10,10 @@ import type { Profile, Room, Resource } from '@/types';
 import {
     Shield, Users, BookOpen, MessageSquare, BarChart3,
     Trash2, Upload, FileText, Video, X, CheckCircle,
-    AlertCircle, ChevronDown, Search, Home
+    AlertCircle, ChevronDown, Search, Home, Settings
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'approvals' | 'rooms' | 'upload';
+type Tab = 'overview' | 'users' | 'approvals' | 'rooms' | 'upload' | 'broadcast' | 'settings';
 
 interface Stats {
     totalUsers: number;
@@ -57,7 +57,24 @@ export default function AdminPage() {
     const [uploadSuccess, setUploadSuccess] = useState('');
     const [uploadError, setUploadError] = useState('');
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+
+    // Maintenance mode
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+    const [maintenanceStatus, setMaintenanceStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+    // Broadcast
+    const [broadcastMessage, setBroadcastMessage] = useState('');
+    const [isBroadcasting, setIsBroadcasting] = useState(false);
+    const [broadcastSuccess, setBroadcastSuccess] = useState('');
+    const [broadcastError, setBroadcastError] = useState('');
+    // Contacts
+    const [contacts, setContacts] = useState<Pick<Profile, 'id' | 'name' | 'email' | 'whatsapp_number'>[]>([]);
+    const [contactsLoading, setContactsLoading] = useState(false);
+    const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+    const [contactFilter, setContactFilter] = useState<'all' | 'verified' | 'unverified'>('all');
+    const [contactSearch, setContactSearch] = useState('');
 
     // Resources list
     const [resources, setResources] = useState<Resource[]>([]);
@@ -120,6 +137,49 @@ export default function AdminPage() {
         if (data) setResources(data);
     }, []);
 
+    const fetchMaintenanceMode = useCallback(async () => {
+        try {
+            const res = await fetch('/api/admin/maintenance');
+            const data = await res.json();
+            setMaintenanceMode(data.maintenance_mode ?? false);
+        } catch {
+            // silently fail
+        }
+    }, []);
+
+    const toggleMaintenanceMode = async (enabled: boolean) => {
+        setMaintenanceLoading(true);
+        setMaintenanceStatus('idle');
+        try {
+            const res = await fetch('/api/admin/maintenance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY || '',
+                },
+                body: JSON.stringify({ enabled }),
+            });
+            if (!res.ok) throw new Error('Failed');
+            setMaintenanceMode(enabled);
+            setMaintenanceStatus('success');
+        } catch {
+            setMaintenanceStatus('error');
+        } finally {
+            setMaintenanceLoading(false);
+            setTimeout(() => setMaintenanceStatus('idle'), 3000);
+        }
+    };
+
+    const fetchContacts = useCallback(async () => {
+        setContactsLoading(true);
+        const { data } = await supabase
+            .from('profiles')
+            .select('id, name, email, whatsapp_number')
+            .order('name', { ascending: true });
+        setContacts(data || []);
+        setContactsLoading(false);
+    }, []);
+
     useEffect(() => {
         if (profile?.role === 'admin') {
             fetchStats();
@@ -127,8 +187,16 @@ export default function AdminPage() {
             fetchRooms();
             fetchPendingRooms();
             fetchResources();
+            fetchMaintenanceMode();
         }
-    }, [profile, fetchStats, fetchUsers, fetchRooms, fetchPendingRooms, fetchResources]);
+    }, [profile, fetchStats, fetchUsers, fetchRooms, fetchPendingRooms, fetchResources, fetchMaintenanceMode]);
+
+    // Fetch contacts when broadcast tab is opened
+    useEffect(() => {
+        if (activeTab === 'broadcast' && profile?.role === 'admin') {
+            fetchContacts();
+        }
+    }, [activeTab, profile, fetchContacts]);
 
     // Role change
     const handleRoleChange = async (userId: string, newRole: string) => {
@@ -138,13 +206,31 @@ export default function AdminPage() {
     };
 
     // Approval Actions
-    const handleApprove = async (roomId: string) => {
+    const handleApprove = async (room: Room) => {
+        const roomId = room.room_id;
         setProcessingId(roomId);
         const { error } = await supabase.rpc('approve_room', { p_room_id: roomId });
         if (!error) {
             fetchPendingRooms();
             fetchRooms();
             fetchStats();
+            
+            // Notify the room creator via WhatsApp
+            if (room.created_by) {
+                try {
+                    await fetch('/api/whatsapp/notify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event_type: 'ROOM_APPROVED',
+                            target_user_id: room.created_by,
+                            payload: { title: room.title }
+                        })
+                    });
+                } catch (e) {
+                    console.error("Failed to notify creator of room approval", e);
+                }
+            }
         }
         setProcessingId(null);
     };
@@ -282,6 +368,41 @@ export default function AdminPage() {
         }
     };
 
+    // Broadcast message
+    const handleBroadcast = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!broadcastMessage.trim()) return;
+
+        setIsBroadcasting(true);
+        setBroadcastError('');
+        setBroadcastSuccess('');
+
+        try {
+            const body: { message: string; target_user_ids?: string[] } = { message: broadcastMessage.trim() };
+            if (selectedContactIds.size > 0) {
+                body.target_user_ids = Array.from(selectedContactIds);
+            }
+
+            const res = await fetch('/api/admin/broadcast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to broadcast');
+
+            setBroadcastSuccess(data.message || 'Broadcast sent successfully!');
+            setBroadcastMessage('');
+        } catch (err) {
+            setBroadcastError(err instanceof Error ? err.message : 'Broadcast failed');
+        } finally {
+            setIsBroadcasting(false);
+        }
+    };
+
+
+
     // Filter helpers
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -306,6 +427,8 @@ export default function AdminPage() {
         { key: 'approvals', label: 'Approvals', icon: <CheckCircle className="w-4 h-4" />, badge: pendingRooms.length },
         { key: 'rooms', label: 'Rooms', icon: <Home className="w-4 h-4" /> },
         { key: 'upload', label: 'Upload', icon: <Upload className="w-4 h-4" /> },
+        { key: 'broadcast', label: 'Broadcast', icon: <MessageSquare className="w-4 h-4" /> },
+        { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
     ];
 
     return (
@@ -550,7 +673,7 @@ export default function AdminPage() {
                                                 {processingId === room.room_id ? 'Wait...' : 'Reject'}
                                             </button>
                                             <button
-                                                onClick={() => handleApprove(room.room_id)}
+                                                onClick={() => handleApprove(room)}
                                                 disabled={processingId !== null}
                                                 className="flex-2 py-2.5 px-6 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/10 transition-all shadow-lg shadow-white/10 active:scale-[0.98] disabled:opacity-50"
                                             >
@@ -790,6 +913,181 @@ export default function AdminPage() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══ BROADCAST TAB ═══ */}
+                {activeTab === 'broadcast' && (
+                    <div className="max-w-3xl space-y-5">
+
+
+
+                        {/* ── Contacts Selector ── */}
+                        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2"><Users className="w-5 h-5 text-brand-accent" /> Recipients</h3>
+                                    <p className="text-gray-500 text-sm mt-0.5">
+                                        {contacts.length === 0 ? 'Loading contacts…' : (
+                                            <>{contacts.filter(c => c.whatsapp_number).length} verified &middot; {contacts.filter(c => !c.whatsapp_number).length} unverified &middot; <span className="text-brand-accent font-semibold">{selectedContactIds.size === 0 ? 'All verified' : `${selectedContactIds.size} selected`}</span></>
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => {
+                                        const verifiedIds = contacts.filter(c => c.whatsapp_number).map(c => c.id);
+                                        setSelectedContactIds(new Set(verifiedIds));
+                                    }} className="text-xs px-3 py-1.5 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 rounded-lg transition-all font-semibold">
+                                        Select All Verified
+                                    </button>
+                                    <button type="button" onClick={() => setSelectedContactIds(new Set())} className="text-xs px-3 py-1.5 bg-white/05 hover:bg-white/10 text-gray-400 border border-white/10 rounded-lg transition-all">
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Filter + Search */}
+                            <div className="flex gap-3 mb-4">
+                                <div className="flex bg-white/[0.04] border border-white/[0.06] rounded-xl overflow-hidden">
+                                    {(['all', 'verified', 'unverified'] as const).map(f => (
+                                        <button key={f} type="button" onClick={() => setContactFilter(f)}
+                                            className={`px-3.5 py-1.5 text-xs font-semibold capitalize transition-all ${
+                                                contactFilter === f ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
+                                            }`}>{f}</button>
+                                    ))}
+                                </div>
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                                    <input type="text" value={contactSearch} onChange={e => setContactSearch(e.target.value)}
+                                        placeholder="Search by name or email…"
+                                        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-8 pr-4 py-1.5 text-sm text-white placeholder:text-gray-600 outline-none focus:border-white/20 transition-all" />
+                                </div>
+                            </div>
+
+                            {/* Contacts list */}
+                            <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                                {contactsLoading ? (
+                                    <div className="flex items-center justify-center py-10">
+                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    </div>
+                                ) : (
+                                    contacts
+                                        .filter(c => {
+                                            if (contactFilter === 'verified') return !!c.whatsapp_number;
+                                            if (contactFilter === 'unverified') return !c.whatsapp_number;
+                                            return true;
+                                        })
+                                        .filter(c => {
+                                            const q = contactSearch.toLowerCase();
+                                            return !q || c.name?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q);
+                                        })
+                                        .map(contact => (
+                                            <label key={contact.id} className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all ${
+                                                selectedContactIds.has(contact.id) ? 'bg-brand-accent/10 border border-brand-accent/20' : 'hover:bg-white/[0.04] border border-transparent'
+                                            }`}>
+                                                <input type="checkbox" checked={selectedContactIds.has(contact.id)}
+                                                    disabled={!contact.whatsapp_number}
+                                                    onChange={() => {
+                                                        if (!contact.whatsapp_number) return;
+                                                        setSelectedContactIds(prev => {
+                                                            const next = new Set(prev);
+                                                            if (next.has(contact.id)) next.delete(contact.id);
+                                                            else next.add(contact.id);
+                                                            return next;
+                                                        });
+                                                    }}
+                                                    className="accent-brand-accent w-3.5 h-3.5 flex-shrink-0 disabled:opacity-30"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm text-white font-medium truncate">{contact.name || 'Unknown'}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{contact.email}</p>
+                                                </div>
+                                                {contact.whatsapp_number ? (
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 flex-shrink-0">✓ Verified</span>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex-shrink-0">⚠ No Number</span>
+                                                )}
+                                            </label>
+                                        ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ── Compose & Send ── */}
+                        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-1"><MessageSquare className="w-5 h-5 text-brand-accent" /> Compose & Send</h3>
+                            <p className="text-gray-500 text-sm mb-5">
+                                {selectedContactIds.size === 0
+                                    ? 'Will send to all verified contacts. Select specific contacts above to narrow the list.'
+                                    : `Will send to ${selectedContactIds.size} selected contact${selectedContactIds.size === 1 ? '' : 's'}.`
+                                }
+                            </p>
+
+                            {broadcastSuccess && <div className="p-3 bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-sm rounded-xl flex items-center gap-2 mb-4"><CheckCircle className="w-4 h-4 flex-shrink-0" /> {broadcastSuccess}</div>}
+                            {broadcastError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl flex items-center gap-2 mb-4"><AlertCircle className="w-4 h-4 flex-shrink-0" /> {broadcastError}</div>}
+
+                            <form onSubmit={handleBroadcast} className="space-y-4">
+                                <div>
+                                    <label className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1.5 block">Message *</label>
+                                    <textarea value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)}
+                                        placeholder="Type your message…"
+                                        rows={6} required
+                                        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-white/20 focus:ring-1 focus:ring-white/20 outline-none transition-all resize-none"
+                                    />
+                                </div>
+                                <button type="submit" disabled={isBroadcasting || !broadcastMessage.trim()}
+                                    className="w-full bg-brand-accent hover:bg-white/90 text-brand-primary font-black py-3.5 rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {isBroadcasting ? (
+                                        <><div className="w-4 h-4 border-2 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin" /> Sending...</>
+                                    ) : (
+                                        <><MessageSquare className="w-4 h-4" /> {selectedContactIds.size > 0 ? `Send to ${selectedContactIds.size} Contact${selectedContactIds.size === 1 ? '' : 's'}` : 'Send to All Verified'}</>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══ SETTINGS TAB ═══ */}
+                {activeTab === 'settings' && (
+                    <div className="max-w-2xl space-y-6">
+                        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+                                <Settings className="w-5 h-5 text-gray-300" />
+                                Platform Settings
+                            </h3>
+                            <p className="text-gray-500 text-sm mb-6">Control platform-wide settings without touching environment variables.</p>
+
+                            {/* Maintenance Mode */}
+                            <div className="flex items-center justify-between p-5 bg-white/[0.02] border border-white/[0.06] rounded-2xl">
+                                <div>
+                                    <p className="text-white font-semibold text-sm">Maintenance Mode</p>
+                                    <p className="text-gray-500 text-xs mt-0.5">When enabled, all users are redirected to the maintenance page.</p>
+                                    {maintenanceStatus === 'success' && (
+                                        <p className="text-green-400 text-xs mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Saved successfully</p>
+                                    )}
+                                    {maintenanceStatus === 'error' && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Failed to save</p>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => toggleMaintenanceMode(!maintenanceMode)}
+                                    disabled={maintenanceLoading}
+                                    className={`relative w-14 h-7 rounded-full transition-all duration-300 focus:outline-none disabled:opacity-50 ${
+                                        maintenanceMode ? 'bg-white/80' : 'bg-white/10'
+                                    }`}
+                                    aria-label="Toggle maintenance mode"
+                                >
+                                    <span
+                                        className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md ${
+                                            maintenanceMode
+                                                ? 'left-8 bg-black'
+                                                : 'left-1 bg-white/40'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

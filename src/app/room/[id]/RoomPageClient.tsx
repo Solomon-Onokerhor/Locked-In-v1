@@ -97,12 +97,58 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             await checkMembership();
             await fetchMembers();
             await refreshProfile();
+
+            // Notify the room creator via WhatsApp
+            if (room.created_by && room.created_by !== session.user.id) {
+                try {
+                    fetch('/api/whatsapp/notify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event_type: 'ROOM_JOINED',
+                            target_user_id: room.created_by,
+                            payload: { 
+                                title: room.title,
+                                joiner_name: profile?.name?.split(' ')[0] || 'A scholar'
+                            }
+                        })
+                    }).catch(err => console.error("Failed to fetch notify API for creator", err));
+                } catch (e) {
+                    console.error("Failed to notify creator of room join", e);
+                }
+            }
+
+            // Notify the joiner via WhatsApp
+            try {
+                fetch('/api/whatsapp/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: 'JOINER_CONFIRMATION',
+                        target_user_id: session.user.id,
+                        payload: { 
+                            title: room.title
+                        }
+                    })
+                }).catch(err => console.error("Failed to fetch notify API for joiner", err));
+            } catch (e) {
+                console.error("Failed to notify joiner", e);
+            }
+
+            // Send room confirmation email with ICS calendar invite
+            fetch('/api/send-email/room-confirmation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId }),
+            }).catch(err => console.error('Failed to send confirmation email:', err));
+
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to lock in');
         } finally {
             setLockingIn(false);
         }
     };
+
 
     const handleConfirmAttendance = async () => {
         if (!session || !room || !membership) return;
@@ -368,7 +414,11 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                     {/* Chat Section */}
                     {membership ? (
                         <div className="mt-4 flex-1 animate-fade-in-up mb-8 rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02]">
-                            <Chat roomId={room.room_id} userProfile={profile} />
+                            <Chat 
+                                roomId={room.room_id} 
+                                userProfile={profile} 
+                                isCreator={room.created_by === profile?.id}
+                            />
                         </div>
                     ) : (
                         <div className="mt-4 p-8 border border-white/10 rounded-3xl bg-white/[0.02] text-center mb-8">

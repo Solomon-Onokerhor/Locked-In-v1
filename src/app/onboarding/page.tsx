@@ -4,35 +4,269 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
+import { useUser, useSession } from "@clerk/nextjs";
 import { ArrowRight, LogOut } from "lucide-react";
 import { FACULTIES } from "@/lib/constants";
+import { completeOnboarding } from "./_actions";
+
+const COUNTRY_CODES = [
+    { code: 'AF', dial: '+93',   flag: '🇦🇫', name: 'Afghanistan' },
+    { code: 'AL', dial: '+355',  flag: '🇦🇱', name: 'Albania' },
+    { code: 'DZ', dial: '+213',  flag: '🇩🇿', name: 'Algeria' },
+    { code: 'AD', dial: '+376',  flag: '🇦🇩', name: 'Andorra' },
+    { code: 'AO', dial: '+244',  flag: '🇦🇴', name: 'Angola' },
+    { code: 'AG', dial: '+1268', flag: '🇦🇬', name: 'Antigua & Barbuda' },
+    { code: 'AR', dial: '+54',   flag: '🇦🇷', name: 'Argentina' },
+    { code: 'AM', dial: '+374',  flag: '🇦🇲', name: 'Armenia' },
+    { code: 'AU', dial: '+61',   flag: '🇦🇺', name: 'Australia' },
+    { code: 'AT', dial: '+43',   flag: '🇦🇹', name: 'Austria' },
+    { code: 'AZ', dial: '+994',  flag: '🇦🇿', name: 'Azerbaijan' },
+    { code: 'BS', dial: '+1242', flag: '🇧🇸', name: 'Bahamas' },
+    { code: 'BH', dial: '+973',  flag: '🇧🇭', name: 'Bahrain' },
+    { code: 'BD', dial: '+880',  flag: '🇧🇩', name: 'Bangladesh' },
+    { code: 'BB', dial: '+1246', flag: '🇧🇧', name: 'Barbados' },
+    { code: 'BY', dial: '+375',  flag: '🇧🇾', name: 'Belarus' },
+    { code: 'BE', dial: '+32',   flag: '🇧🇪', name: 'Belgium' },
+    { code: 'BZ', dial: '+501',  flag: '🇧🇿', name: 'Belize' },
+    { code: 'BJ', dial: '+229',  flag: '🇧🇯', name: 'Benin' },
+    { code: 'BT', dial: '+975',  flag: '🇧🇹', name: 'Bhutan' },
+    { code: 'BO', dial: '+591',  flag: '🇧🇴', name: 'Bolivia' },
+    { code: 'BA', dial: '+387',  flag: '🇧🇦', name: 'Bosnia & Herzegovina' },
+    { code: 'BW', dial: '+267',  flag: '🇧🇼', name: 'Botswana' },
+    { code: 'BR', dial: '+55',   flag: '🇧🇷', name: 'Brazil' },
+    { code: 'BN', dial: '+673',  flag: '🇧🇳', name: 'Brunei' },
+    { code: 'BG', dial: '+359',  flag: '🇧🇬', name: 'Bulgaria' },
+    { code: 'BF', dial: '+226',  flag: '🇧🇫', name: 'Burkina Faso' },
+    { code: 'BI', dial: '+257',  flag: '🇧🇮', name: 'Burundi' },
+    { code: 'CV', dial: '+238',  flag: '🇨🇻', name: 'Cabo Verde' },
+    { code: 'KH', dial: '+855',  flag: '🇰🇭', name: 'Cambodia' },
+    { code: 'CM', dial: '+237',  flag: '🇨🇲', name: 'Cameroon' },
+    { code: 'CA', dial: '+1',    flag: '🇨🇦', name: 'Canada' },
+    { code: 'CF', dial: '+236',  flag: '🇨🇫', name: 'Central African Republic' },
+    { code: 'TD', dial: '+235',  flag: '🇹🇩', name: 'Chad' },
+    { code: 'CL', dial: '+56',   flag: '🇨🇱', name: 'Chile' },
+    { code: 'CN', dial: '+86',   flag: '🇨🇳', name: 'China' },
+    { code: 'CO', dial: '+57',   flag: '🇨🇴', name: 'Colombia' },
+    { code: 'KM', dial: '+269',  flag: '🇰🇲', name: 'Comoros' },
+    { code: 'CG', dial: '+242',  flag: '🇨🇬', name: 'Congo' },
+    { code: 'CD', dial: '+243',  flag: '🇨🇩', name: 'Congo (DRC)' },
+    { code: 'CR', dial: '+506',  flag: '🇨🇷', name: 'Costa Rica' },
+    { code: 'HR', dial: '+385',  flag: '🇭🇷', name: 'Croatia' },
+    { code: 'CU', dial: '+53',   flag: '🇨🇺', name: 'Cuba' },
+    { code: 'CY', dial: '+357',  flag: '🇨🇾', name: 'Cyprus' },
+    { code: 'CZ', dial: '+420',  flag: '🇨🇿', name: 'Czech Republic' },
+    { code: 'CI', dial: '+225',  flag: '🇨🇮', name: "Côte d'Ivoire" },
+    { code: 'DK', dial: '+45',   flag: '🇩🇰', name: 'Denmark' },
+    { code: 'DJ', dial: '+253',  flag: '🇩🇯', name: 'Djibouti' },
+    { code: 'DM', dial: '+1767', flag: '🇩🇲', name: 'Dominica' },
+    { code: 'DO', dial: '+1809', flag: '🇩🇴', name: 'Dominican Republic' },
+    { code: 'EC', dial: '+593',  flag: '🇪🇨', name: 'Ecuador' },
+    { code: 'EG', dial: '+20',   flag: '🇪🇬', name: 'Egypt' },
+    { code: 'SV', dial: '+503',  flag: '🇸🇻', name: 'El Salvador' },
+    { code: 'GQ', dial: '+240',  flag: '🇬🇶', name: 'Equatorial Guinea' },
+    { code: 'ER', dial: '+291',  flag: '🇪🇷', name: 'Eritrea' },
+    { code: 'EE', dial: '+372',  flag: '🇪🇪', name: 'Estonia' },
+    { code: 'SZ', dial: '+268',  flag: '🇸🇿', name: 'Eswatini' },
+    { code: 'ET', dial: '+251',  flag: '🇪🇹', name: 'Ethiopia' },
+    { code: 'FJ', dial: '+679',  flag: '🇫🇯', name: 'Fiji' },
+    { code: 'FI', dial: '+358',  flag: '🇫🇮', name: 'Finland' },
+    { code: 'FR', dial: '+33',   flag: '🇫🇷', name: 'France' },
+    { code: 'GA', dial: '+241',  flag: '🇬🇦', name: 'Gabon' },
+    { code: 'GM', dial: '+220',  flag: '🇬🇲', name: 'Gambia' },
+    { code: 'GE', dial: '+995',  flag: '🇬🇪', name: 'Georgia' },
+    { code: 'DE', dial: '+49',   flag: '🇩🇪', name: 'Germany' },
+    { code: 'GH', dial: '+233',  flag: '🇬🇭', name: 'Ghana' },
+    { code: 'GR', dial: '+30',   flag: '🇬🇷', name: 'Greece' },
+    { code: 'GD', dial: '+1473', flag: '🇬🇩', name: 'Grenada' },
+    { code: 'GT', dial: '+502',  flag: '🇬🇹', name: 'Guatemala' },
+    { code: 'GN', dial: '+224',  flag: '🇬🇳', name: 'Guinea' },
+    { code: 'GW', dial: '+245',  flag: '🇬🇼', name: 'Guinea-Bissau' },
+    { code: 'GY', dial: '+592',  flag: '🇬🇾', name: 'Guyana' },
+    { code: 'HT', dial: '+509',  flag: '🇭🇹', name: 'Haiti' },
+    { code: 'HN', dial: '+504',  flag: '🇭🇳', name: 'Honduras' },
+    { code: 'HU', dial: '+36',   flag: '🇭🇺', name: 'Hungary' },
+    { code: 'IS', dial: '+354',  flag: '🇮🇸', name: 'Iceland' },
+    { code: 'IN', dial: '+91',   flag: '🇮🇳', name: 'India' },
+    { code: 'ID', dial: '+62',   flag: '🇮🇩', name: 'Indonesia' },
+    { code: 'IR', dial: '+98',   flag: '🇮🇷', name: 'Iran' },
+    { code: 'IQ', dial: '+964',  flag: '🇮🇶', name: 'Iraq' },
+    { code: 'IE', dial: '+353',  flag: '🇮🇪', name: 'Ireland' },
+    { code: 'IL', dial: '+972',  flag: '🇮🇱', name: 'Israel' },
+    { code: 'IT', dial: '+39',   flag: '🇮🇹', name: 'Italy' },
+    { code: 'JM', dial: '+1876', flag: '🇯🇲', name: 'Jamaica' },
+    { code: 'JP', dial: '+81',   flag: '🇯🇵', name: 'Japan' },
+    { code: 'JO', dial: '+962',  flag: '🇯🇴', name: 'Jordan' },
+    { code: 'KZ', dial: '+7',    flag: '🇰🇿', name: 'Kazakhstan' },
+    { code: 'KE', dial: '+254',  flag: '🇰🇪', name: 'Kenya' },
+    { code: 'KI', dial: '+686',  flag: '🇰🇮', name: 'Kiribati' },
+    { code: 'KP', dial: '+850',  flag: '🇰🇵', name: 'Korea (North)' },
+    { code: 'KR', dial: '+82',   flag: '🇰🇷', name: 'Korea (South)' },
+    { code: 'KW', dial: '+965',  flag: '🇰🇼', name: 'Kuwait' },
+    { code: 'KG', dial: '+996',  flag: '🇰🇬', name: 'Kyrgyzstan' },
+    { code: 'LA', dial: '+856',  flag: '🇱🇦', name: 'Laos' },
+    { code: 'LV', dial: '+371',  flag: '🇱🇻', name: 'Latvia' },
+    { code: 'LB', dial: '+961',  flag: '🇱🇧', name: 'Lebanon' },
+    { code: 'LS', dial: '+266',  flag: '🇱🇸', name: 'Lesotho' },
+    { code: 'LR', dial: '+231',  flag: '🇱🇷', name: 'Liberia' },
+    { code: 'LY', dial: '+218',  flag: '🇱🇾', name: 'Libya' },
+    { code: 'LI', dial: '+423',  flag: '🇱🇮', name: 'Liechtenstein' },
+    { code: 'LT', dial: '+370',  flag: '🇱🇹', name: 'Lithuania' },
+    { code: 'LU', dial: '+352',  flag: '🇱🇺', name: 'Luxembourg' },
+    { code: 'MG', dial: '+261',  flag: '🇲🇬', name: 'Madagascar' },
+    { code: 'MW', dial: '+265',  flag: '🇲🇼', name: 'Malawi' },
+    { code: 'MY', dial: '+60',   flag: '🇲🇾', name: 'Malaysia' },
+    { code: 'MV', dial: '+960',  flag: '🇲🇻', name: 'Maldives' },
+    { code: 'ML', dial: '+223',  flag: '🇲🇱', name: 'Mali' },
+    { code: 'MT', dial: '+356',  flag: '🇲🇹', name: 'Malta' },
+    { code: 'MH', dial: '+692',  flag: '🇲🇭', name: 'Marshall Islands' },
+    { code: 'MR', dial: '+222',  flag: '🇲🇷', name: 'Mauritania' },
+    { code: 'MU', dial: '+230',  flag: '🇲🇺', name: 'Mauritius' },
+    { code: 'MX', dial: '+52',   flag: '🇲🇽', name: 'Mexico' },
+    { code: 'FM', dial: '+691',  flag: '🇫🇲', name: 'Micronesia' },
+    { code: 'MD', dial: '+373',  flag: '🇲🇩', name: 'Moldova' },
+    { code: 'MC', dial: '+377',  flag: '🇲🇨', name: 'Monaco' },
+    { code: 'MN', dial: '+976',  flag: '🇲🇳', name: 'Mongolia' },
+    { code: 'ME', dial: '+382',  flag: '🇲🇪', name: 'Montenegro' },
+    { code: 'MA', dial: '+212',  flag: '🇲🇦', name: 'Morocco' },
+    { code: 'MZ', dial: '+258',  flag: '🇲🇿', name: 'Mozambique' },
+    { code: 'MM', dial: '+95',   flag: '🇲🇲', name: 'Myanmar' },
+    { code: 'NA', dial: '+264',  flag: '🇳🇦', name: 'Namibia' },
+    { code: 'NR', dial: '+674',  flag: '🇳🇷', name: 'Nauru' },
+    { code: 'NP', dial: '+977',  flag: '🇳🇵', name: 'Nepal' },
+    { code: 'NL', dial: '+31',   flag: '🇳🇱', name: 'Netherlands' },
+    { code: 'NZ', dial: '+64',   flag: '🇳🇿', name: 'New Zealand' },
+    { code: 'NI', dial: '+505',  flag: '🇳🇮', name: 'Nicaragua' },
+    { code: 'NE', dial: '+227',  flag: '🇳🇪', name: 'Niger' },
+    { code: 'NG', dial: '+234',  flag: '🇳🇬', name: 'Nigeria' },
+    { code: 'MK', dial: '+389',  flag: '🇲🇰', name: 'North Macedonia' },
+    { code: 'NO', dial: '+47',   flag: '🇳🇴', name: 'Norway' },
+    { code: 'OM', dial: '+968',  flag: '🇴🇲', name: 'Oman' },
+    { code: 'PK', dial: '+92',   flag: '🇵🇰', name: 'Pakistan' },
+    { code: 'PW', dial: '+680',  flag: '🇵🇼', name: 'Palau' },
+    { code: 'PA', dial: '+507',  flag: '🇵🇦', name: 'Panama' },
+    { code: 'PG', dial: '+675',  flag: '🇵🇬', name: 'Papua New Guinea' },
+    { code: 'PY', dial: '+595',  flag: '🇵🇾', name: 'Paraguay' },
+    { code: 'PE', dial: '+51',   flag: '🇵🇪', name: 'Peru' },
+    { code: 'PH', dial: '+63',   flag: '🇵🇭', name: 'Philippines' },
+    { code: 'PL', dial: '+48',   flag: '🇵🇱', name: 'Poland' },
+    { code: 'PT', dial: '+351',  flag: '🇵🇹', name: 'Portugal' },
+    { code: 'QA', dial: '+974',  flag: '🇶🇦', name: 'Qatar' },
+    { code: 'RO', dial: '+40',   flag: '🇷🇴', name: 'Romania' },
+    { code: 'RU', dial: '+7',    flag: '🇷🇺', name: 'Russia' },
+    { code: 'RW', dial: '+250',  flag: '🇷🇼', name: 'Rwanda' },
+    { code: 'KN', dial: '+1869', flag: '🇰🇳', name: 'Saint Kitts & Nevis' },
+    { code: 'LC', dial: '+1758', flag: '🇱🇨', name: 'Saint Lucia' },
+    { code: 'VC', dial: '+1784', flag: '🇻🇨', name: 'Saint Vincent & Grenadines' },
+    { code: 'WS', dial: '+685',  flag: '🇼🇸', name: 'Samoa' },
+    { code: 'SM', dial: '+378',  flag: '🇸🇲', name: 'San Marino' },
+    { code: 'ST', dial: '+239',  flag: '🇸🇹', name: 'São Tomé & Príncipe' },
+    { code: 'SA', dial: '+966',  flag: '🇸🇦', name: 'Saudi Arabia' },
+    { code: 'SN', dial: '+221',  flag: '🇸🇳', name: 'Senegal' },
+    { code: 'RS', dial: '+381',  flag: '🇷🇸', name: 'Serbia' },
+    { code: 'SC', dial: '+248',  flag: '🇸🇨', name: 'Seychelles' },
+    { code: 'SL', dial: '+232',  flag: '🇸🇱', name: 'Sierra Leone' },
+    { code: 'SG', dial: '+65',   flag: '🇸🇬', name: 'Singapore' },
+    { code: 'SK', dial: '+421',  flag: '🇸🇰', name: 'Slovakia' },
+    { code: 'SI', dial: '+386',  flag: '🇸🇮', name: 'Slovenia' },
+    { code: 'SB', dial: '+677',  flag: '🇸🇧', name: 'Solomon Islands' },
+    { code: 'SO', dial: '+252',  flag: '🇸🇴', name: 'Somalia' },
+    { code: 'ZA', dial: '+27',   flag: '🇿🇦', name: 'South Africa' },
+    { code: 'SS', dial: '+211',  flag: '🇸🇸', name: 'South Sudan' },
+    { code: 'ES', dial: '+34',   flag: '🇪🇸', name: 'Spain' },
+    { code: 'LK', dial: '+94',   flag: '🇱🇰', name: 'Sri Lanka' },
+    { code: 'SD', dial: '+249',  flag: '🇸🇩', name: 'Sudan' },
+    { code: 'SR', dial: '+597',  flag: '🇸🇷', name: 'Suriname' },
+    { code: 'SE', dial: '+46',   flag: '🇸🇪', name: 'Sweden' },
+    { code: 'CH', dial: '+41',   flag: '🇨🇭', name: 'Switzerland' },
+    { code: 'SY', dial: '+963',  flag: '🇸🇾', name: 'Syria' },
+    { code: 'TW', dial: '+886',  flag: '🇹🇼', name: 'Taiwan' },
+    { code: 'TJ', dial: '+992',  flag: '🇹🇯', name: 'Tajikistan' },
+    { code: 'TZ', dial: '+255',  flag: '🇹🇿', name: 'Tanzania' },
+    { code: 'TH', dial: '+66',   flag: '🇹🇭', name: 'Thailand' },
+    { code: 'TL', dial: '+670',  flag: '🇹🇱', name: 'Timor-Leste' },
+    { code: 'TG', dial: '+228',  flag: '🇹🇬', name: 'Togo' },
+    { code: 'TO', dial: '+676',  flag: '🇹🇴', name: 'Tonga' },
+    { code: 'TT', dial: '+1868', flag: '🇹🇹', name: 'Trinidad & Tobago' },
+    { code: 'TN', dial: '+216',  flag: '🇹🇳', name: 'Tunisia' },
+    { code: 'TR', dial: '+90',   flag: '🇹🇷', name: 'Turkey' },
+    { code: 'TM', dial: '+993',  flag: '🇹🇲', name: 'Turkmenistan' },
+    { code: 'TV', dial: '+688',  flag: '🇹🇻', name: 'Tuvalu' },
+    { code: 'UG', dial: '+256',  flag: '🇺🇬', name: 'Uganda' },
+    { code: 'UA', dial: '+380',  flag: '🇺🇦', name: 'Ukraine' },
+    { code: 'AE', dial: '+971',  flag: '🇦🇪', name: 'United Arab Emirates' },
+    { code: 'GB', dial: '+44',   flag: '🇬🇧', name: 'United Kingdom' },
+    { code: 'US', dial: '+1',    flag: '🇺🇸', name: 'United States' },
+    { code: 'UY', dial: '+598',  flag: '🇺🇾', name: 'Uruguay' },
+    { code: 'UZ', dial: '+998',  flag: '🇺🇿', name: 'Uzbekistan' },
+    { code: 'VU', dial: '+678',  flag: '🇻🇺', name: 'Vanuatu' },
+    { code: 'VE', dial: '+58',   flag: '🇻🇪', name: 'Venezuela' },
+    { code: 'VN', dial: '+84',   flag: '🇻🇳', name: 'Vietnam' },
+    { code: 'YE', dial: '+967',  flag: '🇾🇪', name: 'Yemen' },
+    { code: 'ZM', dial: '+260',  flag: '🇿🇲', name: 'Zambia' },
+    { code: 'ZW', dial: '+263',  flag: '🇿🇼', name: 'Zimbabwe' },
+];
+
 
 export default function OnboardingPage() {
     const router = useRouter();
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, signOut } = useAuth();
+    const { user } = useUser();
+    const { session } = useSession();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
-    const [userId, setUserId] = useState("");
-    const [email, setEmail] = useState("");
 
     // Profile Data
     const [faculty, setFaculty] = useState("");
     const [programme, setProgramme] = useState("");
     const [level, setLevel] = useState("");
     const [whatsappNumber, setWhatsappNumber] = useState("");
+    const [dialCode, setDialCode] = useState("+233"); // Default Ghana
+
+    // OTP States
+    const [otp, setOtp] = useState("");
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [isOtpVerified, setIsOtpVerified] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [otpError, setOtpError] = useState("");
+    
+    // Timer State
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+
+    useEffect(() => {
+        if (!isOtpSent || isOtpVerified) return;
+
+        setTimeLeft(600); // Reset on each new OTP send
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setOtpError("OTP expired. Please request a new one.");
+                    setIsOtpSent(false);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [isOtpSent, isOtpVerified]); // ← no timeLeft dep; countdown managed inside callback
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, "0")}`;
+    };
 
     useEffect(() => {
         const checkUser = async () => {
             try {
-                const { data: { user }, error: authError } = await supabase.auth.getUser();
-                if (authError || !user) {
-                    router.push("/auth");
+                if (!user) {
+                    setLoading(false);
                     return;
                 }
-                setUserId(user.id);
-                setEmail(user.email || "");
 
+                // Fetch existing profile if they have one (in case they refresh)
                 const { data: profile } = await supabase
                     .from("profiles")
                     .select("faculty, programme, level, whatsapp_number")
@@ -43,11 +277,9 @@ export default function OnboardingPage() {
                     if (profile.faculty) setFaculty(profile.faculty);
                     if (profile.programme) setProgramme(profile.programme);
                     if (profile.level) setLevel(profile.level);
-                    if (profile.whatsapp_number) setWhatsappNumber(profile.whatsapp_number);
-
-                    if (profile.faculty && profile.programme && profile.level && profile.whatsapp_number) {
-                        router.push("/");
-                        return;
+                    if (profile.whatsapp_number) {
+                        setWhatsappNumber(profile.whatsapp_number);
+                        setIsOtpVerified(true);
                     }
                 }
             } catch (err) {
@@ -56,8 +288,62 @@ export default function OnboardingPage() {
                 setLoading(false);
             }
         };
+
         checkUser();
-    }, [router]);
+    }, [user]);
+
+    const handleSendOtp = async () => {
+        if (!whatsappNumber.trim()) {
+            setOtpError("Please enter a WhatsApp number first.");
+            return;
+        }
+        // Strip leading 0 from local number before prepending dial code
+        const localNumber = whatsappNumber.trim().replace(/^0+/, '');
+        const fullNumber = dialCode + localNumber;
+        setOtpLoading(true);
+        setOtpError("");
+        try {
+            const res = await fetch("/api/whatsapp/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber: fullNumber }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+            setIsOtpSent(true);
+            setTimeLeft(600);
+        } catch (err: any) {
+            setOtpError(err.message);
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp.trim()) {
+            setOtpError("Please enter the OTP.");
+            return;
+        }
+        const localNumber = whatsappNumber.trim().replace(/^0+/, '');
+        const fullNumber = dialCode + localNumber;
+        setOtpLoading(true);
+        setOtpError("");
+        try {
+            const res = await fetch("/api/whatsapp/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber: fullNumber, otp }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to verify OTP");
+            setIsOtpVerified(true);
+            setOtpError("");
+        } catch (err: any) {
+            setOtpError(err.message);
+        } finally {
+            setOtpLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,7 +352,12 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (!userId) {
+        if (!isOtpVerified) {
+            setError("Please verify your WhatsApp number to continue.");
+            return;
+        }
+
+        if (!user) {
             setError("Not signed in.");
             return;
         }
@@ -74,45 +365,38 @@ export default function OnboardingPage() {
         setSubmitting(true);
         setError("");
 
+        // Compose the verified full international number
+        const fullWhatsapp = dialCode + whatsappNumber.trim().replace(/^0+/, '');
+
         try {
-                const { data: existingProfile } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("id", userId)
-                .single();
+            // Mark onboarding as complete in Clerk's publicMetadata and upsert Supabase profile
+            const formData = new FormData();
+            formData.set('faculty', faculty.trim());
+            formData.set('programme', programme.trim());
+            formData.set('level', level.trim());
+            formData.set('whatsappNumber', fullWhatsapp);
+            const res = await completeOnboarding(formData);
 
-            if (existingProfile) {
-                const { error: updateError } = await supabase
-                    .from("profiles")
-                    .update({
-                        faculty: faculty.trim(),
-                        programme: programme.trim(),
-                        level: level.trim(),
-                        whatsapp_number: whatsappNumber.trim()
-                    })
-                    .eq('id', userId);
-                if (updateError) throw updateError;
-            } else {
-                const { data: authUser } = await supabase.auth.getUser();
-                const userName = authUser.user?.user_metadata?.full_name || "Scholar";
-
-                const { error: insertError } = await supabase
-                    .from("profiles")
-                    .insert({
-                        id: userId,
-                        email: email,
-                        name: userName,
-                        faculty: faculty.trim(),
-                        programme: programme.trim(),
-                        level: level.trim(),
-                        whatsapp_number: whatsappNumber.trim(),
-                        role: 'student'
-                    });
-                if (insertError) throw insertError;
+            if (res?.error) {
+                setError(res.error);
+                setSubmitting(false);
+                return;
             }
 
+            try {
+                // Forces a token refresh so middleware sees onboardingComplete
+                await user.reload();
+                await session?.getToken({ skipCache: true });
+            } catch (tokenErr) {
+                console.warn("[onboarding] Non-fatal error refreshing Clerk token:", tokenErr);
+            }
+
+            // Refresh the global profile state
             await refreshProfile();
-            router.push("/?tour=1");
+
+            // Redirect to dashboard with tour active via hard navigation 
+            // so the browser gets a fresh JWT for the middleware
+            window.location.href = "/?tour=1";
 
         } catch (err: any) {
             setError(err.message || "Failed to update profile.");
@@ -197,15 +481,82 @@ export default function OnboardingPage() {
 
                     <div className="flex flex-col gap-2">
                         <label className="text-white text-base font-medium" htmlFor="whatsapp">WhatsApp Number</label>
-                        <input
-                            id="whatsapp"
-                            type="tel"
-                            value={whatsappNumber}
-                            onChange={(e) => setWhatsappNumber(e.target.value)}
-                            placeholder="e.g. +233 50 123 4567"
-                            className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
-                            required
-                        />
+                        <div className="flex gap-2">
+                            <div className="relative shrink-0">
+                                <select
+                                    value={dialCode}
+                                    onChange={(e) => {
+                                        setDialCode(e.target.value);
+                                        setIsOtpVerified(false);
+                                        setIsOtpSent(false);
+                                        setOtpError("");
+                                    }}
+                                    disabled={isOtpVerified}
+                                    className="h-14 pl-3 pr-8 bg-[#111111] border border-white/20 rounded-lg text-white appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors disabled:opacity-60 cursor-pointer"
+                                >
+                                    {COUNTRY_CODES.map((c) => (
+                                        <option key={c.code + c.dial} value={c.dial}>
+                                            {c.flag} {c.dial}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none text-xs">▼</span>
+                            </div>
+                            <input
+                                id="whatsapp"
+                                type="tel"
+                                value={whatsappNumber}
+                                onChange={(e) => {
+                                    // Auto-strip leading zeros as they type
+                                    const val = e.target.value.replace(/^0+/, '');
+                                    setWhatsappNumber(val);
+                                    setIsOtpVerified(false);
+                                    setIsOtpSent(false);
+                                    setOtpError("");
+                                }}
+                                placeholder="531 423 911 (no leading 0)"
+                                className={`flex-1 h-14 bg-[#111111] border ${isOtpVerified ? 'border-green-500/50' : 'border-white/20'} rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors`}
+                                required
+                                disabled={isOtpVerified}
+                            />
+                            {!isOtpVerified && (
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={otpLoading || !whatsappNumber.trim()}
+                                    className="h-14 px-4 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                >
+                                    {otpLoading && !isOtpSent ? "Sending..." : (isOtpSent ? "Resend" : "Send OTP")}
+                                </button>
+                            )}
+                        </div>
+                        {isOtpSent && !isOtpVerified && (
+                            <div className="flex flex-col gap-2 mt-2">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        placeholder="Enter 6-digit OTP"
+                                        className="flex-1 h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
+                                        maxLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleVerifyOtp}
+                                        disabled={otpLoading || !otp.trim() || timeLeft === 0}
+                                        className="h-14 px-6 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                        {otpLoading && isOtpSent ? "Verifying..." : "Verify"}
+                                    </button>
+                                </div>
+                                <div className="text-right text-sm text-[#888888]">
+                                    Expires in <span className="font-medium text-white">{formatTime(timeLeft)}</span>
+                                </div>
+                            </div>
+                        )}
+                        {otpError && <p className="text-red-400 text-sm mt-1">{otpError}</p>}
+                        {isOtpVerified && <p className="text-green-400 text-sm mt-1">✓ Number verified</p>}
                     </div>
 
                     {error && (
@@ -232,8 +583,8 @@ export default function OnboardingPage() {
             <div className="mt-6 flex flex-col items-center gap-4">
                 <button
                     onClick={async () => {
-                        await supabase.auth.signOut();
-                        router.push('/auth');
+                        await signOut();
+                        router.push('/sign-in');
                     }}
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                 >

@@ -15,13 +15,15 @@ function OnboardingEnforcer() {
     const pathname = usePathname();
 
     useEffect(() => {
-        // Skip redirect entirely while the tour is running
+        // Middleware handles the primary onboarding gate.
+        // This client-side guard is a safety net for when Supabase profile loads
+        // but is still missing required fields (e.g. whatsapp_number set after sign-up).
         if (isTourActive) return;
+        if (pathname === '/onboarding' || pathname.startsWith('/sign-') || pathname.startsWith('/auth')) return;
 
         if (!loading && session && profile) {
             const isProfileComplete = profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
-            
-            if (!isProfileComplete && pathname !== '/onboarding' && !pathname.startsWith('/auth')) {
+            if (!isProfileComplete) {
                 router.replace('/onboarding');
             }
         }
