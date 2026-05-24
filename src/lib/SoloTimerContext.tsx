@@ -57,6 +57,46 @@ interface SoloTimerContextType {
 
 const SoloTimerContext = createContext<SoloTimerContextType | undefined>(undefined);
 
+const LS_KEY = 'lockedin_solotimer_state';
+
+interface PersistedSoloTimerState {
+    timerState: TimerState;
+    expectedEndTime: number | null;
+    duration: number;
+    label: string;
+    goal: string;
+    isPaused: boolean;
+    pausedTimeLeft: number;
+    pomodoroEnabled: boolean;
+    breakDuration: number;
+    pomodoroRound: number;
+    totalRounds: number;
+    soundEnabled: boolean;
+}
+
+function saveToStorage(state: PersistedSoloTimerState) {
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify(state));
+    } catch { /* ignore */ }
+}
+
+function loadFromStorage(): PersistedSoloTimerState | null {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+function clearStorage() {
+    try {
+        localStorage.removeItem(LS_KEY);
+    } catch { /* ignore */ }
+}
+
+
 export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const { session, profile, refreshProfile } = useAuth();
     const pathname = usePathname();
@@ -85,45 +125,97 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const [countdown, setCountdown] = useState(3);
     const [isPaused, setIsPaused] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const lastTickRef = useRef<number>(Date.now()); // For background sync
+    const expectedEndTimeRef = useRef<number | null>(null);
+    const hasRestoredRef = useRef(false);
 
     // Determine if floating timer should show (if active/break/completion/stats AND not on dashboard)
     const isTimerVisible = (timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN' || timerState === 'COMPLETION' || timerState === 'STATS') && pathname !== '/';
+
+    // ---- Restore from localStorage on mount ----
+    useEffect(() => {
+        if (hasRestoredRef.current) return;
+        hasRestoredRef.current = true;
+
+        const saved = loadFromStorage();
+        if (!saved) return;
+
+        // Restore setup/pomodoro data
+        setDuration(saved.duration);
+        setLabel(saved.label);
+        setGoal(saved.goal);
+        setPomodoroEnabled(saved.pomodoroEnabled);
+        setBreakDuration(saved.breakDuration);
+        setPomodoroRound(saved.pomodoroRound);
+        setTotalRounds(saved.totalRounds);
+        setSoundEnabled(saved.soundEnabled);
+
+        const activeStates: TimerState[] = ['ACTIVE', 'BREAK', 'COUNTDOWN'];
+
+        if (activeStates.includes(saved.timerState)) {
+            if (saved.isPaused) {
+                setTimeLeft(saved.pausedTimeLeft);
+                setIsPaused(true);
+                setTimerState(saved.timerState);
+            } else if (saved.expectedEndTime) {
+                const remaining = Math.round((saved.expectedEndTime - Date.now()) / 1000);
+                if (remaining > 0) {
+                    setTimeLeft(remaining);
+                    expectedEndTimeRef.current = saved.expectedEndTime;
+                    setTimerState(saved.timerState);
+                } else {
+                    setTimeLeft(0);
+                    if (saved.timerState === 'ACTIVE') {
+                        setTimerState('COMPLETION');
+                    } else if (saved.timerState === 'BREAK') {
+                        setPomodoroRound(r => r + 1);
+                        setTimeLeft(saved.duration * 60);
+                        setCountdown(3);
+                        setTimerState('COUNTDOWN');
+                    }
+                    clearStorage();
+                }
+            }
+        } else if (saved.timerState === 'COMPLETION') {
+            setTimerState('COMPLETION');
+        } else if (saved.timerState === 'STATS') {
+            setTimerState('STATS');
+        }
+    }, []);
+
+    // ---- Persist state to localStorage whenever it changes ----
+    useEffect(() => {
+        if (!hasRestoredRef.current) return;
+        if (timerState === 'SETUP') {
+            clearStorage();
+            return;
+        }
+
+        const persisted: PersistedSoloTimerState = {
+            timerState,
+            expectedEndTime: expectedEndTimeRef.current,
+            duration,
+            label,
+            goal,
+            isPaused,
+            pausedTimeLeft: timeLeft,
+            pomodoroEnabled,
+            breakDuration,
+            pomodoroRound,
+            totalRounds,
+            soundEnabled,
+        };
+        saveToStorage(persisted);
+    }, [timerState, timeLeft, isPaused, duration, label, goal, pomodoroEnabled, breakDuration, pomodoroRound, totalRounds, soundEnabled]);
 
     // Sync timeLeft when duration changes in SETUP
     useEffect(() => {
         if (timerState === 'SETUP') {
             setTimeLeft(duration * 60);
+            expectedEndTimeRef.current = null;
         }
     }, [duration, timerState]);
 
-    // Background Tab Sync Logic
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && !isPaused && (timerState === 'ACTIVE' || timerState === 'BREAK')) {
-                // We came back! Calculate how much time passed
-                const now = Date.now();
-                const diffSeconds = Math.floor((now - lastTickRef.current) / 1000);
-                
-                if (diffSeconds > 0) {
-                    setTimeLeft(prev => {
-                        const newTime = Math.max(0, prev - diffSeconds);
-                        // If it crossed 0 while we were gone, we need to handle completion manually
-                        if (newTime === 0 && prev > 0) {
-                            // Note: this will be picked up by the regular interval loop safely
-                        }
-                        return newTime;
-                    });
-                }
-            }
-            lastTickRef.current = Date.now();
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [isPaused, timerState]);
-
-    // Main Timer Loop
+    // Main Timer Loop using system-time sync
     useEffect(() => {
         if (timerState === 'COUNTDOWN') {
             if (countdown > 0) {
@@ -131,28 +223,44 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
                 return () => clearTimeout(id);
             } else {
                 setTimerState('ACTIVE');
-                lastTickRef.current = Date.now();
+                expectedEndTimeRef.current = Date.now() + (duration * 60 * 1000);
             }
         }
 
-        if ((timerState === 'ACTIVE' || timerState === 'BREAK') && !isPaused) {
-            if (timeLeft > 0) {
-                timerRef.current = setTimeout(() => {
-                    setTimeLeft(t => t - 1);
-                    lastTickRef.current = Date.now();
-                }, 1000);
-            } else if (timeLeft === 0) {
-                if (timerState === 'ACTIVE') {
-                    handleTimerFinished();
-                } else if (timerState === 'BREAK') {
-                    handleBreakFinished();
-                }
+        const isActive = (timerState === 'ACTIVE' || timerState === 'BREAK');
+
+        if (isActive && !isPaused) {
+            if (!expectedEndTimeRef.current) {
+                expectedEndTimeRef.current = Date.now() + (timeLeft * 1000);
             }
+
+            timerRef.current = setInterval(() => {
+                if (!expectedEndTimeRef.current) return;
+
+                const remaining = Math.round((expectedEndTimeRef.current - Date.now()) / 1000);
+
+                if (remaining > 0) {
+                    setTimeLeft(remaining);
+                } else {
+                    setTimeLeft(0);
+                    expectedEndTimeRef.current = null;
+                    if (timerRef.current) clearInterval(timerRef.current);
+
+                    if (timerState === 'ACTIVE') {
+                        handleTimerFinished();
+                    } else if (timerState === 'BREAK') {
+                        handleBreakFinished();
+                    }
+                }
+            }, 1000);
+        } else {
+            expectedEndTimeRef.current = null;
         }
+
         return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [timerState, countdown, isPaused, timeLeft]);
+    }, [timerState, countdown, isPaused]);
 
     // -- Audio Functions --
     const playCompletionSound = useCallback(() => {
@@ -221,11 +329,13 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const handleStartSequence = () => {
         setPomodoroRound(1);
         setCountdown(3);
+        expectedEndTimeRef.current = null;
         setTimerState('COUNTDOWN');
     };
 
     const handleTimerFinished = () => {
         playCompletionSound();
+        expectedEndTimeRef.current = null;
         if (pomodoroEnabled && pomodoroRound < totalRounds) {
             setTimeLeft(breakDuration * 60);
             setTimerState('BREAK');
@@ -236,6 +346,7 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
                 new Notification('Locked In Complete! 🎉', { body: `You finished: ${label}` });
             }
             triggerConfetti();
+            clearStorage();
         }
     };
 
@@ -246,18 +357,22 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
         }
         setPomodoroRound(r => r + 1);
         setTimeLeft(duration * 60);
+        expectedEndTimeRef.current = null;
         setCountdown(3);
         setTimerState('COUNTDOWN');
     };
 
     const skipBreak = () => {
-        if (timerRef.current) clearTimeout(timerRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        expectedEndTimeRef.current = null;
         handleBreakFinished();
     };
 
     const handleQuitEarly = async () => {
         setIsSaving(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        expectedEndTimeRef.current = null;
+        clearStorage();
 
         try {
             await supabase.from('solo_sessions').insert({
@@ -299,6 +414,7 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
                 throw new Error(data.error || 'Unknown error saving session');
             }
 
+            clearStorage();
             await refreshProfile();
             setTimerState('STATS');
 
@@ -317,7 +433,7 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
 
         } catch (error) {
             console.error('Error saving completion:', error);
-            alert('Failed to save session. ensure database functions are updated.');
+            alert('Failed to save session. Ensure database functions are updated.');
         } finally {
             setIsSaving(false);
         }
@@ -330,6 +446,8 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
         setGoal('');
         setIsPaused(false);
         setPomodoroRound(1);
+        expectedEndTimeRef.current = null;
+        clearStorage();
     };
 
     // Ask for notification permission when they start typing a goal

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, setSupabaseToken } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { useAuth as useClerkAuth, useUser, useClerk } from '@clerk/nextjs';
+import { useAuth as useClerkAuth, useUser, useClerk, useSession } from '@clerk/nextjs';
 
 // We mock a Session type that matches the subset used by the app
 interface MockSession {
@@ -35,9 +35,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { userId, isLoaded: clerkLoaded } = useClerkAuth();
     const { user: clerkUser } = useUser();
     const { signOut: clerkSignOut } = useClerk();
+    const { session: clerkSession } = useSession();
 
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Sync Clerk session token with Supabase client
+    useEffect(() => {
+        const syncToken = async () => {
+            if (clerkSession) {
+                try {
+                    const token = await clerkSession.getToken({ template: 'supabase' });
+                    setSupabaseToken(token);
+                } catch (err) {
+                    console.error('Error getting Supabase token from Clerk:', err);
+                }
+            } else {
+                setSupabaseToken(null);
+            }
+        };
+
+        syncToken();
+
+        // Refresh token every 55 seconds to prevent expiration
+        const interval = setInterval(syncToken, 55 * 1000);
+        return () => clearInterval(interval);
+    }, [clerkSession]);
 
     const session: MockSession | null = userId ? {
         user: {
@@ -45,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: clerkUser?.primaryEmailAddress?.emailAddress
         }
     } : null;
+
 
     const fetchProfile = async (uid: string) => {
         try {

@@ -14,3 +14,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         detectSessionInUrl: false,
     },
 });
+
+export const setSupabaseToken = (token: string | null) => {
+    if (token) {
+        // @ts-ignore
+        supabase.rest.headers['Authorization'] = `Bearer ${token}`;
+        // @ts-ignore
+        if (supabase.realtime) {
+            // @ts-ignore
+            supabase.realtime.setAuth(token);
+        }
+    } else {
+        // @ts-ignore
+        delete supabase.rest.headers['Authorization'];
+    }
+};
+
