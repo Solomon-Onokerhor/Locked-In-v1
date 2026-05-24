@@ -30,7 +30,7 @@ export function BuddiesClient() {
 
     useEffect(() => {
         if (!loading && !session) {
-            router.push('/auth');
+            router.push('/sign-in');
         } else if (session) {
             fetchMyBuddies();
         }

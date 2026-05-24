@@ -279,7 +279,7 @@ export function SoloTimer() {
                         <button
                             onClick={() => {
                                 if (!session) {
-                                    router.push('/auth');
+                                    router.push('/sign-in');
                                     return;
                                 }
                                 handleStartSequence();

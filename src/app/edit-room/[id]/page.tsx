@@ -40,7 +40,7 @@ export default function EditRoomPage({ params }: { params: Promise<{ id: string 
 
     useEffect(() => {
         if (!authLoading && !session) {
-            router.push('/auth');
+            router.push('/sign-in');
             return;
         }
 

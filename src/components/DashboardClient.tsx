@@ -27,7 +27,7 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
 
     useEffect(() => {
         if (!loading && !session) {
-            router.push('/auth');
+            router.push('/sign-in');
         } else if (!loading && session && profile && !profile.faculty) {
             // Old accounts missing onboarding data → force onboarding
             router.push('/onboarding');

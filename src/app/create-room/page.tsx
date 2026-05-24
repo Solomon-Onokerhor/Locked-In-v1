@@ -35,7 +35,7 @@ export default function CreateRoomPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!loading && !session) router.push('/auth');
+        if (!loading && !session) router.push('/sign-in');
     }, [loading, session, router]);
 
     const handleCreateRoom = async (e: React.FormEvent) => {

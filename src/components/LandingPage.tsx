@@ -57,13 +57,13 @@ export function LandingPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <Link
-                        href="/auth"
+                        href="/sign-in"
                         className="text-sm text-gray-400 hover:text-white transition-colors font-medium hidden sm:block"
                     >
                         Log In
                     </Link>
                     <Link
-                        href="/auth"
+                        href="/sign-in"
                         className="bg-white text-black text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-gray-200 transition-all active:scale-95"
                     >
                         Get Started
@@ -93,7 +93,7 @@ export function LandingPage() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
-                            href="/auth"
+                            href="/sign-in"
                             className="w-full sm:w-auto bg-white text-black font-bold text-base px-8 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                         >
                             Get Started — Free
@@ -193,7 +193,7 @@ export function LandingPage() {
                         Join the most focused students on campus and start building study habits that stick.
                     </p>
                     <Link
-                        href="/auth"
+                        href="/sign-in"
                         className="inline-flex items-center gap-2 bg-white text-black font-bold text-base px-10 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.08)]"
                     >
                         Join Now — It&apos;s Free

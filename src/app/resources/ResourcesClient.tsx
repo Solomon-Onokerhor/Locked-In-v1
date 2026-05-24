@@ -36,7 +36,7 @@ export default function ResourcesClient({ initialResources }: ResourcesClientPro
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!loading && !session) router.push('/auth');
+        if (!loading && !session) router.push('/sign-in');
     }, [loading, session, router]);
 
     useEffect(() => {

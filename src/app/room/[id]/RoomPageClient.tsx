@@ -30,7 +30,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
 
     // Removal of mandatory redirect to allow preview mode
     // useEffect(() => {
-    //     if (!authLoading && !session) router.push('/auth');
+    //     if (!authLoading && !session) router.push('/sign-in');
     // }, [authLoading, session, router]);
 
     useEffect(() => {
@@ -293,7 +293,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                     <p className="text-gray-400 text-xs">Sign in to lock in and chat with scholars.</p>
                                 </div>
                             </div>
-                            <Link href="/auth" className="bg-brand-accent text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors whitespace-nowrap">
+                            <Link href="/sign-in" className="bg-brand-accent text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors whitespace-nowrap">
                                 Sign In
                             </Link>
                         </div>

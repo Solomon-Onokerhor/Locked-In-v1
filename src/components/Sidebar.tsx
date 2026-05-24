@@ -225,7 +225,7 @@ export function Sidebar() {
                         </>
                     ) : (
                         <Link
-                            href="/auth"
+                            href="/sign-in"
                             className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white hover:bg-gray-200 text-black font-bold transition-all shadow-lg shadow-white/10 active:scale-95"
                         >
                             <LogOut className="w-5 h-5 rotate-180" />

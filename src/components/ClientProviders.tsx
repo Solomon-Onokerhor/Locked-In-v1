@@ -19,7 +19,7 @@ function OnboardingEnforcer() {
         // This client-side guard is a safety net for when Supabase profile loads
         // but is still missing required fields (e.g. whatsapp_number set after sign-up).
         if (isTourActive) return;
-        if (pathname === '/onboarding' || pathname.startsWith('/sign-') || pathname.startsWith('/auth')) return;
+        if (pathname === '/onboarding' || pathname.startsWith('/sign-') || pathname.startsWith('/sign-in')) return;
 
         if (!loading && session && profile) {
             const isProfileComplete = profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
