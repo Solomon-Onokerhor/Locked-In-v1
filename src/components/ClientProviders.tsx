@@ -21,8 +21,8 @@ function OnboardingEnforcer() {
         if (isTourActive) return;
         if (pathname === '/onboarding' || pathname.startsWith('/sign-') || pathname.startsWith('/sign-in')) return;
 
-        if (!loading && session && profile) {
-            const isProfileComplete = profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
+        if (!loading && session) {
+            const isProfileComplete = profile && profile.faculty && profile.programme && profile.level && profile.whatsapp_number;
             if (!isProfileComplete) {
                 router.replace('/onboarding');
             }

@@ -28,8 +28,8 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
     useEffect(() => {
         if (!loading && !session) {
             router.push('/sign-in');
-        } else if (!loading && session && profile && !profile.faculty) {
-            // Old accounts missing onboarding data → force onboarding
+        } else if (!loading && session && (!profile || !profile.faculty)) {
+            // Missing profile row or missing academic fields → force onboarding
             router.push('/onboarding');
         } else if (session) {
             fetchPrivateData();
