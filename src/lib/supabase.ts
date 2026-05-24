@@ -9,9 +9,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // This avoids the PKCE code-verifier storage issue.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        flowType: 'implicit',
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
     },
 });
