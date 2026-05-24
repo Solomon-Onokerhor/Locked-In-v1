@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   '/maintenance',
   '/favicon.ico',
   '/icon.png',
+  '/manifest.json'
 ]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,7 +46,7 @@ export default clerkMiddleware(async (auth, req) => {
   const path = req.nextUrl.pathname;
 
   // Skip maintenance check for static assets and Next.js internals
-  const isAsset = path.startsWith('/_next') || path.startsWith('/api') || path === '/favicon.ico' || path === '/icon.png';
+  const isAsset = path.startsWith('/_next') || path.startsWith('/api') || path === '/favicon.ico' || path === '/icon.png' || path === '/manifest.json';
 
   // Maintenance mode — skip assets, the maintenance page, and the admin panel
   if (!isAsset && !path.startsWith('/maintenance') && !path.startsWith('/admin')) {

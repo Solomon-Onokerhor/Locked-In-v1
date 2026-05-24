@@ -1,27 +1,19 @@
-'use client';
-
-import { useUser } from '@clerk/nextjs';
-import { SignInButton, SignUpButton, SignOutButton, UserButton } from '@clerk/nextjs';
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 /**
  * AuthHeader — shows sign-in/sign-up when signed out, user button when signed in.
- * Client component so it can use useUser() for reactive state.
+ * Uses Clerk's SSR-compatible SignedIn/SignedOut components to prevent hydration mismatch.
  */
 export function AuthHeader() {
-    const { isSignedIn, isLoaded } = useUser();
-
-    if (!isLoaded) return null;
-
     return (
         <header className="flex justify-end items-center p-4 gap-4 h-16 absolute top-0 right-0 z-50">
-            {isSignedIn ? (
+            <SignedIn>
                 <UserButton />
-            ) : (
-                <>
-                    <SignInButton />
-                    <SignUpButton />
-                </>
-            )}
+            </SignedIn>
+            <SignedOut>
+                <SignInButton />
+                <SignUpButton />
+            </SignedOut>
         </header>
     );
 }
