@@ -3,10 +3,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { Session } from '@supabase/supabase-js';
+import { useAuth as useClerkAuth, useUser, useClerk } from '@clerk/nextjs';
+
+// We mock a Session type that matches the subset used by the app
+interface MockSession {
+    user: {
+        id: string;
+        email?: string;
+    };
+}
 
 interface AuthContextType {
-    session: Session | null;
+    session: MockSession | null;
     profile: Profile | null;
     loading: boolean;
     signOut: () => Promise<void>;
@@ -24,9 +32,19 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null);
+    const { userId, isLoaded: clerkLoaded } = useClerkAuth();
+    const { user: clerkUser } = useUser();
+    const { signOut: clerkSignOut } = useClerk();
+
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const session: MockSession | null = userId ? {
+        user: {
+            id: userId,
+            email: clerkUser?.primaryEmailAddress?.emailAddress
+        }
+    } : null;
 
     const fetchProfile = async (uid: string) => {
         try {
@@ -51,46 +69,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const refreshProfile = async () => {
-        if (session?.user?.id) {
-            await fetchProfile(session.user.id);
+        if (userId) {
+            await fetchProfile(userId);
         }
     };
 
     useEffect(() => {
-        const initializeAuth = async () => {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            setSession(currentSession);
-            
-            if (currentSession?.user?.id) {
-                await fetchProfile(currentSession.user.id);
-            }
-            setLoading(false);
-        };
-
-        initializeAuth();
-
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-            setSession(newSession);
-            if (newSession?.user?.id) {
-                await fetchProfile(newSession.user.id);
+        if (clerkLoaded) {
+            if (userId) {
+                fetchProfile(userId).finally(() => setLoading(false));
             } else {
                 setProfile(null);
+                setLoading(false);
             }
-        });
-
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
-    }, []);
+        }
+    }, [clerkLoaded, userId]);
 
     const signOut = async () => {
-        await supabase.auth.signOut();
-        setSession(null);
         setProfile(null);
+        await clerkSignOut();
     };
 
     return (
-        <AuthContext.Provider value={{ session, profile, loading, signOut, refreshProfile }}>
+        <AuthContext.Provider value={{ session, profile, loading: !clerkLoaded || loading, signOut, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );
