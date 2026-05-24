@@ -124,8 +124,8 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
         <div className="min-h-screen bg-[#000000]">
             <Sidebar />
 
-            <main className="px-4 pt-16 pb-24 md:p-10 md:ml-[280px] relative z-10 animate-fade-in flex-1">
-                <div className="max-w-[1080px] mx-auto flex flex-col gap-6 md:gap-10">
+            <main className="px-4 pt-20 pb-24 md:p-10 md:ml-[280px] relative z-10 animate-fade-in flex-1">
+                <div className="max-w-[1080px] mx-auto flex flex-col gap-4 md:gap-10">
                     {/* Header — compact on mobile */}
                     <header className="flex items-center justify-between gap-3" data-tour="welcome">
                         <div className="min-w-0">
