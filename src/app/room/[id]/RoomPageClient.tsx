@@ -27,11 +27,22 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [members, setMembers] = useState<(RoomMember & { profiles: Profile | null })[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    // Must be at the top level — cannot be after an early return (Rules of Hooks)
+    const [now, setNow] = useState(new Date());
 
     // Removal of mandatory redirect to allow preview mode
     // useEffect(() => {
     //     if (!authLoading && !session) router.push('/sign-in');
     // }, [authLoading, session, router]);
+
+    // Keep 'now' updated every 10 seconds to refresh live session status
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(new Date());
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         if (roomId) {
@@ -172,8 +183,6 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         }
     };
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
     const handleDeleteRoom = async () => {
         if (!room) return;
 
@@ -211,16 +220,6 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const isCreator = session ? room.created_by === session.user.id : false;
     const isAdmin = profile?.role === 'admin';
     const canDelete = isCreator || isAdmin;
-
-    const [now, setNow] = useState(new Date());
-
-    useEffect(() => {
-        // Update the current time every 10 seconds to keep the UI fresh without manual refresh
-        const interval = setInterval(() => {
-            setNow(new Date());
-        }, 10000);
-        return () => clearInterval(interval);
-    }, []);
 
     const sessionDate = new Date(room.date_time);
     const startTime = sessionDate.getTime();
