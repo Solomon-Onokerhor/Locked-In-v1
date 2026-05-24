@@ -411,7 +411,7 @@ export function SoloTimer() {
                 </div>
 
                 {/* Giant Timer */}
-                <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center mb-10 group">
+                <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 flex items-center justify-center mb-10 group">
                     <div className={`absolute inset-0 bg-brand-accent/10 rounded-full blur-3xl transition-opacity duration-1000 ${isPaused ? 'opacity-30' : 'opacity-80 animate-pulse-glow'}`}></div>
 
                     <svg className="w-full h-full absolute -rotate-90 transform drop-shadow-2xl" viewBox="0 0 100 100">
@@ -439,12 +439,12 @@ export function SoloTimer() {
                 {showQuitConfirm ? (
                     <div className="flex flex-col items-center gap-4 bg-red-500/10 p-5 rounded-3xl border border-red-500/30 animate-fade-in-up md:w-auto w-[90%]">
                         <p className="text-white font-bold text-center">Are you sure? This logs as a failed session!</p>
-                        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            <button onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }} className="px-6 py-3 bg-red-500 hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all w-full sm:w-auto">
-                                Yes, I&apos;m a loser
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }} className="px-4 py-3 bg-red-500 hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all w-full sm:w-auto text-sm">
+                                Yes, I'm a loser
                             </button>
-                            <button onClick={() => setShowQuitConfirm(false)} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all border border-white/20 w-full sm:w-auto">
-                                Nevermind, stay locked in
+                            <button onClick={() => setShowQuitConfirm(false)} className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all border border-white/20 w-full sm:w-auto text-sm">
+                                Nevermind, lock in
                             </button>
                         </div>
                     </div>

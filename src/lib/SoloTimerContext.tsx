@@ -253,7 +253,7 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
                     }
                 }
             }, 1000);
-        } else {
+        } else if (isPaused) {
             expectedEndTimeRef.current = null;
         }
 
@@ -329,6 +329,7 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const handleStartSequence = () => {
         setPomodoroRound(1);
         setCountdown(3);
+        setTimeLeft(duration * 60);
         expectedEndTimeRef.current = null;
         setTimerState('COUNTDOWN');
     };

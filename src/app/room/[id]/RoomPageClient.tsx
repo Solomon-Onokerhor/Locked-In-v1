@@ -385,7 +385,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         {members.length === 0 ? (
                             <p className="text-gray-500 text-sm text-center py-8">No scholars have locked in yet.</p>
                         ) : (
-                            <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
+                            <div className="flex gap-6 overflow-x-auto pb-6 px-2 scrollbar-hide">
                                 {members.map((member) => (
                                     <button
                                         key={member.id}

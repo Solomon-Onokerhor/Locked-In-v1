@@ -263,7 +263,7 @@ export function BuddiesClient() {
                 <div className="flex border-b border-white/10 mb-8">
                     <button
                         onClick={() => setActiveTab('my_buddies')}
-                        className={`px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-sm transition-colors ${activeTab === 'my_buddies'
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex-1 sm:flex-none text-center ${activeTab === 'my_buddies'
                             ? 'border-b-white text-white'
                             : 'border-b-transparent text-gray-500 hover:text-white'
                             }`}
@@ -272,7 +272,7 @@ export function BuddiesClient() {
                     </button>
                     <button
                         onClick={() => setActiveTab('discover')}
-                        className={`px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-sm transition-colors flex items-center gap-2 ${activeTab === 'discover'
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none ${activeTab === 'discover'
                             ? 'border-b-white text-white'
                             : 'border-b-transparent text-gray-500 hover:text-white'
                             }`}
