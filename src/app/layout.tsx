@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { AuthHeader } from "@/components/AuthHeader";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -103,6 +104,7 @@ export default function RootLayout({
                         type="application/ld+json"
                         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                     />
+                    <Toaster position="top-center" theme="dark" richColors />
                     <ClientProviders>
                         {children}
                     </ClientProviders>

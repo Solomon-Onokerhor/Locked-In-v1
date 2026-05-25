@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
 import { Search, UserPlus, UserMinus, Users, Check, Flame, Trophy, BookOpen, Activity, Bell, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { UserProfileModal } from '@/components/UserProfileModal';
 
 interface ActivitySession {
@@ -250,15 +251,16 @@ export function BuddiesClient() {
             });
             const data = await res.json();
             if (!res.ok) {
-                alert(data.error || 'Failed to send request.');
+                toast.error(data.error || 'Failed to send request.');
                 return;
             }
             // Remove from search/suggestions visually — request is now pending
             setSearchResults(prev => prev.filter(p => p.id !== buddyId));
             setSuggestedBuddies(prev => prev.filter(p => p.id !== buddyId));
+            toast.success("Friend request sent!");
         } catch (err) {
             console.error('Error sending request:', err);
-            alert('Failed to send request. Please try again.');
+            toast.error('Failed to send request. Please try again.');
         }
     };
 
@@ -270,10 +272,11 @@ export function BuddiesClient() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sender_id: senderId })
             });
-            if (!res.ok) { alert('Failed to accept request.'); return; }
+            if (!res.ok) { toast.error('Failed to accept request.'); return; }
 
             setIncomingRequests(prev => prev.filter(r => r.id !== connectionId));
             await fetchMyBuddies(); // Refresh buddy list
+            toast.success("Friend request accepted!");
         } catch (err) {
             console.error('Error accepting request:', err);
         } finally {
@@ -305,7 +308,7 @@ export function BuddiesClient() {
             setMyBuddies(prev => prev.filter(p => p.id !== buddyId));
         } catch (err) {
             console.error('Error disconnecting:', err);
-            alert('Failed to remove connection.');
+            toast.error('Failed to remove connection.');
         }
     };
 

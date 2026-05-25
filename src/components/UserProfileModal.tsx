@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, UserPlus, UserCheck, UserMinus, Flame, Users, Check, Clock, BellRing } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Profile } from '@/types';
 
 interface UserProfileModalProps {
@@ -65,10 +66,11 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
             });
             const data = await res.json();
             if (!res.ok) {
-                alert(data.error || 'Failed to send request');
+                toast.error(data.error || 'Failed to send request');
                 return;
             }
             setConnectionStatus('pending_sent');
+            toast.success("Friend request sent!");
         } catch (err) {
             console.error('Failed to connect:', err);
         } finally {
@@ -87,10 +89,11 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
             });
             const data = await res.json();
             if (!res.ok) {
-                alert(data.error || 'Failed to accept request');
+                toast.error(data.error || 'Failed to accept request');
                 return;
             }
             setConnectionStatus('accepted');
+            toast.success("Friend request accepted!");
         } catch (err) {
             console.error('Failed to accept:', err);
         } finally {
@@ -131,7 +134,7 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
 
             if (!res.ok) {
                 if (res.status === 429) {
-                    alert(data.error || 'You cannot poke this buddy again so soon.');
+                    toast.error(data.error || 'You cannot poke this buddy again so soon.');
                 } else {
                     throw new Error(data.error || 'Failed to send nudge');
                 }
@@ -140,10 +143,11 @@ export function UserProfileModal({ isOpen, onClose, userId, currentUserProfile }
             }
 
             setNudgeSent(true);
+            toast.success("Nudge sent!");
             setTimeout(() => setNudgeSent(false), 3000);
         } catch (err) {
             console.error('Failed to nudge:', err);
-            alert('Failed to send nudge. Please try again later.');
+            toast.error('Failed to send nudge. Please try again later.');
         } finally {
             setIsNudging(false);
         }

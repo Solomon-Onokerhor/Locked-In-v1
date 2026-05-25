@@ -24,6 +24,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.3",
+    "sonner": "^2.0.7",
     "svix": "^1.93.0"
   },
   "devDependencies": {
