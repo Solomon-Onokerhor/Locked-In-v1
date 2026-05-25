@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Play, Pause, Square, Flame, CheckCircle2, Clock, Target, AlertTriangle, ArrowRight, XCircle, History, Coffee, Volume2, VolumeX, RotateCcw, Loader2 as Loader2Icon } from 'lucide-react';
+import { Play, Pause, Square, Flame, CheckCircle2, Clock, Target, AlertTriangle, ArrowRight, XCircle, History, Coffee, Volume2, VolumeX, RotateCcw, Loader2 as Loader2Icon, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import type { SoloSession } from '@/types';
+import type { SoloSession, Profile } from '@/types';
 import { useSoloTimer } from '@/lib/SoloTimerContext';
 
 const DURATIONS = [25, 45, 60];
@@ -61,6 +61,12 @@ export function SoloTimer() {
     const [completedGoal, setCompletedGoal] = useState<'yes' | 'partial' | 'no' | null>(null);
     const [distraction, setDistraction] = useState('');
 
+    // -- Buddy Ping State --
+    const [myBuddies, setMyBuddies] = useState<Profile[]>([]);
+    const [showPingModal, setShowPingModal] = useState(false);
+    const [pingedBuddies, setPingedBuddies] = useState<Set<string>>(new Set());
+    const [pingingId, setPingingId] = useState<string | null>(null);
+
     // -- Fetch Session History --
     const fetchHistory = useCallback(async () => {
         if (!session) return;
@@ -85,6 +91,66 @@ export function SoloTimer() {
             fetchHistory();
         }
     }, [showHistory, session, fetchHistory]);
+
+    // -- Fetch Buddies Context --
+    useEffect(() => {
+        if (timerState === 'ACTIVE' || timerState === 'BREAK') {
+            const fetchMyBuddies = async () => {
+                if (!session) return;
+                try {
+                    const { data: connections, error } = await supabase
+                        .from('buddy_connections')
+                        .select('*')
+                        .or(`user_id.eq.${session.user.id},buddy_id.eq.${session.user.id}`);
+
+                    if (error) throw error;
+                    if (!connections || connections.length === 0) return;
+
+                    const buddyIds = connections.map((conn: any) =>
+                        conn.user_id === session.user.id ? conn.buddy_id : conn.user_id
+                    );
+
+                    const { data: profiles, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .in('id', buddyIds);
+
+                    if (profileError) throw profileError;
+                    setMyBuddies((profiles as Profile[]) || []);
+                } catch (err) {
+                    console.error('Error fetching buddies:', err);
+                }
+            };
+            fetchMyBuddies();
+        }
+    }, [timerState, session]);
+
+    const handlePingBuddy = async (buddyId: string) => {
+        if (!session || !profile) return;
+        setPingingId(buddyId);
+        try {
+            const response = await fetch('/api/whatsapp/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'BUDDY_SOLO_INVITE',
+                    target_user_id: buddyId,
+                    payload: { 
+                        inviter_name: profile.name?.split(' ')[0] || 'A buddy',
+                        goal: goal || label || 'a focus session',
+                        app_url: `${window.location.protocol}//${window.location.host}/`
+                    }
+                })
+            });
+            if (response.ok) {
+                setPingedBuddies(prev => new Set(prev).add(buddyId));
+            }
+        } catch (e) {
+            console.error("Failed to ping buddy", e);
+        } finally {
+            setPingingId(null);
+        }
+    };
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -469,6 +535,16 @@ export function SoloTimer() {
                         </button>
                     </div>
                 )}
+
+                {/* Ping Buddy Button */}
+                {session && myBuddies.length > 0 && !showQuitConfirm && (
+                    <div className="mt-8 animate-fade-in-up">
+                        <button onClick={() => setShowPingModal(true)} className="flex items-center gap-2 px-5 py-3 rounded-full bg-brand-accent/10 hover:bg-brand-accent/20 border border-brand-accent/30 text-brand-accent font-bold transition-all text-sm shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                            <Zap className="w-4 h-4 fill-current" />
+                            Ping a Buddy
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }
@@ -594,6 +670,49 @@ export function SoloTimer() {
             {timerState === 'COMPLETION' && renderCompletion()}
             {timerState === 'STATS' && renderStats()}
 
+            {/* Buddy Ping Modal overlay inside the main container */}
+            {showPingModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#111] rounded-3xl w-full max-w-sm border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                            <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-brand-accent fill-current" />
+                                Ping Buddy
+                            </h3>
+                            <button onClick={() => setShowPingModal(false)} className="text-gray-400 hover:text-white transition-colors">✕</button>
+                        </div>
+                        <div className="p-3 overflow-y-auto flex-1 flex flex-col gap-2">
+                            {myBuddies.length === 0 ? (
+                                <p className="text-center text-gray-500 py-6 text-sm">No buddies available.</p>
+                            ) : (
+                                myBuddies.map(buddy => {
+                                    const isPinged = pingedBuddies.has(buddy.id);
+                                    const isPinging = pingingId === buddy.id;
+                                    return (
+                                        <div key={buddy.id} className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
+                                                    {buddy.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <p className="font-bold text-white text-sm">{buddy.name.split(' ')[0]}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => handlePingBuddy(buddy.id)}
+                                                disabled={isPinged || isPinging}
+                                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                                                    isPinged ? 'bg-green-500/20 text-green-400' : 'bg-brand-accent text-brand-primary hover:bg-white'
+                                                }`}
+                                            >
+                                                {isPinging ? '...' : isPinged ? 'Pinged ✓' : 'Ping'}
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

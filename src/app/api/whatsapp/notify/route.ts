@@ -41,6 +41,12 @@ export async function POST(req: NextRequest) {
         case 'JOINER_CONFIRMATION':
             message = `🔥 You're officially locked into '${payload.title}'! We'll ping you here 15 mins before the session starts.`;
             break;
+        case 'BUDDY_ROOM_INVITE':
+            message = `🤝 Your buddy ${payload.inviter_name} invited you to lock into '${payload.room_title}' with them!\n\nSpots are limited. Join here: ${payload.room_url}`;
+            break;
+        case 'BUDDY_SOLO_INVITE':
+            message = `🤝 Your buddy ${payload.inviter_name} is locked in right now focusing on '${payload.goal}'!\n\nDrop what you're doing and lock in with them: ${payload.app_url}`;
+            break;
         default:
             return NextResponse.json({ error: "Invalid event_type" }, { status: 400 });
     }

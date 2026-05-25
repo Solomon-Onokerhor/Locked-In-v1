@@ -28,6 +28,13 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Buddy Ping State
+    const [myBuddies, setMyBuddies] = useState<Profile[]>([]);
+    const [showPingModal, setShowPingModal] = useState(false);
+    const [pingedBuddies, setPingedBuddies] = useState<Set<string>>(new Set());
+    const [pingingId, setPingingId] = useState<string | null>(null);
+
     // Must be at the top level — cannot be after an early return (Rules of Hooks)
     const [now, setNow] = useState(new Date());
 
@@ -49,6 +56,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             fetchRoomData();
             if (session) {
                 checkMembership();
+                fetchMyBuddies(); // Load buddies for pinging
             }
             fetchMembers();
         }
@@ -89,6 +97,60 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             .order('joined_at', { ascending: true });
 
         if (data) setMembers(data as any);
+    };
+
+    const fetchMyBuddies = async () => {
+        if (!session) return;
+        try {
+            const { data: connections, error } = await supabase
+                .from('buddy_connections')
+                .select('*')
+                .or(`user_id.eq.${session.user.id},buddy_id.eq.${session.user.id}`);
+
+            if (error) throw error;
+            if (!connections || connections.length === 0) return;
+
+            const buddyIds = connections.map((conn: any) =>
+                conn.user_id === session.user.id ? conn.buddy_id : conn.user_id
+            );
+
+            const { data: profiles, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('id', buddyIds);
+
+            if (profileError) throw profileError;
+            setMyBuddies((profiles as Profile[]) || []);
+        } catch (err) {
+            console.error('Error fetching buddies:', err);
+        }
+    };
+
+    const handlePingBuddy = async (buddyId: string) => {
+        if (!session || !profile) return;
+        setPingingId(buddyId);
+        try {
+            const response = await fetch('/api/whatsapp/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'BUDDY_ROOM_INVITE',
+                    target_user_id: buddyId,
+                    payload: { 
+                        inviter_name: profile.name?.split(' ')[0] || 'A buddy',
+                        room_title: room?.title || 'a study session',
+                        room_url: `${window.location.protocol}//${window.location.host}/room/${roomId}`
+                    }
+                })
+            });
+            if (response.ok) {
+                setPingedBuddies(prev => new Set(prev).add(buddyId));
+            }
+        } catch (e) {
+            console.error("Failed to ping buddy", e);
+        } finally {
+            setPingingId(null);
+        }
     };
 
     const handleLockIn = async () => {
@@ -376,9 +438,16 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                 <Users className="w-4 h-4 text-brand-accent" />
                                 Scholars ({members.length}/{room.max_members})
                             </h3>
-                            <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 text-gray-300 hover:bg-white/10 text-xs font-bold transition-all">
-                                <Share2 className="w-4 h-4" /> Invite
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {session && myBuddies.length > 0 && (
+                                    <button onClick={() => setShowPingModal(true)} className="flex items-center gap-2 px-3 py-2 rounded-full bg-brand-accent/10 border border-brand-accent/30 text-brand-accent hover:bg-brand-accent/20 text-xs font-bold transition-all">
+                                        <Zap className="w-3 h-3" /> Ping Buddies
+                                    </button>
+                                )}
+                                <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 text-gray-300 hover:bg-white/10 text-xs font-bold transition-all">
+                                    <Share2 className="w-4 h-4" /> Share
+                                </button>
+                            </div>
                         </div>
 
                         {members.length === 0 ? (
@@ -427,6 +496,58 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                         </div>
                     )}
                 </div>
+
+                {showPingModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-[#111] rounded-3xl w-full max-w-md border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <Zap className="w-5 h-5 text-brand-accent" />
+                                    Ping Buddies
+                                </h3>
+                                <button onClick={() => setShowPingModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="p-4 overflow-y-auto flex-1">
+                                {myBuddies.filter(b => !members.find(m => m.user_id === b.id)).length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500">
+                                        All your buddies are already in this room!
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        {myBuddies.filter(b => !members.find(m => m.user_id === b.id)).map(buddy => {
+                                            const isPinged = pingedBuddies.has(buddy.id);
+                                            const isPinging = pingingId === buddy.id;
+                                            return (
+                                                <div key={buddy.id} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-sm">
+                                                            {buddy.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-white text-sm">{buddy.name}</p>
+                                                            <p className="text-xs text-gray-400">{buddy.faculty}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => handlePingBuddy(buddy.id)}
+                                                        disabled={isPinged || isPinging}
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                                            isPinged ? 'bg-green-500/20 text-green-400' : 'bg-brand-accent text-brand-primary hover:bg-white'
+                                                        }`}
+                                                    >
+                                                        {isPinging ? '...' : isPinged ? 'Pinged! ✓' : 'Ping'}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <UserProfileModal
                     isOpen={!!selectedUserId}
