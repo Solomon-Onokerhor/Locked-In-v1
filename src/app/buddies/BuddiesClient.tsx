@@ -6,8 +6,24 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types';
-import { Search, UserPlus, UserMinus, Users, Check, Flame, Trophy, BookOpen } from 'lucide-react';
+import { Search, UserPlus, UserMinus, Users, Check, Flame, Trophy, BookOpen, Activity, Bell, X } from 'lucide-react';
 import { UserProfileModal } from '@/components/UserProfileModal';
+
+interface ActivitySession {
+    id: string;
+    user_id: string;
+    label: string;
+    duration_minutes: number;
+    completed_at: string;
+    profile?: Profile;
+}
+
+interface IncomingRequest {
+    id: string;
+    user_id: string;
+    created_at: string;
+    profile: Profile;
+}
 
 export function BuddiesClient() {
     const { session, profile, loading } = useAuth();
@@ -19,7 +35,16 @@ export function BuddiesClient() {
 
     const [myBuddies, setMyBuddies] = useState<Profile[]>([]);
     const [isLoadingBuddies, setIsLoadingBuddies] = useState(true);
-    const [activeTab, setActiveTab] = useState<'my_buddies' | 'discover'>('my_buddies');
+    const [activeTab, setActiveTab] = useState<'my_buddies' | 'discover' | 'activity' | 'requests'>('my_buddies');
+
+    // Activity Feed
+    const [activityFeed, setActivityFeed] = useState<ActivitySession[]>([]);
+    const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+
+    // Incoming Requests
+    const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+    const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+    const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
     // Profile Modal
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -33,6 +58,7 @@ export function BuddiesClient() {
             router.push('/sign-in');
         } else if (session) {
             fetchMyBuddies();
+            fetchIncomingRequests();
         }
     }, [session, loading, router]);
 
@@ -40,8 +66,10 @@ export function BuddiesClient() {
     useEffect(() => {
         if (activeTab === 'discover' && session && profile) {
             fetchSuggestedBuddies();
+        } else if (activeTab === 'activity' && session && profile) {
+            fetchActivityFeed();
         }
-    }, [activeTab, session, profile]);
+    }, [activeTab, session, profile, myBuddies]);
 
     const fetchMyBuddies = async () => {
         if (!session) return;
@@ -51,6 +79,7 @@ export function BuddiesClient() {
             const { data: connections, error } = await supabase
                 .from('buddy_connections')
                 .select('*')
+                .eq('status', 'accepted')
                 .or(`user_id.eq.${session.user.id},buddy_id.eq.${session.user.id}`);
 
             if (error) throw error;
@@ -77,6 +106,75 @@ export function BuddiesClient() {
             console.error('Error fetching buddies:', err);
         } finally {
             setIsLoadingBuddies(false);
+        }
+    };
+
+    const fetchActivityFeed = async () => {
+        if (!session || myBuddies.length === 0) {
+            setActivityFeed([]);
+            return;
+        }
+        setIsLoadingActivity(true);
+        try {
+            const buddyIds = myBuddies.map(b => b.id);
+            const { data, error } = await supabase
+                .from('solo_sessions')
+                .select('*')
+                .in('user_id', buddyIds)
+                .eq('quit_early', false)
+                .order('completed_at', { ascending: false })
+                .limit(20);
+
+            if (error) throw error;
+
+            const enriched = (data as any[]).map(session => ({
+                ...session,
+                profile: myBuddies.find(b => b.id === session.user_id)
+            }));
+            
+            setActivityFeed(enriched as ActivitySession[]);
+        } catch (err) {
+            console.error('Error fetching activity:', err);
+        } finally {
+            setIsLoadingActivity(false);
+        }
+    };
+
+    const fetchIncomingRequests = async () => {
+        if (!session) return;
+        setIsLoadingRequests(true);
+        try {
+            const { data: connections, error } = await supabase
+                .from('buddy_connections')
+                .select('id, user_id, created_at')
+                .eq('buddy_id', session.user.id)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            if (!connections || connections.length === 0) {
+                setIncomingRequests([]);
+                return;
+            }
+
+            const senderIds = connections.map(c => c.user_id);
+            const { data: profiles, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('id', senderIds);
+
+            if (profileError) throw profileError;
+
+            const enriched = connections.map(conn => ({
+                ...conn,
+                profile: (profiles as Profile[]).find(p => p.id === conn.user_id)!
+            })).filter(r => r.profile);
+
+            setIncomingRequests(enriched as IncomingRequest[]);
+        } catch (err) {
+            console.error('Error fetching incoming requests:', err);
+        } finally {
+            setIsLoadingRequests(false);
         }
     };
 
@@ -145,21 +243,53 @@ export function BuddiesClient() {
     const handleConnect = async (buddyId: string) => {
         if (!session) return;
         try {
-            const { error } = await supabase
-                .from('buddy_connections')
-                .insert([{ user_id: session.user.id, buddy_id: buddyId }]);
-
-            if (error) throw error;
-
-            const newBuddy = searchResults.find(p => p.id === buddyId) || suggestedBuddies.find(p => p.id === buddyId);
-            if (newBuddy) {
-                setMyBuddies(prev => [...prev, newBuddy]);
-                setSearchResults(prev => prev.filter(p => p.id !== buddyId));
-                setSuggestedBuddies(prev => prev.filter(p => p.id !== buddyId));
+            const res = await fetch('/api/buddies/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receiver_id: buddyId })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || 'Failed to send request.');
+                return;
             }
+            // Remove from search/suggestions visually — request is now pending
+            setSearchResults(prev => prev.filter(p => p.id !== buddyId));
+            setSuggestedBuddies(prev => prev.filter(p => p.id !== buddyId));
         } catch (err) {
-            console.error('Error connecting:', err);
-            alert('Failed to connect. Please try again.');
+            console.error('Error sending request:', err);
+            alert('Failed to send request. Please try again.');
+        }
+    };
+
+    const handleAcceptRequest = async (senderId: string, connectionId: string) => {
+        setProcessingIds(prev => new Set(prev).add(connectionId));
+        try {
+            const res = await fetch('/api/buddies/accept', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sender_id: senderId })
+            });
+            if (!res.ok) { alert('Failed to accept request.'); return; }
+
+            setIncomingRequests(prev => prev.filter(r => r.id !== connectionId));
+            await fetchMyBuddies(); // Refresh buddy list
+        } catch (err) {
+            console.error('Error accepting request:', err);
+        } finally {
+            setProcessingIds(prev => { const s = new Set(prev); s.delete(connectionId); return s; });
+        }
+    };
+
+    const handleDeclineRequest = async (connectionId: string) => {
+        setProcessingIds(prev => new Set(prev).add(connectionId));
+        try {
+            await supabase.from('buddy_connections').delete().eq('id', connectionId);
+            setIncomingRequests(prev => prev.filter(r => r.id !== connectionId));
+        } catch (err) {
+            console.error('Error declining request:', err);
+        } finally {
+            setProcessingIds(prev => { const s = new Set(prev); s.delete(connectionId); return s; });
         }
     };
 
@@ -203,8 +333,11 @@ export function BuddiesClient() {
                         className="flex items-center gap-4 min-w-0 cursor-pointer group flex-1"
                         onClick={() => setSelectedUserId(user.id)}
                     >
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-lg border border-white/20 shrink-0 group-hover:border-white/40 transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-lg border border-white/20 shrink-0 group-hover:border-white/40 transition-colors relative">
                             {user.name.charAt(0).toUpperCase()}
+                            {user.is_locked_in && (
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#111111] animate-pulse-glow" title="Locked In" />
+                            )}
                         </div>
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -216,7 +349,11 @@ export function BuddiesClient() {
                                 )}
                             </div>
                             <p className="text-xs text-gray-500 truncate mt-0.5">
-                                {user.faculty || 'Unknown Faculty'}
+                                {user.is_locked_in ? (
+                                    <span className="text-emerald-400 font-bold">Locked in: {user.current_topic || 'Focusing'}</span>
+                                ) : (
+                                    user.faculty || 'Unknown Faculty'
+                                )}
                             </p>
                         </div>
                     </div>
@@ -260,10 +397,10 @@ export function BuddiesClient() {
                 </header>
 
                 {/* Tabs */}
-                <div className="flex border-b border-white/10 mb-8">
+                <div className="flex border-b border-white/10 mb-8 overflow-x-auto no-scrollbar">
                     <button
                         onClick={() => setActiveTab('my_buddies')}
-                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex-1 sm:flex-none text-center ${activeTab === 'my_buddies'
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex-1 sm:flex-none text-center whitespace-nowrap ${activeTab === 'my_buddies'
                             ? 'border-b-white text-white'
                             : 'border-b-transparent text-gray-500 hover:text-white'
                             }`}
@@ -271,8 +408,33 @@ export function BuddiesClient() {
                         My Buddies ({myBuddies.length})
                     </button>
                     <button
+                        onClick={() => setActiveTab('requests')}
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none whitespace-nowrap ${activeTab === 'requests'
+                            ? 'border-b-white text-white'
+                            : 'border-b-transparent text-gray-500 hover:text-white'
+                            }`}
+                    >
+                        <Bell className="w-4 h-4" />
+                        Requests
+                        {incomingRequests.length > 0 && (
+                            <span className="bg-orange-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                                {incomingRequests.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('activity')}
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none whitespace-nowrap ${activeTab === 'activity'
+                            ? 'border-b-white text-white'
+                            : 'border-b-transparent text-gray-500 hover:text-white'
+                            }`}
+                    >
+                        <Activity className="w-4 h-4" />
+                        Activity
+                    </button>
+                    <button
                         onClick={() => setActiveTab('discover')}
-                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none ${activeTab === 'discover'
+                        className={`px-3 sm:px-6 py-4 border-b-[3px] font-bold tracking-wide uppercase text-xs sm:text-sm transition-colors flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none whitespace-nowrap ${activeTab === 'discover'
                             ? 'border-b-white text-white'
                             : 'border-b-transparent text-gray-500 hover:text-white'
                             }`}
@@ -312,6 +474,96 @@ export function BuddiesClient() {
                                         </button>
                                     ))
                                 )}
+                            </div>
+                        )}
+                    </section>
+                ) : activeTab === 'requests' ? (
+                    <section className="animate-fade-in-up max-w-2xl">
+                        {isLoadingRequests ? (
+                            <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white/20" /></div>
+                        ) : incomingRequests.length === 0 ? (
+                            <div className="bg-[#111111] p-10 text-center rounded-2xl border border-white/10">
+                                <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">No pending requests</h3>
+                                <p className="text-gray-400">When someone sends you a buddy request, it will appear here.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <p className="text-sm text-gray-500 mb-4">{incomingRequests.length} pending {incomingRequests.length === 1 ? 'request' : 'requests'}</p>
+                                {incomingRequests.map(req => (
+                                    <div key={req.id} className="bg-[#111111] p-4 rounded-2xl border border-white/10 flex items-center gap-4">
+                                        <div
+                                            className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-lg border border-white/20 shrink-0 cursor-pointer hover:border-white/40 transition-colors"
+                                            onClick={() => setSelectedUserId(req.user_id)}
+                                        >
+                                            {req.profile.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p
+                                                className="font-bold text-white truncate cursor-pointer hover:underline"
+                                                onClick={() => setSelectedUserId(req.user_id)}
+                                            >
+                                                {req.profile.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                {req.profile.faculty || 'Unknown Faculty'} · {new Date(req.created_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                                onClick={() => handleAcceptRequest(req.user_id, req.id)}
+                                                disabled={processingIds.has(req.id)}
+                                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                            >
+                                                {processingIds.has(req.id) ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black" />
+                                                ) : (
+                                                    <><Check className="w-4 h-4" /> Accept</>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeclineRequest(req.id)}
+                                                disabled={processingIds.has(req.id)}
+                                                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
+                                                title="Decline"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                ) : activeTab === 'activity' ? (
+                    <section className="animate-fade-in-up">
+                        {isLoadingActivity ? (
+                            <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white/20" /></div>
+                        ) : activityFeed.length === 0 ? (
+                            <div className="bg-[#111111] p-10 text-center rounded-2xl border border-white/10">
+                                <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">No activity yet</h3>
+                                <p className="text-gray-400">Your buddies haven&apos;t completed any sessions recently.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 max-w-2xl">
+                                {activityFeed.map(session => (
+                                    <div key={session.id} className="bg-[#111111] p-4 rounded-xl border border-white/10 flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-brand-accent/20 flex items-center justify-center shrink-0 border border-brand-accent/30 text-brand-accent font-bold">
+                                            {session.profile?.name?.charAt(0).toUpperCase() || '?'}
+                                        </div>
+                                        <div>
+                                            <p className="text-white text-sm">
+                                                <span className="font-bold">{session.profile?.name || 'A buddy'}</span> completed <span className="font-bold text-brand-accent">{session.duration_minutes}m</span> of <span className="font-bold">{session.label || 'Study Session'}</span>
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {new Date(session.completed_at).toLocaleString(undefined, {
+                                                    weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </section>

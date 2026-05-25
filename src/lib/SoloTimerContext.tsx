@@ -215,6 +215,21 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
         }
     }, [duration, timerState]);
 
+    // ---- Sync is_locked_in state to Supabase ----
+    useEffect(() => {
+        if (!session?.user?.id) return;
+        
+        const isLockedIn = ['COUNTDOWN', 'ACTIVE', 'BREAK'].includes(timerState);
+        const topic = isLockedIn ? label : null;
+
+        supabase.from('profiles').update({
+            is_locked_in: isLockedIn,
+            current_topic: topic
+        }).eq('id', session.user.id).then(({ error }) => {
+            if (error) console.error('Failed to update lock-in status:', error);
+        });
+    }, [timerState, session?.user?.id, label]);
+
     // Main Timer Loop using system-time sync
     useEffect(() => {
         if (timerState === 'COUNTDOWN') {

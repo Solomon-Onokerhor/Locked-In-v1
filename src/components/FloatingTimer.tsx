@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSoloTimer } from '@/lib/SoloTimerContext';
-import { Play, Pause, Square, Flame, Target } from 'lucide-react';
+import { Play, Pause, Flame, Target, GripHorizontal } from 'lucide-react';
 import Link from 'next/navigation';
 import { PiPTimer } from './PiPTimer';
 
@@ -19,6 +19,12 @@ export function FloatingTimer() {
 
     const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
+    // Draggable state
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const isDragging = useRef(false);
+    const startPos = useRef({ x: 0, y: 0 });
+    const startTransform = useRef({ x: 0, y: 0 });
+
     if (!isTimerVisible) return null;
 
     const formatTime = (seconds: number) => {
@@ -27,10 +33,52 @@ export function FloatingTimer() {
         return `${mins}:${secs}`;
     };
 
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        // Only allow dragging with main mouse button (or touch)
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        isDragging.current = true;
+        startPos.current = { x: e.clientX, y: e.clientY };
+        startTransform.current = { ...position };
+        e.currentTarget.setPointerCapture(e.pointerId);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging.current) return;
+        // Prevent scrolling while dragging on touch devices
+        if (e.pointerType === 'touch') {
+            e.preventDefault();
+        }
+        const dx = e.clientX - startPos.current.x;
+        const dy = e.clientY - startPos.current.y;
+        setPosition({
+            x: startTransform.current.x + dx,
+            y: startTransform.current.y + dy
+        });
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        isDragging.current = false;
+        e.currentTarget.releasePointerCapture(e.pointerId);
+    };
+
     return (
-        <div className="fixed bottom-24 md:bottom-6 right-6 z-[100] animate-fade-in-up">
+        <div 
+            className="fixed bottom-24 md:bottom-6 right-6 z-[100] animate-fade-in-up"
+            style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+        >
             <div className="glass-panel !bg-black/80 backdrop-blur-2xl border border-white/20 p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-72 flex flex-col gap-3 group">
                 
+                {/* Drag Handle */}
+                <div 
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    className="w-full flex justify-center -mt-2 -mb-2 py-2 cursor-grab active:cursor-grabbing text-white/30 hover:text-white/60 transition-colors touch-none"
+                >
+                    <GripHorizontal className="w-5 h-5 pointer-events-none" />
+                </div>
+
                 {/* Header = Link back to dashboard */}
                 <a href="/" className="block hover:opacity-80 transition-opacity">
                     <div className="flex items-center justify-between">
@@ -104,7 +152,7 @@ export function FloatingTimer() {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-0 opacity-0 group-hover:h-8 group-hover:opacity-100 group-hover:mt-2 overflow-hidden transition-all duration-300">
+                        <div className="h-0 opacity-0 group-hover:h-8 group-hover:opacity-100 md:group-hover:mt-2 overflow-hidden transition-all duration-300">
                             <button
                                 onClick={() => setShowQuitConfirm(true)}
                                 className="w-full text-xs font-bold text-red-400/80 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 py-2 rounded-lg transition-colors border border-red-500/20"

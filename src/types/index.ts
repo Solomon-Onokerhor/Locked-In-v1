@@ -26,6 +26,15 @@ export interface Profile {
     badge_label?: string;
     whatsapp_number?: string;
     created_at: string;
+    is_locked_in?: boolean;
+    current_topic?: string | null;
+}
+
+export interface BuddyPoke {
+    id: string;
+    sender_id: string;
+    receiver_id: string;
+    created_at: string;
 }
 
 export interface Room {
