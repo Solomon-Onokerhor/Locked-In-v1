@@ -128,8 +128,10 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
     const expectedEndTimeRef = useRef<number | null>(null);
     const hasRestoredRef = useRef(false);
 
-    // Determine if floating timer should show (if active/break/completion/stats AND not on dashboard)
-    const isTimerVisible = (timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN' || timerState === 'COMPLETION' || timerState === 'STATS') && pathname !== '/';
+    // Determine if floating timer should show (if active/break/completion/stats AND not on dashboard or auth pages)
+    const AUTH_PATHS = ['/', '/onboarding', '/sign-in', '/sign-up'];
+    const isAuthPage = AUTH_PATHS.some(p => pathname === p) || pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+    const isTimerVisible = (timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN' || timerState === 'COMPLETION' || timerState === 'STATS') && !isAuthPage;
 
     // ---- Restore from localStorage on mount ----
     useEffect(() => {
