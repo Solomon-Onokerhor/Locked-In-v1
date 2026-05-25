@@ -81,7 +81,7 @@ async function handleUserCreated(data: any) {
     const email: string = data.email_addresses?.[0]?.email_address ?? '';
     const firstName: string = data.first_name ?? '';
     const lastName: string = data.last_name ?? '';
-    const name = [firstName, lastName].filter(Boolean).join(' ') || 'Scholar';
+    const name = [firstName, lastName].filter(Boolean).join(' ') || data.username || 'Scholar';
     const avatarUrl: string = data.image_url ?? data.profile_image_url ?? '';
 
     // Public metadata may already have onboarding info if set before the webhook fires
@@ -142,7 +142,7 @@ async function handleUserUpdated(data: any) {
     const email: string = data.email_addresses?.[0]?.email_address ?? '';
     const firstName: string = data.first_name ?? '';
     const lastName: string = data.last_name ?? '';
-    const name = [firstName, lastName].filter(Boolean).join(' ') || undefined;
+    const name = [firstName, lastName].filter(Boolean).join(' ') || data.username || undefined;
     const avatarUrl: string = data.image_url ?? data.profile_image_url ?? '';
     const meta = data.public_metadata ?? {};
 

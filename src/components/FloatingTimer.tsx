@@ -63,10 +63,10 @@ export function FloatingTimer() {
 
     return (
         <div 
-            className="fixed bottom-24 md:bottom-6 right-6 z-[100] animate-fade-in-up"
+            className="fixed bottom-24 md:bottom-6 right-6 z-[100]"
             style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
         >
-            <div className="glass-panel !bg-black/80 backdrop-blur-2xl border border-white/20 p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-72 flex flex-col gap-3 group">
+            <div className="glass-panel animate-fade-in-up !bg-black/80 backdrop-blur-2xl border border-white/20 p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-72 flex flex-col gap-3 group">
                 
                 {/* Drag Handle */}
                 <div 

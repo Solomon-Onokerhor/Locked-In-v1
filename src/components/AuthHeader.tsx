@@ -16,7 +16,9 @@ export function AuthHeader() {
                     </>
                 }
             >
-                <UserButton />
+                <div className="flex items-center gap-3">
+                    <UserButton appearance={{ elements: { userButtonAvatarBox: "w-10 h-10" } }} />
+                </div>
             </Show>
         </header>
     );
