@@ -436,6 +436,9 @@ export function SoloTimerProvider({ children }: { children: React.ReactNode }) {
             await refreshProfile();
             setTimerState('STATS');
 
+            // Auto-reset after a short window so the timer doesn't linger on other pages
+            setTimeout(() => resetAll(), 8000);
+
             // Trigger WhatsApp notification asynchronously
             fetch('/api/whatsapp/send', {
                 method: 'POST',
