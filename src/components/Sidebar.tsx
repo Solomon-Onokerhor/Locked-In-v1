@@ -6,6 +6,7 @@ import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { SettingsModal } from './SettingsModal';
+import { supabase } from '@/lib/supabase';
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: Home, tourId: 'nav-dashboard' },
@@ -20,10 +21,29 @@ export function Sidebar() {
     const { profile, signOut } = useAuth();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        if (profile) {
+            const fetchPendingCount = async () => {
+                const { count } = await supabase
+                    .from('buddy_connections')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('buddy_id', profile.id)
+                    .eq('status', 'pending');
+                if (count !== null) setPendingRequestsCount(count);
+            };
+            fetchPendingCount();
+
+            // Realtime subscription to instantly update the badge
+            const sub = supabase.channel('sidebar_requests')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'buddy_connections', filter: `buddy_id=eq.${profile.id}` }, fetchPendingCount)
+                .subscribe();
+
+            return () => { supabase.removeChannel(sub); };
+        }
+    }, [profile]);
 
     return (
         <>
@@ -70,6 +90,9 @@ export function Sidebar() {
                             >
                                 <div className={`relative flex items-center justify-center`}>
                                     <Icon className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                                    {item.label === 'Buddies' && pendingRequestsCount > 0 && (
+                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-accent rounded-full border border-black animate-pulse" />
+                                    )}
                                 </div>
                                 <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${isActive ? 'text-gray-300' : ''}`}>
                                     {item.label}
@@ -124,8 +147,13 @@ export function Sidebar() {
                                     }`}
                             >
                                 {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-accent shadow-[0_0_10px_rgba(255_255_255_/_0.1)]"></div>}
-                                <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'group-hover:scale-110'}`} />
-                                <span className="font-medium">{item.label}</span>
+                                <div className="relative">
+                                    <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'group-hover:scale-110'}`} />
+                                    {item.label === 'Buddies' && pendingRequestsCount > 0 && (
+                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_8px_rgba(255,107,0,0.8)]" />
+                                    )}
+                                </div>
+                                <span className={item.label === 'Buddies' && pendingRequestsCount > 0 ? "font-bold text-brand-accent" : "font-medium"}>{item.label}</span>
                             </Link>
                         );
                     })}
