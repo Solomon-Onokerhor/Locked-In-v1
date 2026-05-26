@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
@@ -39,10 +39,17 @@ export async function POST(req: NextRequest) {
         if (updateError) throw updateError;
 
         // 3. Fetch profiles for Whatsapp msg
-        const [senderRes, receiverRes] = await Promise.all([
-            supabaseAdmin.from('profiles').select('name, whatsapp_number').eq('id', sender_id).single(),
-            supabaseAdmin.from('profiles').select('name').eq('id', userId).single()
-        ]);
+        const cUser = await currentUser();
+        const email = cUser?.primaryEmailAddress?.emailAddress;
+        
+        let receiverRes = await supabaseAdmin.from('profiles').select('name').eq('id', userId).single();
+        if (receiverRes.error || !receiverRes.data) {
+            if (email) {
+                receiverRes = await supabaseAdmin.from('profiles').select('name').eq('email', email).single();
+            }
+        }
+        
+        const senderRes = await supabaseAdmin.from('profiles').select('name, whatsapp_number').eq('id', sender_id).single();
 
         if (senderRes.data && receiverRes.data) {
             const senderPhone = senderRes.data.whatsapp_number;

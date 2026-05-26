@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -18,11 +18,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's phone number
-    const { data: profile, error: profileError } = await supabaseAdmin
+    let { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('whatsapp_number')
         .eq('id', userId)
         .single();
+        
+    // Fallback if the user is using a legacy ID not synced to Clerk ID
+    if (!profile) {
+        const cUser = await currentUser();
+        const email = cUser?.primaryEmailAddress?.emailAddress;
+        if (email) {
+            const { data: profileByEmail } = await supabaseAdmin
+                .from('profiles')
+                .select('whatsapp_number')
+                .eq('email', email)
+                .single();
+            if (profileByEmail) {
+                profile = profileByEmail;
+                profileError = null;
+            }
+        }
+    }
     
     if (profileError || !profile?.whatsapp_number) {
         return NextResponse.json({ error: "User has no verified WhatsApp number" }, { status: 400 });
