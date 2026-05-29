@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { auth } from '@clerk/nextjs/server';
+import { normalizePhoneNumber } from '@/lib/whatsapp';
 
 export async function POST(req: Request) {
     try {
@@ -14,15 +15,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Valid phone number and OTP are required' }, { status: 400 });
         }
 
-        const stripped = phoneNumber.replace(/[^\d+]/g, '');
-        let normalizedPhone: string;
-        if (stripped.startsWith('+')) {
-            normalizedPhone = stripped;
-        } else if (stripped.startsWith('0')) {
-            normalizedPhone = '+233' + stripped.slice(1);
-        } else {
-            normalizedPhone = '+' + stripped;
-        }
+        const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
         // 1. Fetch the OTP record
         const { data: otpRecord, error: dbError } = await supabaseAdmin

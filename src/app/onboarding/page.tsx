@@ -206,6 +206,25 @@ const COUNTRY_CODES = [
     { code: 'ZW', dial: '+263',  flag: '🇿🇼', name: 'Zimbabwe' },
 ];
 
+const getNormalizedFullNumber = (dialCode: string, inputNumber: string): string => {
+    // Remove (0), spaces, dashes, parentheses
+    const clean = inputNumber.trim().replace(/\(0\)/g, "").replace(/[\s\-().]/g, "");
+    
+    // Extract last part after '+' to resolve double-prefixing
+    let last = clean.split('+').pop() || '';
+    
+    // Strip leading zero if present
+    if (last.startsWith('0')) {
+        last = last.slice(1);
+    }
+    
+    const dialDigits = dialCode.replace('+', '');
+    // If last part already starts with country dial code (e.g. '233'), use it as is
+    if (last.startsWith(dialDigits)) {
+        return '+' + last;
+    }
+    return dialCode + last;
+};
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -317,9 +336,7 @@ export default function OnboardingPage() {
             setOtpError("Please enter a WhatsApp number first.");
             return;
         }
-        // Strip leading 0 from local number before prepending dial code
-        const localNumber = whatsappNumber.trim().replace(/^0+/, '');
-        const fullNumber = dialCode + localNumber;
+        const fullNumber = getNormalizedFullNumber(dialCode, whatsappNumber);
         setOtpLoading(true);
         setOtpError("");
         try {
@@ -344,8 +361,7 @@ export default function OnboardingPage() {
             setOtpError("Please enter the OTP.");
             return;
         }
-        const localNumber = whatsappNumber.trim().replace(/^0+/, '');
-        const fullNumber = dialCode + localNumber;
+        const fullNumber = getNormalizedFullNumber(dialCode, whatsappNumber);
         setOtpLoading(true);
         setOtpError("");
         try {
@@ -381,7 +397,7 @@ export default function OnboardingPage() {
         setError("");
 
         // Compose the verified full international number
-        const fullWhatsapp = dialCode + whatsappNumber.trim().replace(/^0+/, '');
+        const fullWhatsapp = getNormalizedFullNumber(dialCode, whatsappNumber);
 
         try {
             // Mark onboarding as complete in Clerk's publicMetadata and upsert Supabase profile

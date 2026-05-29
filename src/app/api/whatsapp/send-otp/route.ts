@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { auth } from '@clerk/nextjs/server';
+import { normalizePhoneNumber } from '@/lib/whatsapp';
 
 export async function POST(req: Request) {
     try {
@@ -14,21 +15,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Valid phone number is required' }, { status: 400 });
         }
 
-        // Strip whitespace/dashes, keep only digits and leading +
-        const stripped = phoneNumber.replace(/[^\d+]/g, '');
-
-        // Normalize to E.164:
-        // - Already has +  → use as-is
-        // - Starts with 0  → assume Ghana (+233), replace leading 0
-        // - Starts with digits (no +, no 0) → assume already has country code, prepend +
-        let cleanPhone: string;
-        if (stripped.startsWith('+')) {
-            cleanPhone = stripped;
-        } else if (stripped.startsWith('0')) {
-            cleanPhone = '+233' + stripped.slice(1);
-        } else {
-            cleanPhone = '+' + stripped;
-        }
+        const cleanPhone = normalizePhoneNumber(phoneNumber);
 
         if (cleanPhone.length < 10) {
             return NextResponse.json({ error: 'Phone number is too short' }, { status: 400 });

@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "locked in",
+    "projectPath": "d:\\Projects\\locked in",
+    "testIds": [],
+    "additionalInstruction": "When the test reaches the email verification (OTP) input, automatically type the literal string `424242` and submit the form.",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-JANp_qtmm0asexwxCwGmEjBCWuFEiAU5igJOCIy0nKxbEZQDmVWa_IKFw91m67ds3kIAijzUKnyOVGiE8lhw2WAMajYzVo1VQim-gOFFSe20NIx5rz6XZDX6feU2BeAuK-o"
+    }
+  },
+  "serverPort": 59556
+}
