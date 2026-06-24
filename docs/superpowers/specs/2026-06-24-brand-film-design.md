@@ -38,16 +38,24 @@ rather than as individually lingered-on features.
 
 | # | Scene | Frames (~sec) | Content |
 |---|-------|----------------|---------|
-| 1 | Cold Open | 90f (3s) | Dark, minimal. Typography-only beat over a blurred, slow-zooming abstract background. Phrase builds: "Everyone knows something." → "Everyone wants to learn something." No app UI yet. |
-| 2 | Reveal | 90f (3s) | Logo + app icon materialize from darkness (scale + blur-in) with a push-in camera move. Tagline locks into place: "Locked In." |
-| 3 | Skill Room (hero) | 240f (8s) | Phone mockup rises into frame with parallax depth. A live Skill Room (e.g. "AI Prompting 101"): peer host, avatars joining with staggered spring-ins, chat bubbles, live indicator. Slowest, most lingering camera work — this is the emotional payoff. |
-| 4 | Quick-fire proof montage | 150f (5s) | Three ~50f (1.7s) vignettes with snappy whip-pan/push cuts (not cross-fades): Study Room card joining → Focus Timer ticking with streak counter → Leaderboard rank climbing. Energetic pacing, contrasts scene 3's calm. |
-| 5 | Payoff / breadth | 90f (3s) | Mosaic/grid of multiple skill + study room cards animating in across parallax depth layers — conveys scale/community. |
-| 6 | CTA / Close | 90f (3s) | Logo lockup returns. Tagline: "Learn anything. From anyone." + call to action. Clean fade to black. |
+| 1 | Cold Open | 168f (5.6s) | Dark, minimal. Typography-only beat over a blurred, slow-zooming abstract background. Phrase builds: "Everyone knows something." → "Everyone wants to learn something." No app UI yet. |
+| 2 | Reveal | 168f (5.6s) | Logo + app icon materialize from darkness (scale + blur-in) with a push-in camera move. Tagline locks into place: "Locked In." |
+| 3 | Skill Room (hero) | 450f (15s) | Phone mockup rises into frame with parallax depth. A live Skill Room (e.g. "AI Prompting 101"): peer host, avatars joining with staggered spring-ins, chat bubbles, live indicator. Slowest, most lingering camera work — this is the emotional payoff. |
+| 4 | Quick-fire proof montage | 282f (9.4s) | Three ~94f (3.1s) vignettes with snappy whip-pan/push cuts (not cross-fades): Study Room card joining → Focus Timer ticking with streak counter → Leaderboard rank climbing. Energetic pacing, contrasts scene 3's calm. |
+| 5 | Payoff / breadth | 168f (5.6s) | Mosaic/grid of multiple skill + study room cards animating in across parallax depth layers — conveys scale/community. |
+| 6 | CTA / Close | 168f (5.6s) | Logo lockup returns. Tagline: "Learn anything. From anyone." + call to action. Clean fade to black. |
 
-Total content: 750f. Remaining ~750f budget covers transition overlaps and breathing
-room — final per-scene frame counts may shift ±10% during implementation to land cuts on
-musical beats once the score is generated.
+Total timeline: 1404f (46.8s @ 30fps). Each non-final scene's `TransitionSeries.Sequence`
+is declared as `base + 18` frames (the trailing 18 frames overlap into the cross-fade
+with the next scene, per the `@remotion/transitions` convention already used in
+`LockedInProductVideo`); the final scene is declared as `base` only. Because the
+transition's overlap consumes exactly the extra frames added to each sequence, the net
+visible timeline length equals the sum of the `base` values above — 1404f — not
+1404 + (5 × 18). (Corrected from an earlier draft of this spec that both miscalculated
+the per-scene seconds, summing to 25s instead of 50s, and then separately double-counted
+the transition overlap on top of that. Scene order and proportions are unchanged; only
+the frame math is fixed. 46.8s comfortably fits the ~45–60s horizontal-hero target
+discussed earlier.)
 
 ## 5. Visual Technique
 
