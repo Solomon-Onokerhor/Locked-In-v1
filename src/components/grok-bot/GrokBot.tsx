@@ -107,10 +107,10 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
 
     // Cursor tracking
     let rafId: number
-    let targetX = 0
-    let targetY = 0
-    let currentX = 0
-    let currentY = 0
+    let targetPitch = 0 // headX
+    let targetYaw = 0   // headY
+    let currentPitch = 0
+    let currentYaw = 0
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!host.current) return
@@ -123,26 +123,24 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       const deltaY = e.clientY - centerY
       
       // Calculate percentage of screen distance
-      // Invert the mapping: moving right (positive deltaX) means we want positive headX
-      // If it was inverted previously, let's negate deltaX and deltaY
-      // Wait, earlier I had targetY = deltaX and targetX = -deltaY.
-      // If it was inverted vertically and horizontally:
-      targetY = -(deltaX / (window.innerWidth / 2)) * maxRotate 
-      targetX = (deltaY / (window.innerHeight / 2)) * maxRotate
+      // In 3D, rotating around X-axis (pitch) moves head up/down
+      // Rotating around Y-axis (yaw) moves head left/right
+      // Based on Avatar data, negative yaw is left, negative pitch is down
+      const yaw = (deltaX / (window.innerWidth / 2)) * maxRotate
+      const pitch = -(deltaY / (window.innerHeight / 2)) * maxRotate
       
       // Clamp to max rotation
-      targetY = Math.max(Math.min(targetY, maxRotate), -maxRotate)
-      targetX = Math.max(Math.min(targetX, maxRotate), -maxRotate)
+      targetYaw = Math.max(Math.min(yaw, maxRotate), -maxRotate)
+      targetPitch = Math.max(Math.min(pitch, maxRotate), -maxRotate)
     }
 
     const animate = () => {
-      // Lerp factor increased from 0.12 to 0.45 for much snappier, less laggy response
-      currentX += (targetX - currentX) * 0.45
-      currentY += (targetY - currentY) * 0.45
+      // Lerp for snappy, buttery smooth movement
+      currentPitch += (targetPitch - currentPitch) * 0.45
+      currentYaw += (targetYaw - currentYaw) * 0.45
 
-      // Apply to internal avatar state instead of CSS transform!
-      // currentY maps to headX (horizontal), currentX maps to headY (vertical)
-      controller.current?.setLookAt(currentY, currentX);
+      // headX = pitch, headY = yaw
+      controller.current?.setLookAt(currentPitch, currentYaw);
 
       rafId = requestAnimationFrame(animate)
     }
