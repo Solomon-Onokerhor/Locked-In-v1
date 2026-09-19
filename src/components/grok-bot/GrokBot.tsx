@@ -118,6 +118,19 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
       
+      // Determine if cursor is on the "bot's side"
+      const isDesktop = window.innerWidth >= 768
+      const isOnBotSide = isDesktop 
+        ? e.clientX > window.innerWidth * 0.5 // right half of screen
+        : e.clientY < window.innerHeight * 0.4 // top half of screen on mobile
+
+      if (!isOnBotSide) {
+        // Return to center when not on bot's side
+        targetYaw = 0
+        targetPitch = 0
+        return
+      }
+
       const maxRotate = 25 // degrees
       const deltaX = e.clientX - centerX
       const deltaY = e.clientY - centerY
