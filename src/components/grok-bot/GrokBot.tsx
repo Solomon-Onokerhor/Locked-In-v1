@@ -17,6 +17,7 @@ export type AvatarProps = {
   size?: number | string
   className?: string
   style?: CSSProperties
+  theme?: 'default' | 'error'
   onAnimationEnd?: (animation: AnimationName) => void
 }
 
@@ -28,6 +29,7 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
     size = 240,
     className,
     style,
+    theme = 'default',
     onAnimationEnd,
   },
   ref
@@ -45,7 +47,19 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
     if (!host.current) return
     let disposed = false
     let avatar: RuntimeAvatar<AnimationName> | null = null
-    void loadAvatarRuntime<AnimationName>(avatarData).then(runtime => {
+
+    const dataToLoad = theme === 'error' ? {
+      ...avatarData,
+      avatar: {
+        ...avatarData.avatar,
+        colors: {
+          body: '#C62828',
+          eyes: '#4A0000'
+        }
+      }
+    } : avatarData
+
+    void loadAvatarRuntime<AnimationName>(dataToLoad).then(runtime => {
       if (disposed || !host.current) return
       avatar = runtime.createAvatar(host.current, {
         animation: animationRef.current,
@@ -61,7 +75,7 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       avatar?.destroy()
       controller.current = null
     }
-  }, [loop])
+  }, [loop, theme])
 
   useEffect(() => {
     const avatar = controller.current

@@ -156,7 +156,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-[#050505] text-[#F6FAFD] flex flex-col md:flex-row">
       {/* Mobile Avatar */}
       <div className="md:hidden flex justify-center items-center py-8 bg-black/20">
-        <GrokBot size={180} animation={avatarAnimation} />
+        <GrokBot size={180} animation={avatarAnimation} theme={avatarAnimation === 'sad' ? 'error' : 'default'} />
       </div>
 
       {/* Left side (form) - ~60% */}
@@ -379,10 +379,11 @@ export default function SignUpPage() {
           <div className="w-[500px] h-[500px] rounded-full bg-blue-500/[0.04] blur-[100px] pointer-events-none" />
         </div>
         <div className="relative z-10 transition-transform duration-500 hover:scale-105">
-          <GrokBot size={280} animation={avatarAnimation} />
+          <GrokBot size={280} animation={avatarAnimation} theme={avatarAnimation === 'sad' ? 'error' : 'default'} />
         </div>
       </div>
     </div>
   )
 }
+
 
