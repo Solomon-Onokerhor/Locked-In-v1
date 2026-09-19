@@ -10,7 +10,7 @@ import { GrokBot } from '@/components/grok-bot'
 type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'excited' | 'angry' | 'suspicious'
 
 export default function SignInPage() {
-  const { signIn, errors, fetchStatus } = useSignIn()
+  const { signIn, errors, fetchStatus, isLoaded } = useSignIn()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,7 +18,7 @@ export default function SignInPage() {
   const [avatarAnimation, setAvatarAnimation] = useState<AvatarAnimation>('idle')
   const [globalError, setGlobalError] = useState<string | null>(null)
 
-  const isLoading = fetchStatus === 'fetching'
+  const isLoading = fetchStatus === 'fetching' || !isLoaded
 
   const handleGoogleSignIn = async (e: React.MouseEvent) => {
     e.preventDefault()
