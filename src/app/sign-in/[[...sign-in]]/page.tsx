@@ -78,23 +78,27 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#F6FAFD] flex flex-col md:flex-row">
-      {/* Mobile Avatar */}
-      <div className="md:hidden flex justify-center items-center py-8 bg-black/20">
-        <GrokBot size={180} animation={avatarAnimation} theme={avatarAnimation === 'angry' ? 'error' : 'default'} />
+      {/* Mobile Header & Avatar */}
+      <div className="md:hidden flex flex-col items-center pt-8 pb-2 relative z-20">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="font-bold text-xl tracking-tight">Locked In</span>
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+        </div>
+        <GrokBot size={160} animation={avatarAnimation} theme={avatarAnimation === 'angry' ? 'error' : 'default'} />
       </div>
 
       {/* Left side (form) - ~60% */}
-      <div className="flex-1 md:w-[60%] flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-12 relative z-10">
-        {/* Brand */}
-        <div className="absolute top-8 left-6 sm:left-12 lg:left-24 flex items-center gap-2">
+      <div className="flex-1 md:w-[60%] flex flex-col px-4 sm:px-12 lg:px-24 py-6 md:py-12 relative z-10">
+        {/* Brand - Desktop only */}
+        <div className="hidden md:flex absolute top-8 left-6 sm:left-12 lg:left-24 items-center gap-2">
           <span className="font-bold text-xl tracking-tight">Locked In</span>
           <div className="w-2 h-2 rounded-full bg-blue-500" />
         </div>
 
-        <div className="max-w-md w-full mx-auto relative">
-          <div className="bg-[rgba(15,15,15,0.6)] backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
+        <div className="max-w-md w-full mx-auto relative my-auto">
+          <div className="bg-[rgba(15,15,15,0.6)] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Welcome back</h1>
               <p className="text-gray-400 text-sm">Sign in to continue your study session</p>
             </div>
 
@@ -198,7 +202,7 @@ export default function SignInPage() {
           </div>
 
           {/* Badge */}
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 md:mt-8 flex justify-center">
             <div className="bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               76+ students already locked in

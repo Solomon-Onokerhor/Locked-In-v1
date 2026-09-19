@@ -191,26 +191,30 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#F6FAFD] flex flex-col md:flex-row">
-      {/* Mobile Avatar */}
-      <div className="md:hidden flex justify-center items-center py-8 bg-black/20">
-        <GrokBot size={180} animation={avatarAnimation} theme={avatarAnimation === 'sad' ? 'error' : 'default'} />
+      {/* Mobile Header & Avatar */}
+      <div className="md:hidden flex flex-col items-center pt-8 pb-2 relative z-20">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="font-bold text-xl tracking-tight">Locked In</span>
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+        </div>
+        <GrokBot size={160} animation={avatarAnimation} theme={avatarAnimation === 'sad' ? 'error' : 'default'} />
       </div>
 
       {/* Left side (form) - ~60% */}
-      <div className="flex-1 md:w-[60%] flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-12 relative z-10">
-        {/* Brand */}
-        <div className="absolute top-8 left-6 sm:left-12 lg:left-24 flex items-center gap-2">
+      <div className="flex-1 md:w-[60%] flex flex-col px-4 sm:px-12 lg:px-24 py-6 md:py-12 relative z-10">
+        {/* Brand - Desktop only */}
+        <div className="hidden md:flex absolute top-8 left-6 sm:left-12 lg:left-24 items-center gap-2">
           <span className="font-bold text-xl tracking-tight">Locked In</span>
           <div className="w-2 h-2 rounded-full bg-blue-500" />
         </div>
 
-        <div className="max-w-md w-full mx-auto relative">
-          <div className="bg-[rgba(15,15,15,0.6)] backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+        <div className="max-w-md w-full mx-auto relative my-auto">
+          <div className="bg-[rgba(15,15,15,0.6)] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
 
             {!verifying ? (
               <>
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-white mb-2">Create your account</h1>
+                <div className="mb-6 md:mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Create your account</h1>
                   <p className="text-gray-400 text-sm">Join the most focused students on campus</p>
                 </div>
 
