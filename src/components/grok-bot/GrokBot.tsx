@@ -9,6 +9,7 @@ export type AvatarHandle = {
   play: (animation?: AnimationName) => void
   pause: () => void
   stop: () => void
+  setLookAt: (x: number, y: number) => void
 }
 export type AvatarProps = {
   animation?: AnimationName
@@ -82,7 +83,7 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
 
     if (theme === 'error' || animation === 'angry') {
       // Snap to look straight ahead
-      host.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)'
+      controller.current?.setLookAt(0, 0);
       
       // Violent shake via WAAPI
       const shake = host.current.animate(
@@ -135,9 +136,11 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       currentX += (targetX - currentX) * 0.12
       currentY += (targetY - currentY) * 0.12
 
-      if (host.current) {
-        host.current.style.transform = `perspective(1000px) rotateX(${currentX}deg) rotateY(${currentY}deg)`
-      }
+      // Apply to internal avatar state instead of CSS transform!
+      // targetX correlates to vertical mouse position, targetY to horizontal
+      // The avatar's headX maps to horizontal, headY to vertical (inverted).
+      controller.current?.setLookAt(currentY, currentX);
+
       rafId = requestAnimationFrame(animate)
     }
 
@@ -161,6 +164,7 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
     play(next = animation) { controller.current?.play(next) },
     pause() { controller.current?.pause() },
     stop() { controller.current?.stop() },
+    setLookAt(x, y) { controller.current?.setLookAt(x, y) },
   }), [animation])
 
   const dimension = typeof size === 'number' ? size + 'px' : size
