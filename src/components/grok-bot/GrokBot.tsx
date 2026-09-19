@@ -78,6 +78,79 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
   }, [loop, theme])
 
   useEffect(() => {
+    if (!host.current) return
+
+    if (theme === 'error' || animation === 'angry') {
+      // Snap to look straight ahead
+      host.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)'
+      
+      // Violent shake via WAAPI
+      const shake = host.current.animate(
+        [
+          { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
+          { transform: 'translate(-8px, -8px) rotate(-3deg) scale(1.05)' },
+          { transform: 'translate(8px, 8px) rotate(3deg) scale(1.05)' },
+          { transform: 'translate(-8px, 8px) rotate(-3deg) scale(1.05)' },
+          { transform: 'translate(8px, -8px) rotate(3deg) scale(1.05)' },
+          { transform: 'translate(0, 0) rotate(0deg) scale(1)' }
+        ],
+        {
+          duration: 250,
+          iterations: Infinity,
+          easing: 'linear'
+        }
+      )
+      
+      return () => shake.cancel()
+    }
+
+    // Cursor tracking
+    let rafId: number
+    let targetX = 0
+    let targetY = 0
+    let currentX = 0
+    let currentY = 0
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!host.current) return
+      const rect = host.current.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      
+      const maxRotate = 35 // degrees
+      const deltaX = e.clientX - centerX
+      const deltaY = e.clientY - centerY
+      
+      // Calculate percentage of screen distance
+      targetY = (deltaX / (window.innerWidth / 2)) * maxRotate
+      targetX = -(deltaY / (window.innerHeight / 2)) * maxRotate
+      
+      // Clamp to max rotation
+      targetY = Math.max(Math.min(targetY, maxRotate), -maxRotate)
+      targetX = Math.max(Math.min(targetX, maxRotate), -maxRotate)
+    }
+
+    const animate = () => {
+      // Lerp for butter-smooth movement
+      currentX += (targetX - currentX) * 0.12
+      currentY += (targetY - currentY) * 0.12
+
+      if (host.current) {
+        host.current.style.transform = `perspective(1000px) rotateX(${currentX}deg) rotateY(${currentY}deg)`
+      }
+      rafId = requestAnimationFrame(animate)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    rafId = requestAnimationFrame(animate)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      cancelAnimationFrame(rafId)
+    }
+  }, [theme, animation])
+
+  useEffect(() => {
     const avatar = controller.current
     if (!avatar) return
     if (playing) avatar.play(animation)
