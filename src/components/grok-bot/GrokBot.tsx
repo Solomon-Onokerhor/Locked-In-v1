@@ -118,13 +118,17 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
       
-      const maxRotate = 35 // degrees
+      const maxRotate = 25 // degrees
       const deltaX = e.clientX - centerX
       const deltaY = e.clientY - centerY
       
       // Calculate percentage of screen distance
-      targetY = (deltaX / (window.innerWidth / 2)) * maxRotate
-      targetX = -(deltaY / (window.innerHeight / 2)) * maxRotate
+      // Invert the mapping: moving right (positive deltaX) means we want positive headX
+      // If it was inverted previously, let's negate deltaX and deltaY
+      // Wait, earlier I had targetY = deltaX and targetX = -deltaY.
+      // If it was inverted vertically and horizontally:
+      targetY = -(deltaX / (window.innerWidth / 2)) * maxRotate 
+      targetX = (deltaY / (window.innerHeight / 2)) * maxRotate
       
       // Clamp to max rotation
       targetY = Math.max(Math.min(targetY, maxRotate), -maxRotate)
@@ -132,13 +136,12 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
     }
 
     const animate = () => {
-      // Lerp for butter-smooth movement
-      currentX += (targetX - currentX) * 0.12
-      currentY += (targetY - currentY) * 0.12
+      // Lerp factor increased from 0.12 to 0.45 for much snappier, less laggy response
+      currentX += (targetX - currentX) * 0.45
+      currentY += (targetY - currentY) * 0.45
 
       // Apply to internal avatar state instead of CSS transform!
-      // targetX correlates to vertical mouse position, targetY to horizontal
-      // The avatar's headX maps to horizontal, headY to vertical (inverted).
+      // currentY maps to headX (horizontal), currentX maps to headY (vertical)
       controller.current?.setLookAt(currentY, currentX);
 
       rafId = requestAnimationFrame(animate)
