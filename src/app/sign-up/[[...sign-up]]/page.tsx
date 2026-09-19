@@ -44,17 +44,25 @@ export default function SignUpPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verifying])
 
-  const handleGoogleSignUp = (e: React.MouseEvent) => {
+  const handleGoogleSignUp = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (!signUp) return
     setAvatarAnimation('thinking')
-    signUp.sso({
-      strategy: 'oauth_google',
-      redirectUrl: '/',
-      redirectCallbackUrl: '/sso-callback'
-    }).catch(() => {
+    
+    try {
+      const { error } = await signUp.sso({
+        strategy: 'oauth_google',
+        redirectUrl: '/',
+        redirectCallbackUrl: '/sso-callback'
+      })
+      if (error) {
+        setAvatarAnimation('sad')
+        setErrorMsg(error.longMessage || error.message || 'SSO Failed')
+      }
+    } catch (err) {
       setAvatarAnimation('sad')
-    })
+      setErrorMsg('An unexpected error occurred.')
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {

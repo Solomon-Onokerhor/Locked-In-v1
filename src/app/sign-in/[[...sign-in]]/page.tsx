@@ -20,17 +20,25 @@ export default function SignInPage() {
 
   const isLoading = fetchStatus === 'fetching'
 
-  const handleGoogleSignIn = (e: React.MouseEvent) => {
+  const handleGoogleSignIn = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (!signIn) return
     setAvatarAnimation('thinking')
-    signIn.sso({
-      strategy: 'oauth_google',
-      redirectUrl: '/',
-      redirectCallbackUrl: '/sso-callback'
-    }).catch(() => {
+    
+    try {
+      const { error } = await signIn.sso({
+        strategy: 'oauth_google',
+        redirectUrl: '/',
+        redirectCallbackUrl: '/sso-callback'
+      })
+      if (error) {
+        setAvatarAnimation('angry')
+        setGlobalError(error.longMessage || error.message || 'SSO Failed')
+      }
+    } catch (err) {
       setAvatarAnimation('angry')
-    })
+      setGlobalError('An unexpected error occurred.')
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
