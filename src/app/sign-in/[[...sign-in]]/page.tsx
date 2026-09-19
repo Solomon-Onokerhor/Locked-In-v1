@@ -59,7 +59,12 @@ export default function SignInPage() {
     } catch (err: any) {
       setAvatarAnimation('angry')
       if (err.errors && err.errors.length > 0) {
-        setGlobalError(err.errors[0].longMessage || err.errors[0].message)
+        const errorData = err.errors[0]
+        if (errorData.code === 'strategy_for_user_invalid') {
+          setGlobalError("You created this account using Google. Please click 'Continue with Google' above.")
+        } else {
+          setGlobalError(errorData.longMessage || errorData.message)
+        }
       } else if (err instanceof Error) {
         setGlobalError(err.message)
       } else {

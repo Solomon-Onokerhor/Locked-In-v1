@@ -79,7 +79,12 @@ export default function SignUpPage() {
     } catch (err: any) {
       setAvatarAnimation('sad')
       if (err.errors && err.errors.length > 0) {
-        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+        const errorData = err.errors[0]
+        if (errorData.code === 'strategy_for_user_invalid') {
+          setErrorMsg("This account uses a different sign-in method. Try Google.")
+        } else {
+          setErrorMsg(errorData.longMessage || errorData.message)
+        }
       } else if (err instanceof Error) {
         setErrorMsg(err.message)
       } else {
@@ -120,7 +125,12 @@ export default function SignUpPage() {
     } catch (err: any) {
       setAvatarAnimation('sad')
       if (err.errors && err.errors.length > 0) {
-        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+        const errorData = err.errors[0]
+        if (errorData.code === 'strategy_for_user_invalid') {
+          setErrorMsg("This account uses a different sign-in method. Try Google.")
+        } else {
+          setErrorMsg(errorData.longMessage || errorData.message)
+        }
       } else if (err instanceof Error) {
         setErrorMsg(err.message)
       } else {
@@ -140,7 +150,12 @@ export default function SignUpPage() {
       setErrorMsg('')
     } catch (err: any) {
       if (err.errors && err.errors.length > 0) {
-        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+        const errorData = err.errors[0]
+        if (errorData.code === 'strategy_for_user_invalid') {
+          setErrorMsg("This account uses a different sign-in method. Try Google.")
+        } else {
+          setErrorMsg(errorData.longMessage || errorData.message)
+        }
       } else if (err instanceof Error) {
         setErrorMsg(err.message)
       } else {
