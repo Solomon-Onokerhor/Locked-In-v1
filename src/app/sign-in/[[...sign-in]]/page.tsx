@@ -40,7 +40,8 @@ export default function SignInPage() {
     setAvatarAnimation('thinking')
 
     try {
-      await signIn.password({ identifier: email, password })
+      const { error } = await signIn.password({ identifier: email, password })
+      if (error) throw error
 
       if (signIn.status === 'complete') {
         setAvatarAnimation('excited')

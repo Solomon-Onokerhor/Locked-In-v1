@@ -65,14 +65,16 @@ export default function SignUpPage() {
     setAvatarAnimation('thinking')
 
     try {
-      await signUp.password({
+      const { error: pwdError } = await signUp.password({
         firstName,
         lastName,
         emailAddress: email,
         password
       })
+      if (pwdError) throw pwdError
 
-      await signUp.verifications.sendEmailCode()
+      const { error: verifyError } = await signUp.verifications.sendEmailCode()
+      if (verifyError) throw verifyError
       setVerifying(true)
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -99,7 +101,8 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      await signUp.verifications.verifyEmailCode({ code: codeStr })
+      const { error } = await signUp.verifications.verifyEmailCode({ code: codeStr })
+      if (error) throw error
 
       if (signUp.status === 'complete') {
         setAvatarAnimation('excited')
@@ -132,7 +135,8 @@ export default function SignUpPage() {
   const resendCode = async () => {
     if (!signUp) return
     try {
-      await signUp.verifications.sendEmailCode()
+      const { error } = await signUp.verifications.sendEmailCode()
+      if (error) throw error
       setErrorMsg('')
     } catch (err: any) {
       if (err.errors && err.errors.length > 0) {
