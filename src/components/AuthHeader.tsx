@@ -1,25 +1,21 @@
-import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs';
+'use client';
+
+import { useAuth } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 
 /**
- * AuthHeader — shows sign-in/sign-up when signed out, user button when signed in.
- * Uses Clerk's SSR-compatible Show component to prevent hydration mismatch.
+ * AuthHeader — shows user button when signed in.
  */
 export function AuthHeader() {
+    const { isSignedIn } = useAuth();
+
+    if (!isSignedIn) return null;
+
     return (
         <header className="flex justify-end items-center p-4 gap-4 h-16 absolute top-0 right-0 z-50">
-            <Show 
-                when="signed-in"
-                fallback={
-                    <>
-                        <SignInButton />
-                        <SignUpButton />
-                    </>
-                }
-            >
-                <div className="flex items-center gap-3">
-                    <UserButton appearance={{ elements: { userButtonAvatarBox: "w-10 h-10" } }} />
-                </div>
-            </Show>
+            <div className="flex items-center gap-3">
+                <UserButton appearance={{ elements: { userButtonAvatarBox: "w-10 h-10" } }} />
+            </div>
         </header>
     );
 }
