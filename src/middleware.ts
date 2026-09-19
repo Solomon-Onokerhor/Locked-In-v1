@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/sso-callback(.*)',
   '/',
   '/api/webhooks(.*)',
   '/api/admin/maintenance(.*)', // allow reading maintenance status publicly

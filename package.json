@@ -28,7 +28,8 @@
     "svix": "^1.93.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
+    "@clerk/testing": "^2.2.36",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",

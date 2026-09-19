@@ -415,9 +415,9 @@ export default function SignUpPage() {
       </div>
 
       {/* Right side (avatar) - ~40% */}
-      <div className="hidden md:flex md:w-[40%] relative items-center justify-center overflow-hidden border-l border-white/5 bg-black/20">
+      <div className="hidden md:flex md:w-[40%] relative items-center justify-center overflow-hidden border-l border-white/5 bg-black">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[500px] h-[500px] rounded-full bg-blue-500/[0.04] blur-[100px] pointer-events-none" />
+          <div className="w-[500px] h-[500px] rounded-full bg-blue-500/[0.02] blur-[100px] pointer-events-none" />
         </div>
         <div className="relative z-10 transition-transform duration-500 hover:scale-105">
           <GrokBot size={280} animation={avatarAnimation} theme={avatarAnimation === 'sad' ? 'error' : 'default'} />
