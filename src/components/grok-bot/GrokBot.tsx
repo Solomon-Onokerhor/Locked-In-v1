@@ -53,8 +53,8 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       avatar: {
         ...avatarData.avatar,
         colors: {
-          body: '#C62828',
-          eyes: '#4A0000'
+          body: '#B93030',
+          eyes: '#5C0000'
         }
       }
     } : avatarData
@@ -95,3 +95,4 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
 })
 
 export default GrokBot
+

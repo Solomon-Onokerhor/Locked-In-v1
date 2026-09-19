@@ -74,11 +74,18 @@ export default function SignUpPage() {
 
       await signUp.verifications.sendEmailCode()
       setVerifying(true)
-    } catch (err: unknown) {
+    } catch (err: any) {
       setAvatarAnimation('sad')
-      if (err instanceof Error) {
+      if (err.errors && err.errors.length > 0) {
+        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+      } else if (err instanceof Error) {
         setErrorMsg(err.message)
+      } else {
+        setErrorMsg("An unknown error occurred")
       }
+      setTimeout(() => {
+        setAvatarAnimation('idle')
+      }, 3000)
     }
   }
 
@@ -107,11 +114,18 @@ export default function SignUpPage() {
           }
         })
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       setAvatarAnimation('sad')
-      if (err instanceof Error) {
+      if (err.errors && err.errors.length > 0) {
+        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+      } else if (err instanceof Error) {
         setErrorMsg(err.message)
+      } else {
+        setErrorMsg("An unknown error occurred")
       }
+      setTimeout(() => {
+        setAvatarAnimation('idle')
+      }, 3000)
     }
   }
 
@@ -120,9 +134,13 @@ export default function SignUpPage() {
     try {
       await signUp.verifications.sendEmailCode()
       setErrorMsg('')
-    } catch (err: unknown) {
-      if (err instanceof Error) {
+    } catch (err: any) {
+      if (err.errors && err.errors.length > 0) {
+        setErrorMsg(err.errors[0].longMessage || err.errors[0].message)
+      } else if (err instanceof Error) {
         setErrorMsg(err.message)
+      } else {
+        setErrorMsg("An unknown error occurred")
       }
     }
   }
@@ -385,5 +403,7 @@ export default function SignUpPage() {
     </div>
   )
 }
+
+
 
 

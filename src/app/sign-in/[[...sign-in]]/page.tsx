@@ -55,11 +55,18 @@ export default function SignInPage() {
           }
         })
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       setAvatarAnimation('angry')
-      if (err instanceof Error) {
+      if (err.errors && err.errors.length > 0) {
+        setGlobalError(err.errors[0].longMessage || err.errors[0].message)
+      } else if (err instanceof Error) {
         setGlobalError(err.message)
+      } else {
+        setGlobalError("An unknown error occurred")
       }
+      setTimeout(() => {
+        setAvatarAnimation('idle')
+      }, 3000)
     }
   }
 
@@ -206,5 +213,7 @@ export default function SignInPage() {
     </div>
   )
 }
+
+
 
 
