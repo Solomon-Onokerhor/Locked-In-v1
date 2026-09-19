@@ -90,11 +90,17 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 
+  const { userId, sessionClaims } = await auth();
+
+  // Redirect authenticated users away from sign-in and sign-up pages
+  if (userId && (path.startsWith('/sign-in') || path.startsWith('/sign-up'))) {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
+
   // Onboarding gate — signed-in users who haven't completed onboarding
   // are redirected to /onboarding (checked via Clerk publicMetadata in JWT).
   // REQUIRES: Clerk Dashboard → Sessions → Customize session token →
   //   add: { "metadata": "{{user.public_metadata}}" }
-  const { userId, sessionClaims } = await auth();
   if (userId && path !== '/onboarding' && !path.startsWith('/sign-') && !path.startsWith('/api')) {
     // sessionClaims.metadata is populated only if the session token is customized in Clerk Dashboard
     const meta = (sessionClaims as any)?.metadata as Record<string, unknown> | undefined;
