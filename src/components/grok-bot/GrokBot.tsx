@@ -152,8 +152,15 @@ export const GrokBot = forwardRef<AvatarHandle, AvatarProps>(function GrokBot(
       currentPitch += (targetPitch - currentPitch) * 0.45
       currentYaw += (targetYaw - currentYaw) * 0.45
 
-      // headX = pitch, headY = yaw
-      controller.current?.setLookAt(currentPitch, currentYaw);
+      // Only pass to engine if difference is meaningful, to allow internal engine to sleep
+      if (Math.abs(targetPitch - currentPitch) > 0.01 || Math.abs(targetYaw - currentYaw) > 0.01) {
+        controller.current?.setLookAt(currentPitch, currentYaw);
+      } else if (targetPitch === 0 && targetYaw === 0 && (currentPitch !== 0 || currentYaw !== 0)) {
+        // Snap exactly to 0 when resting
+        currentPitch = 0;
+        currentYaw = 0;
+        controller.current?.setLookAt(0, 0);
+      }
 
       rafId = requestAnimationFrame(animate)
     }
