@@ -193,15 +193,33 @@ async function handleEmailCreated(data: any) {
     const linkUrl = urlMatch ? urlMatch[0] : undefined;
     
     let type: any = null;
+    let customSubject = subject; // default to original subject
 
-    if (subjectLower.includes('verification') || subjectLower.includes('verify')) type = 'verification';
-    else if ((subjectLower.includes('reset') || subjectLower.includes('forgot')) && subjectLower.includes('password')) type = 'reset';
-    else if (subjectLower.includes('locked')) type = 'locked';
-    else if (subjectLower.includes('password changed')) type = 'password_changed';
-    else if (subjectLower.includes('password removed')) type = 'password_removed';
-    else if (subjectLower.includes('email') && (subjectLower.includes('changed') || subjectLower.includes('primary'))) type = 'email_changed';
-    else if (subjectLower.includes('new device') || subjectLower.includes('sign in from')) type = 'new_device';
-    else if (subjectLower.includes('invitation') || subjectLower.includes('invited')) type = 'invitation';
+    if (subjectLower.includes('verification') || subjectLower.includes('verify')) {
+        type = 'verification';
+        customSubject = 'Verify your email address for Locked In';
+    } else if ((subjectLower.includes('reset') || subjectLower.includes('forgot')) && subjectLower.includes('password')) {
+        type = 'reset';
+        customSubject = 'Reset your Locked In password';
+    } else if (subjectLower.includes('locked')) {
+        type = 'locked';
+        customSubject = 'Security Alert: Your Locked In account is locked';
+    } else if (subjectLower.includes('password changed')) {
+        type = 'password_changed';
+        customSubject = 'Security Update: Your password was changed';
+    } else if (subjectLower.includes('password removed')) {
+        type = 'password_removed';
+        customSubject = 'Security Update: Your password was removed';
+    } else if (subjectLower.includes('email') && (subjectLower.includes('changed') || subjectLower.includes('primary'))) {
+        type = 'email_changed';
+        customSubject = 'Security Update: Your primary email was changed';
+    } else if (subjectLower.includes('new device') || subjectLower.includes('sign in from')) {
+        type = 'new_device';
+        customSubject = 'Security Alert: Sign-in from a new device';
+    } else if (subjectLower.includes('invitation') || subjectLower.includes('invited')) {
+        type = 'invitation';
+        customSubject = "You've been invited to join Locked In";
+    }
 
     if (type) {
         console.log(`[clerk-webhook] email.created → Intercepted '${type}', rendering custom ImpeccableEmail template.`);
@@ -216,7 +234,7 @@ async function handleEmailCreated(data: any) {
         const { error } = await resend.emails.send({
             from: `${fromEmailName} <hello@contact.lockedinumat.tech>`,
             to: [toEmailAddress],
-            subject: subject,
+            subject: customSubject,
             html: body,
             text: bodyPlain,
         });
