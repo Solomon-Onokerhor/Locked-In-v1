@@ -203,10 +203,7 @@ async function handleEmailCreated(data: any) {
     } else if ((subjectLower.includes('reset') || subjectLower.includes('forgot')) && subjectLower.includes('password')) {
         type = 'reset';
         customSubject = 'Reset your Locked In password';
-    } else if (subjectLower.includes('locked')) {
-        type = 'locked';
-        customSubject = 'Security Alert: Your Locked In account is locked';
-    } else if (subjectLower.includes('password changed')) {
+    } else if (subjectLower.includes('password changed') || subjectLower.includes('password has been changed')) {
         type = 'password_changed';
         customSubject = 'Security Update: Your password was changed';
     } else if (subjectLower.includes('password removed')) {
@@ -221,6 +218,10 @@ async function handleEmailCreated(data: any) {
     } else if (subjectLower.includes('invitation') || subjectLower.includes('invited')) {
         type = 'invitation';
         customSubject = "You've been invited to join Locked In";
+    } else if (subjectLower.includes('account locked') || subjectLower.includes('temporarily locked') || (subjectLower.includes('locked') && !subjectLower.includes('locked in'))) {
+        // We ensure we don't accidentally match the app name "Locked In"
+        type = 'locked';
+        customSubject = 'Security Alert: Your Locked In account is locked';
     }
 
     if (type) {
