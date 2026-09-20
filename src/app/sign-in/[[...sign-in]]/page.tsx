@@ -29,18 +29,21 @@ export default function SignInPage() {
     setAvatarAnimation('thinking')
     
     try {
-      const { error } = await signIn.sso({
+      const result = await signIn.sso({
         strategy: 'oauth_google',
         redirectUrl: '/',
         redirectCallbackUrl: '/sso-callback'
-      })
-      if (error) {
+      }) as any
+      if (result && result.error) {
         setAvatarAnimation('angry')
-        setGlobalError(error.longMessage || error.message || 'SSO Failed')
+        setGlobalError(result.error.longMessage || result.error.message || 'SSO Failed')
+      } else {
+        setAvatarAnimation('angry')
+        setGlobalError('No error but no redirect? Result: ' + JSON.stringify(result))
       }
-    } catch (err) {
+    } catch (err: any) {
       setAvatarAnimation('angry')
-      setGlobalError('An unexpected error occurred.')
+      setGlobalError('Unexpected error: ' + (err.message || JSON.stringify(err)))
     }
   }
 
