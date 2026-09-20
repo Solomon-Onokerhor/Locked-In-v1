@@ -29,6 +29,16 @@ export default function SignInPage() {
     setAvatarAnimation('thinking')
     
     try {
+      if ((signIn as any).authenticateWithRedirect) {
+        setAvatarAnimation('thinking')
+        await (signIn as any).authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl: '/sso-callback',
+          redirectUrlComplete: '/'
+        })
+        return
+      }
+
       const result = await signIn.sso({
         strategy: 'oauth_google',
         redirectUrl: '/',
@@ -39,7 +49,7 @@ export default function SignInPage() {
         setGlobalError(result.error.longMessage || result.error.message || 'SSO Failed')
       } else {
         setAvatarAnimation('angry')
-        setGlobalError('No error but no redirect? Result: ' + JSON.stringify(result))
+        setGlobalError('No error but no redirect? Result: ' + JSON.stringify(result) + ' (authWithRedirect=' + typeof (signIn as any).authenticateWithRedirect + ')')
       }
     } catch (err: any) {
       setAvatarAnimation('angry')
