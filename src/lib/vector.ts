@@ -17,8 +17,9 @@ export async function upsertProfileVector(userId: string) {
     // Generate embeddings using Gemini
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.embedContent({
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-2',
         contents: text,
+        config: { outputDimensionality: 768 }
     });
     
     if (!response.embeddings || response.embeddings.length === 0) {
