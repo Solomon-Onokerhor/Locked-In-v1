@@ -10,7 +10,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, User } from 'lucide-react'
 type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searching' | 'excited' | 'sad'
 
 export default function SignUpPage() {
-  const { signUp } = useSignUp()
+  const { signUp, errors } = useSignUp()
   const router = useRouter()
 
   const [firstName, setFirstName] = useState('')
