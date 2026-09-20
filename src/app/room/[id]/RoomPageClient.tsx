@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Sidebar } from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
 import {
@@ -28,7 +29,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    // Must be at the top level — cannot be after an early return (Rules of Hooks)
+    // Must be at the top level Ã¢â‚¬â€ cannot be after an early return (Rules of Hooks)
     const [now, setNow] = useState(new Date());
 
     // Removal of mandatory redirect to allow preview mode
@@ -154,7 +155,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             }).catch(err => console.error('Failed to send confirmation email:', err));
 
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to lock in');
+            toast.error(err instanceof Error ? err.message : 'Failed to lock in');
         } finally {
             setLockingIn(false);
         }
@@ -177,7 +178,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             setMembership({ ...membership, attendance_confirmed: true });
             await fetchMembers(); // Refresh the sidebar to show confirmed status if you ever add an indicator there
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to confirm attendance');
+            toast.error(err instanceof Error ? err.message : 'Failed to confirm attendance');
         } finally {
             setConfirmingAttendance(false);
         }
@@ -197,7 +198,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
             router.push('/');
         } catch (err: unknown) {
             console.error('Failed to delete room:', err);
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            toast.error(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setIsDeleting(false);
             setShowDeleteConfirm(false);
@@ -205,7 +206,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     };
 
     const handleShare = () => {
-        const text = `🚨 I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\n💡 ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\n🗓️ ${new Date(room?.date_time || '').toLocaleString()}\\n\\n⚡ Spots are limited — lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
+        const text = `Ã°Å¸Å¡Â¨ I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\nÃ°Å¸â€™Â¡ ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\nÃ°Å¸â€”â€œÃ¯Â¸Â ${new Date(room?.date_time || '').toLocaleString()}\\n\\nÃ¢Å¡Â¡ Spots are limited Ã¢â‚¬â€ lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
