@@ -226,7 +226,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const endTime = startTime + (room.duration_minutes || 60) * 60000;
     const tenMinutesBefore = startTime - 10 * 60000;
 
-    const canAccessLink = now.getTime() >= tenMinutesBefore && now.getTime() <= endTime;
+    const canAccessLink = (isCreator || now.getTime() >= tenMinutesBefore) && now.getTime() <= endTime;
     const sessionStatus = now.getTime() < startTime ? 'upcoming' : (now.getTime() <= endTime ? 'live' : 'ended');
 
     return (
@@ -340,7 +340,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                                     rel="noopener noreferrer"
                                     className="w-full py-4 px-8 rounded-full bg-brand-accent text-brand-primary text-lg font-black tracking-wide hover:scale-105 active:scale-95 transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                                 >
-                                    <Video className="w-6 h-6" /> JOIN CALL
+                                    <Video className="w-6 h-6" /> JOIN VIDEO ROOM
                                 </a>
                             )}
 

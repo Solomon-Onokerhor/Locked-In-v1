@@ -31,7 +31,7 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
     return (
         <Link
             href={`/room/${room.room_id}`}
-            className="group flex flex-col glass-card border border-white/5 hover:border-brand-accent/50 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 overflow-hidden relative p-0"
+            className="group flex flex-col bg-[#0a0a0a] border border-white/10 rounded-2xl hover:border-white/30 hover:bg-[#0f0f0f] transition-all duration-300 hover:-translate-y-1 overflow-hidden relative shadow-lg hover:shadow-2xl"
             data-tour="join-room"
         >
             <div className="aspect-video w-full relative overflow-hidden">
@@ -39,36 +39,38 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
                     src={imageUrl}
                     alt={room.title}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     priority={false}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/90 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent"></div>
 
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${room.room_type === 'Study' ? 'bg-black/50 border-white/20 text-white' : 'bg-brand-accent/20 border-brand-accent/50 text-brand-accent'}`}>
+                        {room.room_type}
+                    </span>
+                    {room.course_code && (
+                        <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border bg-black/50 border-white/20 text-white">
+                            {room.course_code}
+                        </span>
+                    )}
+                </div>
+
+                {/* Share Button */}
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300 z-20">
                     <button
                         onClick={handleShare}
-                        className="p-2.5 bg-brand-accent/80 hover:bg-brand-accent border border-white/20 rounded-full text-white transition-all backdrop-blur-md shadow-lg"
+                        className="p-2 bg-black/50 hover:bg-white/20 border border-white/20 rounded-full text-white transition-all backdrop-blur-md"
                         title="Share to WhatsApp"
                     >
                         <Share2 className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter backdrop-blur-md border ${room.room_type === 'Study' ? 'bg-brand-accent/40 border-brand-accent/20 text-gray-300' : 'bg-white/10 border-white/20 text-gray-300'}`}>
-                        {room.room_type}
-                    </span>
-                    {room.course_code && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter backdrop-blur-md border bg-white/10 border-white/10 text-white">
-                            {room.course_code}
-                        </span>
-                    )}
-                </div>
-
                 {/* Buddy Activity Indicator */}
                 {(buddyCount || 0) > 0 && (
-                    <div className="absolute bottom-3 right-14 bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 transition-transform group-hover:scale-110 z-20">
+                    <div className="absolute bottom-3 right-16 bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded-md text-[10px] font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5 z-20">
                         <Users className="w-3 h-3" />
                         {buddyCount} {buddyCount === 1 ? 'Buddy' : 'Buddies'} Inside
                     </div>
@@ -77,38 +79,38 @@ export function RoomCard({ room, buddyCount }: RoomCardProps) {
                 <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-20">
                     <div className="flex gap-2">
                         {isLive && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-white/10 border-white/20 text-white flex items-center gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border bg-red-500/20 border-red-500/50 text-red-400 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
                                 Live
                             </span>
                         )}
                         {isUpcoming && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider backdrop-blur-md border bg-white/10 border-white/20 text-white flex items-center gap-1.5">
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border bg-blue-500/20 border-blue-500/50 text-blue-400 flex items-center gap-1.5">
                                 Upcoming
                             </span>
                         )}
                     </div>
-                    <div className="bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-[10px] font-bold text-white/90 border border-white/5">
+                    <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold text-white border border-white/10">
                         {room.duration_minutes}m
                     </div>
                 </div>
             </div>
 
-            <div className="p-4 flex-1 flex flex-col z-10">
-                <h3 className="text-base font-bold text-white group-hover:text-brand-accent transition-colors line-clamp-1 mb-1">
+            <div className="p-5 flex-1 flex flex-col z-10 bg-[#0a0a0a]">
+                <h3 className="text-lg font-bold text-white group-hover:text-white/90 transition-colors line-clamp-1 mb-1 tracking-tight">
                     {room.title}
                 </h3>
-                <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">{room.description || 'No description provided.'}</p>
+                <p className="text-sm text-[#888888] mb-4 line-clamp-2 leading-relaxed">{room.description || 'No description provided.'}</p>
 
-                <div className="mt-auto pt-3 border-t border-white/5 flex items-center justify-between text-gray-600">
+                <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5" />
-                            <span className="text-[11px] font-bold uppercase tracking-tight">{room.max_members} Limit</span>
+                            <Users className="w-4 h-4 text-[#888888]" />
+                            <span className="text-xs font-semibold text-[#888888]">{room.max_members} Limit</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span className="text-[11px] font-bold uppercase tracking-tight">
+                            <Calendar className="w-4 h-4 text-[#888888]" />
+                            <span className="text-xs font-semibold text-[#888888]">
                                 {new Date(room.date_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </span>
                         </div>

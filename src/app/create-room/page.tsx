@@ -61,13 +61,10 @@ export default function CreateRoomPage() {
             // Updated regex to allow query parameters (?, &, =, etc)
             const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?&#=-]*)*\/?$/i;
 
-            if (sessionMode === 'virtual' && (!meetingLink || !urlRegex.test(meetingLink))) {
-                throw new Error('Please enter a valid meeting URL (e.g., Zoom/Google Meet)');
-            }
-
             if (whatsappGroupLink && !urlRegex.test(whatsappGroupLink)) {
                 throw new Error('Please enter a valid WhatsApp Group link');
             }
+            // ------------------------
             // ------------------------
 
             let image_url = null;
@@ -102,7 +99,7 @@ export default function CreateRoomPage() {
                     date_time: dateTime,
                     duration_minutes: durationMinutes,
                     session_mode: sessionMode,
-                    meeting_link: sessionMode === 'virtual' ? meetingLink : null,
+                    meeting_link: sessionMode === 'virtual' ? `https://meet.jit.si/LockedIn-${crypto.randomUUID()}` : null,
                     physical_location: sessionMode === 'in_person' ? physicalLocation : null,
                     location_note: sessionMode === 'in_person' ? locationNote : null,
                     max_members: maxMembers,
@@ -366,14 +363,10 @@ export default function CreateRoomPage() {
                                 {/* Location / Link Inputs */}
                                 <div className="animate-fade-in-up">
                                     {sessionMode === 'virtual' ? (
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                                <Video className="w-3 h-3" /> Meeting Link (Zoom, Meet, etc) *
-                                            </label>
-                                            <input type="url" required placeholder="https://zoom.us/j/..." value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-white/20 outline-none transition-all placeholder:text-gray-600"
-                                            />
-                                            <p className="text-[10px] text-gray-500">Links remain hidden securely until users lock in and the session is live.</p>
+                                        <div className="space-y-2 p-4 bg-brand-accent/5 border border-brand-accent/20 rounded-xl text-center">
+                                            <Video className="w-6 h-6 text-brand-accent mx-auto mb-2" />
+                                            <h4 className="text-white font-bold text-sm">Auto-Generated Jitsi Room</h4>
+                                            <p className="text-[11px] text-gray-400">A dedicated video room will be created automatically. Scholars can join 10 minutes before the session starts.</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
