@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { Sidebar } from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { Room, RoomMember } from '@/types';
@@ -31,15 +31,15 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    // Must be at the top level ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â cannot be after an early return (Rules of Hooks)
+    // Must be at the top level - cannot be after an early return (Rules of Hooks)
         const [now, setNow] = useState(new Date());
 
-    const paystackConfig = {
-        reference: (new Date()).getTime().toString(),
-        email: session?.user?.email || profile?.email || 'user@example.com',
+    const paystackConfig = useMemo(() => ({
+        reference: `tx_${roomId}_${(new Date()).getTime()}`,
+        email: session?.user?.email || profile?.email || 'student@umat.edu.gh',
         amount: room?.price ? room.price * 100 : 0, // pesewas
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-    };
+    }), [session, profile, room?.price, roomId]);
     
     // @ts-ignore
     const initializePayment = usePaystackPayment(paystackConfig);

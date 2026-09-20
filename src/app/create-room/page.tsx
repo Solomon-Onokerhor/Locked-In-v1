@@ -103,8 +103,8 @@ export default function CreateRoomPage() {
                     physical_location: sessionMode === 'in_person' ? physicalLocation : null,
                     location_note: sessionMode === 'in_person' ? locationNote : null,
                     max_members: maxMembers,
-                    is_paid: false, // Force free for MVP
-                    price: 0,
+                    is_paid: isPaid,
+                      price: isPaid ? price : 0,
                     commission_rate: 0.1,
                     course_code: roomType === 'Study' ? courseCode : null,
                     faculty: faculty || null,
@@ -413,16 +413,27 @@ export default function CreateRoomPage() {
                                 </div>
 
                                 {/* Pricing */}
-                                <div className="space-y-4 opacity-50 relative">
+                                <div className="space-y-4">
                                     <div className="flex items-center gap-3">
-                                        <input type="checkbox" id="isPaid" disabled checked={false}
-                                            className="w-5 h-5 rounded bg-white/5 border-white/10 text-brand-accent focus:ring-white/30 cursor-not-allowed"
+                                        <input type="checkbox" id="isPaid" checked={isPaid} onChange={(e) => setIsPaid(e.target.checked)}
+                                            className="w-5 h-5 rounded bg-white/5 border-white/10 text-brand-accent focus:ring-white/30 cursor-pointer"
                                         />
-                                        <label htmlFor="isPaid" className="text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
-                                            <DollarSign className="w-4 h-4" /> Paid Session
-                                            <span className="bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded text-[10px] font-black uppercase">Coming Soon</span>
+                                        <label htmlFor="isPaid" className="text-sm font-bold text-gray-200 flex items-center gap-2 cursor-pointer">
+                                            <DollarSign className="w-4 h-4 text-green-500" /> Charge for this Session
                                         </label>
                                     </div>
+                                    {isPaid && (
+                                        <div className="space-y-2 animate-fade-in-up pl-8">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                                                Price (GHS) *
+                                            </label>
+                                            <input type="number" min={5} step={1} required={isPaid} value={price || ''} onChange={(e) => setPrice(Number(e.target.value))}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-brand-accent outline-none transition-all placeholder:text-gray-600"
+                                                placeholder="e.g. 20"
+                                            />
+                                            <p className="text-[11px] text-gray-500">UMaT students can pay to join your session via Mobile Money / Card.</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Submit */}
