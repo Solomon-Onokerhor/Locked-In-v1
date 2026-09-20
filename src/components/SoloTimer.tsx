@@ -7,6 +7,7 @@ import { Play, Pause, Square, Flame, CheckCircle2, Clock, Target, AlertTriangle,
 import { useRouter } from 'next/navigation';
 import type { SoloSession } from '@/types';
 import { useSoloTimer } from '@/lib/SoloTimerContext';
+import { PiPTimer } from './PiPTimer';
 
 const DURATIONS = [25, 45, 60];
 const BREAK_DURATIONS = [5, 10, 15];
@@ -123,24 +124,24 @@ export function SoloTimer() {
 
     const renderSetup = () => (
         <div className="animate-fade-in w-full max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-brand-accent/20 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-                        <Flame className="w-8 h-8 text-brand-accent" />
+            <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                    <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.02)] flex items-center justify-center">
+                        <Flame className="w-7 h-7 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight">Solo Lock-In</h3>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setSoundEnabled(!soundEnabled)}
-                        className={`p-2.5 rounded-xl border transition-all ${soundEnabled ? 'bg-white/10 border-white/20 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all ${soundEnabled ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/10 text-[#888888] hover:text-white hover:bg-white/5'}`}
                         title={soundEnabled ? 'Sound on' : 'Sound off'}
                     >
                         {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                     </button>
                     <button
                         onClick={() => setShowHistory(!showHistory)}
-                        className={`p-2.5 rounded-xl border transition-all ${showHistory ? 'bg-white/10 border-white/20 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                        className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all ${showHistory ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/10 text-[#888888] hover:text-white hover:bg-white/5'}`}
                         title="Session History"
                     >
                         <History className="w-4 h-4" />
@@ -149,42 +150,42 @@ export function SoloTimer() {
             </div>
 
             {showHistory ? renderHistory() : (
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {/* Inputs */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-gray-400 text-sm font-bold ml-1 uppercase tracking-wider">Topic / Subject</label>
+                    <div className="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label className="text-[#888888] text-[10px] font-bold uppercase tracking-widest block mb-2">Topic / Subject</label>
                             <input
                                 type="text"
                                 placeholder="e.g. Calculus, Web Dev"
                                 value={label}
                                 onChange={(e) => setLabel(e.target.value)}
-                                className="w-full glass-panel !border-white/10 !bg-black/30 focus:!bg-black/50 py-3.5 px-4 rounded-xl outline-none focus:ring-2 focus:ring-brand-accent/50 transition-all text-white placeholder:text-gray-600 font-medium"
+                                className="w-full bg-[#050505] border border-white/10 focus:border-white/30 focus:bg-[#0a0a0a] py-3.5 px-4 rounded-xl outline-none transition-all text-white placeholder-white/20 text-sm font-medium shadow-inner"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-gray-400 text-sm font-bold ml-1 uppercase tracking-wider">Session Goal</label>
+                        <div>
+                            <label className="text-[#888888] text-[10px] font-bold uppercase tracking-widest block mb-2">Session Goal</label>
                             <input
                                 type="text"
                                 placeholder="e.g. Finish Chapter 4"
                                 value={goal}
                                 onChange={(e) => setGoal(e.target.value)}
-                                className="w-full glass-panel !border-white/10 !bg-black/30 focus:!bg-black/50 py-3.5 px-4 rounded-xl outline-none focus:ring-2 focus:ring-brand-accent/50 transition-all text-white placeholder:text-gray-600 font-medium"
+                                className="w-full bg-[#050505] border border-white/10 focus:border-white/30 focus:bg-[#0a0a0a] py-3.5 px-4 rounded-xl outline-none transition-all text-white placeholder-white/20 text-sm font-medium shadow-inner"
                             />
                         </div>
                     </div>
 
                     {/* Durations */}
-                    <div className="space-y-3 pt-2">
-                        <label className="text-gray-400 text-sm font-bold ml-1 uppercase tracking-wider text-center block md:text-left">Session Length</label>
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <div className="flex flex-col items-center md:items-start">
+                        <label className="text-[#888888] text-[10px] font-bold uppercase tracking-widest block mb-3">Session Length</label>
+                        <div className="flex items-center gap-1 bg-[#050505] p-1.5 rounded-2xl border border-white/10 w-fit">
                             {DURATIONS.map((d) => (
                                 <button
                                     key={d}
                                     onClick={() => { setDuration(d); setIsCustomDuration(false); }}
-                                    className={`px-6 py-3 rounded-xl text-base font-bold transition-all ${duration === d && !isCustomDuration
-                                        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105 border-transparent'
-                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
+                                    className={`px-5 sm:px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${duration === d && !isCustomDuration
+                                        ? 'bg-white text-black shadow-md'
+                                        : 'text-[#888888] hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {d}m
@@ -200,14 +201,14 @@ export function SoloTimer() {
                                     onChange={(e) => setCustomDurationInput(e.target.value)}
                                     onKeyDown={handleCustomDurationSubmit}
                                     onBlur={() => handleCustomDurationSubmit({ key: 'Enter' })}
-                                    className="w-24 px-4 py-3 rounded-xl bg-black/40 border border-brand-accent text-white text-center font-bold outline-none focus:ring-2 focus:ring-brand-accent"
+                                    className="w-20 px-2 py-2.5 rounded-xl bg-white/10 border border-white text-white text-center text-sm font-bold outline-none shadow-md"
                                 />
                             ) : (
                                 <button
                                     onClick={() => setIsCustomDuration(true)}
-                                    className={`px-6 py-3 rounded-xl text-base font-bold transition-all ${!DURATIONS.includes(duration)
-                                        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105 border-transparent'
-                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
+                                    className={`px-5 sm:px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${!DURATIONS.includes(duration)
+                                        ? 'bg-white text-black shadow-md'
+                                        : 'text-[#888888] hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {!DURATIONS.includes(duration) ? `${duration}m` : 'Custom'}
@@ -217,35 +218,35 @@ export function SoloTimer() {
                     </div>
 
                     {/* Pomodoro Mode Toggle */}
-                    <div className="glass-panel !bg-black/20 p-5 rounded-2xl space-y-4">
+                    <div className="bg-[#050505] border border-white/10 p-5 rounded-2xl space-y-4 shadow-inner">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Coffee className="w-5 h-5 text-amber-400" />
+                                <Coffee className="w-5 h-5 text-white/50" />
                                 <div>
                                     <span className="text-white font-bold text-sm">Pomodoro Mode</span>
-                                    <p className="text-gray-500 text-xs mt-0.5">Work/break cycles for sustained focus</p>
+                                    <p className="text-[#888888] text-xs mt-0.5">Work/break cycles for sustained focus</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setPomodoroEnabled(!pomodoroEnabled)}
-                                className={`relative w-12 h-7 rounded-full transition-all duration-300 ${pomodoroEnabled ? 'bg-amber-500' : 'bg-white/10'}`}
+                                className={`relative w-12 h-7 rounded-full transition-all duration-300 ${pomodoroEnabled ? 'bg-white' : 'bg-white/10'}`}
                             >
-                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${pomodoroEnabled ? 'left-6' : 'left-1'}`} />
+                                <div className={`absolute top-1 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${pomodoroEnabled ? 'bg-black left-6' : 'bg-[#888888] left-1'}`} />
                             </button>
                         </div>
 
                         {pomodoroEnabled && (
-                            <div className="animate-fade-in grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
-                                <div className="space-y-2">
-                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider">Break Length</label>
-                                    <div className="flex gap-2">
+                            <div className="animate-fade-in grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                                <div>
+                                    <label className="text-[#888888] text-[10px] font-bold uppercase tracking-widest block mb-2">Break Length</label>
+                                    <div className="flex items-center gap-1 bg-[#0a0a0a] border border-white/5 p-1 rounded-xl">
                                         {BREAK_DURATIONS.map(bd => (
                                             <button
                                                 key={bd}
                                                 onClick={() => setBreakDuration(bd)}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${breakDuration === bd
-                                                    ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
-                                                    : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10'
+                                                    ? 'bg-white/10 text-white shadow-sm border border-white/10'
+                                                    : 'text-[#888888] hover:text-white hover:bg-white/5 border border-transparent'
                                                     }`}
                                             >
                                                 {bd}m
@@ -253,16 +254,16 @@ export function SoloTimer() {
                                         ))}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider">Rounds</label>
-                                    <div className="flex gap-2">
+                                <div>
+                                    <label className="text-[#888888] text-[10px] font-bold uppercase tracking-widest block mb-2">Rounds</label>
+                                    <div className="flex items-center gap-1 bg-[#0a0a0a] border border-white/5 p-1 rounded-xl">
                                         {[2, 3, 4].map(r => (
                                             <button
                                                 key={r}
                                                 onClick={() => setTotalRounds(r)}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${totalRounds === r
-                                                    ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
-                                                    : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10'
+                                                    ? 'bg-white/10 text-white shadow-sm border border-white/10'
+                                                    : 'text-[#888888] hover:text-white hover:bg-white/5 border border-transparent'
                                                     }`}
                                             >
                                                 {r}x
@@ -275,7 +276,7 @@ export function SoloTimer() {
                     </div>
 
                     {/* Start Button */}
-                    <div className="pt-4">
+                    <div className="pt-2">
                         <button
                             onClick={() => {
                                 if (!session) {
@@ -285,12 +286,16 @@ export function SoloTimer() {
                                 handleStartSequence();
                             }}
                             disabled={!label || !goal}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black text-xl shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:shadow-[0_0_40px_rgba(79,70,229,0.6)] transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group flex items-center justify-center gap-3"
+                            className={`w-full py-4 rounded-2xl font-black text-lg transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3 ${
+                                label && goal 
+                                ? 'bg-white text-black shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]' 
+                                : 'bg-white/5 text-[#888888] border border-white/10 cursor-not-allowed'
+                            }`}
                         >
                             {pomodoroEnabled ? `START ${totalRounds}x POMODORO` : 'START LOCKED IN'}
-                            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className={`w-5 h-5 transition-transform ${label && goal ? 'group-hover:translate-x-1' : ''}`} />
                         </button>
-                        {(!label || !goal) && <p className="text-center text-amber-500/80 text-sm mt-3 font-medium">Please enter a topic and goal to start.</p>}
+                        {(!label || !goal) && <p className="text-center text-[#888888] text-xs font-medium mt-4">Enter a topic and goal to start.</p>}
                     </div>
                 </div>
             )}
@@ -390,46 +395,50 @@ export function SoloTimer() {
     const renderActive = () => {
         const progress = ((duration * 60 - timeLeft) / (duration * 60)) * 100;
         return (
-            <div className="animate-fade-in flex flex-col items-center justify-center w-full relative z-10 py-4">
+            <div className="animate-fade-in flex flex-col items-center justify-center w-full relative z-10 py-6">
                 {/* Minimal Zen Info */}
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                        <span className="px-4 py-1.5 rounded-full bg-brand-accent/20 text-brand-accent font-bold text-sm tracking-widest uppercase border border-brand-accent/30 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                <div className="text-center mb-10">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <span className="px-4 py-1.5 rounded-full bg-white/5 text-white/80 font-bold text-[10px] tracking-[0.2em] uppercase border border-white/10 backdrop-blur-md flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             Locked In
                         </span>
                         {pomodoroEnabled && (
-                            <span className="px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs tracking-wider uppercase border border-amber-500/30">
+                            <span className="px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400/90 font-bold text-[10px] tracking-[0.2em] uppercase border border-amber-500/20 backdrop-blur-md">
                                 Round {pomodoroRound}/{totalRounds}
                             </span>
                         )}
                     </div>
-                    <h2 className="text-3xl font-black text-white mt-4 mb-1">{label}</h2>
-                    <div className="flex items-center justify-center gap-2 text-gray-400 font-medium">
-                        <Target className="w-4 h-4 text-emerald-400" />
-                        <span>Goal: {goal}</span>
+                    <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg mb-2">{label}</h2>
+                    <div className="flex items-center justify-center gap-2 text-white/50 font-medium bg-white/5 px-4 py-1.5 rounded-full border border-white/5 w-max mx-auto">
+                        <Target className="w-4 h-4 text-emerald-400/80" />
+                        <span className="text-sm">Goal: {goal}</span>
                     </div>
                 </div>
 
                 {/* Giant Timer */}
-                <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 flex items-center justify-center mb-10 group">
-                    <div className={`absolute inset-0 bg-brand-accent/10 rounded-full blur-3xl transition-opacity duration-1000 ${isPaused ? 'opacity-30' : 'opacity-80 animate-pulse-glow'}`}></div>
+                <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center mb-12 group">
+                    {/* Inner atmospheric glow */}
+                    <div className={`absolute inset-0 rounded-full blur-[50px] transition-all duration-1000 ${isPaused ? 'bg-amber-500/10' : 'bg-white/5 animate-pulse-glow'}`}></div>
 
-                    <svg className="w-full h-full absolute -rotate-90 transform drop-shadow-2xl" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="46" fill="transparent" stroke="rgba(255,255,255,0.03)" strokeWidth="2" />
+                    <svg className="w-full h-full absolute -rotate-90 transform" viewBox="0 0 100 100">
+                        {/* Background Track */}
+                        <circle cx="50" cy="50" r="45" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                        {/* Progress Track */}
                         <circle
-                            cx="50" cy="50" r="46"
+                            cx="50" cy="50" r="45"
                             fill="none"
-                            stroke={isPaused ? "#f59e0b" : "#3b82f6"}
-                            strokeWidth="3"
+                            stroke={isPaused ? "#fbbf24" : "#ffffff"}
+                            strokeWidth="4"
                             strokeLinecap="round"
-                            strokeDasharray="289"
-                            strokeDashoffset={289 - (289 * progress) / 100}
+                            strokeDasharray="282.7"
+                            strokeDashoffset={282.7 - (282.7 * progress) / 100}
                             className="transition-all duration-1000 ease-linear"
                         />
                     </svg>
 
-                    <div className="flex flex-col items-center justify-center font-mono z-10 w-full">
-                        <span className={`text-6xl md:text-7xl font-light tracking-tighter tabular-nums transition-colors ${isPaused ? 'text-amber-400' : 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]'}`}>
+                    <div className="flex flex-col items-center justify-center font-mono z-10 w-full mt-2">
+                        <span className={`text-7xl md:text-8xl font-light tracking-tighter tabular-nums transition-colors duration-500 ${isPaused ? 'text-amber-400 drop-shadow-md' : 'text-white drop-shadow-lg'}`}>
                             {formatTime(timeLeft)}
                         </span>
                     </div>
@@ -437,36 +446,47 @@ export function SoloTimer() {
 
                 {/* Controls */}
                 {showQuitConfirm ? (
-                    <div className="flex flex-col items-center gap-4 bg-red-500/10 p-5 rounded-3xl border border-red-500/30 animate-fade-in-up md:w-auto w-[90%]">
+                    <div className="flex flex-col items-center gap-4 bg-red-500/10 p-6 rounded-3xl border border-red-500/30 backdrop-blur-xl shadow-2xl animate-fade-in-up w-full max-w-sm mx-auto">
                         <p className="text-white font-bold text-center">Are you sure? This logs as a failed session!</p>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <button onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }} className="px-4 py-3 bg-red-500 hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all w-full sm:w-auto text-sm">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                            <button onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }} className="flex-1 px-4 py-3.5 bg-red-500 hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.4)] text-white font-bold rounded-xl transition-all text-sm uppercase tracking-wider">
                                 Yes, I'm a loser
                             </button>
-                            <button onClick={() => setShowQuitConfirm(false)} className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all border border-white/20 w-full sm:w-auto text-sm">
-                                Nevermind, lock in
+                            <button onClick={() => setShowQuitConfirm(false)} className="flex-1 px-4 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10 text-sm uppercase tracking-wider">
+                                Nevermind
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        
+                        {/* Play/Pause Button */}
                         <button
                             onClick={() => setIsPaused(!isPaused)}
-                            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${isPaused
-                                ? 'bg-amber-500 hover:bg-amber-400 text-brand-primary shadow-[0_0_20px_rgba(251,191,36,0.5)] scale-110'
-                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:scale-105'
+                            className={`w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md ${isPaused
+                                ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_30px_rgba(251,191,36,0.4)] scale-110'
+                                : 'bg-white hover:bg-gray-100 text-black shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105'
                                 }`}
                         >
-                            {isPaused ? <Play className="w-7 h-7 fill-current ml-1" /> : <Pause className="w-7 h-7 fill-current" />}
+                            {isPaused ? <Play className="w-8 h-8 fill-current ml-1" /> : <Pause className="w-8 h-8 fill-current" />}
                         </button>
 
-                        <button
-                            onClick={() => setShowQuitConfirm(true)}
-                            className="flex items-center gap-2 px-6 py-4 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold transition-all hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-                        >
-                            <XCircle className="w-5 h-5" />
-                            Are you a loser? Quit early
-                        </button>
+                        {/* Secondary Controls Group */}
+                        <div className="flex items-center gap-2 bg-white/5 rounded-full p-2 border border-white/5 backdrop-blur-md">
+                            <div className="px-2">
+                                <PiPTimer />
+                            </div>
+                            
+                            <div className="w-px h-6 bg-white/10"></div>
+                            
+                            <button
+                                onClick={() => setShowQuitConfirm(true)}
+                                className="flex items-center justify-center w-10 h-10 rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
+                                title="Quit Session Early"
+                            >
+                                <XCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

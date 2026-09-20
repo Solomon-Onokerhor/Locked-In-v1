@@ -2,18 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check, Users, Trophy, Settings } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Library, LogOut, User, ExternalLink, Shield, Share2, Check, Users, Trophy, Settings, Timer } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { SettingsModal } from './SettingsModal';
 import { supabase } from '@/lib/supabase';
 
 const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home, tourId: 'nav-dashboard' },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, tourId: 'nav-leaderboard' },
-    { href: '/buddies', label: 'Buddies', icon: Users, tourId: 'nav-buddies' },
-    { href: '/create-room', label: 'Host Room', icon: PlusCircle, tourId: 'nav-host' },
-    { href: '/resources', label: 'Resources', icon: Library, tourId: 'nav-resources' },
+    { href: '/', label: 'Dashboard', icon: Home, tourId: 'nav-dashboard', hideOnMobile: false },
+    { href: '/solo', label: 'Go Solo', icon: Timer, tourId: 'nav-solo', hideOnMobile: false },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, tourId: 'nav-leaderboard', hideOnMobile: false },
+    { href: '/buddies', label: 'Buddies', icon: Users, tourId: 'nav-buddies', hideOnMobile: false },
+    { href: '/create-room', label: 'Host Room', icon: PlusCircle, tourId: 'nav-host', hideOnMobile: true },
+    { href: '/resources', label: 'Resources', icon: Library, tourId: 'nav-resources', hideOnMobile: false },
 ];
 
 export function Sidebar() {
@@ -54,6 +55,15 @@ export function Sidebar() {
                 </Link>
                 {isMounted && (
                     <div className="flex items-center gap-2">
+                        {profile?.role === 'admin' && (
+                            <Link
+                                href="/admin"
+                                className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
+                                title="Admin Panel"
+                            >
+                                <Shield className="w-4 h-4 text-brand-accent" />
+                            </Link>
+                        )}
                         <button
                             onClick={() => setIsSettingsOpen(true)}
                             className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center hover:bg-white/10 transition-colors"
@@ -75,7 +85,7 @@ export function Sidebar() {
             {/* ═══ MOBILE: Premium Bottom Tab Bar ═══ */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#000000]/80 backdrop-blur-2xl border-t border-white/[0.05] shadow-[0_-4px_30px_rgba(0,0,0,0.2)]">
                 <div className="flex items-center justify-between px-1 py-1.5 w-full max-w-md mx-auto">
-                    {navItems.map((item) => {
+                    {navItems.filter(item => !item.hideOnMobile).map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
                         return (
@@ -100,21 +110,6 @@ export function Sidebar() {
                             </Link>
                         );
                     })}
-                    {/* Admin tab - only for admins */}
-                    {isMounted && profile?.role === 'admin' && (
-                        <Link
-                            href="/admin"
-                            className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 flex-1 rounded-2xl transition-all duration-300 ${pathname === '/admin'
-                                ? 'text-gray-300 bg-white/10'
-                                : 'text-gray-500 hover:text-gray-400'
-                                }`}
-                        >
-                            <Shield className={`w-5 h-5 sm:w-[22px] sm:h-[22px] transition-transform duration-200 ${pathname === '/admin' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : ''}`} strokeWidth={pathname === '/admin' ? 2.5 : 2} />
-                            <span className={`text-[9px] sm:text-[10px] font-bold tracking-tight text-center w-full truncate px-0.5 ${pathname === '/admin' ? 'text-gray-300' : ''}`}>
-                                Admin
-                            </span>
-                        </Link>
-                    )}
                 </div>
 
                 {/* Safe area spacer for iPhones */}

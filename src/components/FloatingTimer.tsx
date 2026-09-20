@@ -1,31 +1,18 @@
-'use client';
-
-import { useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSoloTimer } from '@/lib/SoloTimerContext';
-import { Play, Pause, Flame, Target, GripHorizontal } from 'lucide-react';
-import Link from 'next/navigation';
 import { PiPTimer } from './PiPTimer';
 
 export function FloatingTimer() {
+    const pathname = usePathname();
     const {
         isTimerVisible,
         timeLeft,
         isPaused,
-        setIsPaused,
-        label,
-        timerState,
-        handleQuitEarly
+        timerState
     } = useSoloTimer();
 
-    const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-
-    // Draggable state
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const isDragging = useRef(false);
-    const startPos = useRef({ x: 0, y: 0 });
-    const startTransform = useRef({ x: 0, y: 0 });
-
-    if (!isTimerVisible) return null;
+    // Hide if not active or if we're on the main solo timer page
+    if (!isTimerVisible || pathname === '/solo') return null;
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -33,136 +20,24 @@ export function FloatingTimer() {
         return `${mins}:${secs}`;
     };
 
-    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-        // Only allow dragging with main mouse button (or touch)
-        if (e.button !== 0 && e.pointerType === 'mouse') return;
-        isDragging.current = true;
-        startPos.current = { x: e.clientX, y: e.clientY };
-        startTransform.current = { ...position };
-        e.currentTarget.setPointerCapture(e.pointerId);
-    };
-
-    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!isDragging.current) return;
-        // Prevent scrolling while dragging on touch devices
-        if (e.pointerType === 'touch') {
-            e.preventDefault();
-        }
-        const dx = e.clientX - startPos.current.x;
-        const dy = e.clientY - startPos.current.y;
-        setPosition({
-            x: startTransform.current.x + dx,
-            y: startTransform.current.y + dy
-        });
-    };
-
-    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-        isDragging.current = false;
-        e.currentTarget.releasePointerCapture(e.pointerId);
-    };
-
     return (
-        <div 
-            className="fixed bottom-24 md:bottom-6 right-6 z-[100]"
-            style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
-        >
-            <div className="glass-panel animate-fade-in-up !bg-black/80 backdrop-blur-2xl border border-white/20 p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-72 flex flex-col gap-3 group">
-                
-                {/* Drag Handle */}
-                <div 
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerCancel={handlePointerUp}
-                    className="w-full flex justify-center -mt-2 -mb-2 py-2 cursor-grab active:cursor-grabbing text-white/30 hover:text-white/60 transition-colors touch-none"
-                >
-                    <GripHorizontal className="w-5 h-5 pointer-events-none" />
-                </div>
-
-                {/* Header = Link back to dashboard */}
-                <a href="/" className="block hover:opacity-80 transition-opacity">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 max-w-[70%]">
-                            <Flame className={`w-4 h-4 ${isPaused ? 'text-amber-500' : 'text-brand-accent animate-pulse'}`} />
-                            <span className="text-white font-bold text-sm truncate">{label || 'Locked In'}</span>
-                        </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/70 bg-brand-accent/10 px-2 py-0.5 rounded">
-                            {timerState === 'BREAK' ? 'BREAK' : 'FOCUS'}
-                        </span>
-                    </div>
-                </a>
-
-                {/* Big Timer / Status */}
-                <div className="flex items-center justify-between mt-1">
-                    <div className={`text-4xl font-light tracking-tighter tabular-nums font-mono ${isPaused ? 'text-amber-400' : timerState === 'COMPLETION' || timerState === 'STATS' ? 'text-emerald-400' : 'text-white'}`}>
-                        {timerState === 'COMPLETION' || timerState === 'STATS' ? 'FINISH' : formatTime(timeLeft)}
-                    </div>
-
-                    <div className="flex gap-2 items-center">
-                        <PiPTimer />
-                        
-                        {(timerState === 'ACTIVE' || timerState === 'BREAK' || timerState === 'COUNTDOWN') && (
-                            <button
-                                onClick={() => setIsPaused(!isPaused)}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPaused
-                                    ? 'bg-amber-500 text-black hover:bg-amber-400 scale-105 shadow-[0_0_15px_rgba(251,191,36,0.5)]'
-                                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                                    }`}
-                            >
-                                {isPaused ? <Play className="w-4 h-4 fill-current ml-0.5" /> : <Pause className="w-4 h-4 fill-current" />}
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* completion/Stats specific UI */}
-                {(timerState === 'COMPLETION' || timerState === 'STATS') && (
-                    <div className="mt-2 space-y-3 animate-fade-in-up">
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
-                            <p className="text-white font-black text-sm">Session Complete! 🎉</p>
-                            <p className="text-emerald-400 text-[10px] font-bold mt-0.5">Time to reflect on your progress</p>
-                        </div>
-                        <a 
-                            href="/"
-                            className="w-full py-2.5 bg-white text-black rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-100 transition-all active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                        >
-                            GO TO REFLECTION
-                        </a>
-                    </div>
-                )}
-
-                {/* Quit intent inside group hover to keep it clean until hovered */}
-                {(timerState === 'ACTIVE' || timerState === 'BREAK') && (
-                    showQuitConfirm ? (
-                        <div className="mt-2 bg-red-500/10 border border-red-500/30 p-3 rounded-xl flex flex-col gap-2 animate-fade-in-up">
-                            <p className="text-white text-xs text-center font-bold">Quit early? This logs as a failure!</p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => { setShowQuitConfirm(false); handleQuitEarly(); }}
-                                    className="flex-1 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 py-1.5 rounded-lg transition-colors shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                                >
-                                    Yes, Quit
-                                </button>
-                                <button
-                                    onClick={() => setShowQuitConfirm(false)}
-                                    className="flex-1 text-[10px] font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 py-1.5 rounded-lg transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="h-0 opacity-0 group-hover:h-8 group-hover:opacity-100 md:group-hover:mt-2 overflow-hidden transition-all duration-300">
-                            <button
-                                onClick={() => setShowQuitConfirm(true)}
-                                className="w-full text-xs font-bold text-red-400/80 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 py-2 rounded-lg transition-colors border border-red-500/20"
-                            >
-                                Quit Session Early
-                            </button>
-                        </div>
-                    )
-                )}
+        <div className="fixed top-20 right-4 md:top-10 md:right-10 z-[100] animate-fade-in-down group flex items-center justify-center gap-3">
+            
+            {/* PiP Button - Only visible on hover, placed on the left so it doesn't go off-screen */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:-mr-1">
+                <PiPTimer />
             </div>
+
+            {/* The Tiny Timer - Just Text */}
+            <a href="/solo" className="flex flex-col items-center cursor-pointer">
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-1 ${isPaused ? 'text-amber-500/70' : 'text-white/30 group-hover:text-white/50 transition-colors'}`}>
+                    {timerState === 'BREAK' ? 'BREAK' : 'FOCUS'}
+                </span>
+                <div className={`text-2xl md:text-3xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-300 ${isPaused ? 'text-amber-400 opacity-80 hover:opacity-100' : 'text-white/70 hover:text-white hover:scale-105'}`}>
+                    {timerState === 'COMPLETION' || timerState === 'STATS' ? 'DONE' : formatTime(timeLeft)}
+                </div>
+            </a>
+            
         </div>
     );
 }

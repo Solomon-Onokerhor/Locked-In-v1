@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Room } from '@/types';
 import Link from 'next/link';
-import { Search, BookOpen, Users, Calendar, ArrowRight, PlusCircle, Trophy } from 'lucide-react';
+import { Search, BookOpen, Users, Calendar, ArrowRight, PlusCircle, Trophy, Award } from 'lucide-react';
 import { RoomCard } from './RoomCard';
-import { SoloTimer } from './SoloTimer';
 
 interface DashboardClientProps {
     initialRooms: Room[];
@@ -136,15 +135,15 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                         </div>
                     </header>
 
-                    {/* Quick Stats Row — horizontal on mobile, stacked on desktop sidebar */}
-                    <div className="grid grid-cols-2 md:hidden gap-3">
-                        <div onClick={() => router.push('/buddies')} className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform">
+                    {/* Quick Stats Row & Leaderboard */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div onClick={() => router.push('/buddies')} className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 flex items-center gap-3 cursor-pointer hover:bg-white/5 active:scale-95 transition-all">
                             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
                                 <Users className="w-5 h-5 text-[#888888]" />
                             </div>
                             <div>
-                                <span className="text-white text-xl font-black block leading-none">{profile ? profile.study_buddies : '0'}</span>
-                                <span className="text-[#888888] text-[10px] font-bold uppercase">Buddies</span>
+                                <span className="text-white text-xl font-black block leading-none">{profile?.study_buddies || '0'}</span>
+                                <span className="text-[#888888] text-[10px] font-bold uppercase mt-1 block">Buddies</span>
                             </div>
                         </div>
                         <div className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 flex items-center gap-3">
@@ -152,85 +151,47 @@ export function DashboardClient({ initialRooms }: DashboardClientProps) {
                                 <Trophy className="w-5 h-5 text-amber-400" />
                             </div>
                             <div>
-                                <span className="text-white text-xl font-black block leading-none">{profile ? profile.focus_score || 0 : '0'}</span>
-                                <span className="text-[#888888] text-[10px] font-bold uppercase">Focus Score</span>
+                                <span className="text-white text-xl font-black block leading-none">{profile?.focus_score || '0'}</span>
+                                <span className="text-[#888888] text-[10px] font-bold uppercase mt-1 block">Focus Score</span>
                             </div>
                         </div>
+                        
+                        <Link href="/leaderboard" className="col-span-2 rounded-xl border border-white/10 bg-[#0a0a0a] p-4 flex items-center justify-between hover:border-white/20 hover:bg-white/5 transition-all group">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                                    <Award className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-white text-sm md:text-base font-bold tracking-tight truncate">Campus Leaderboards</h3>
+                                    <p className="text-[#888888] text-xs truncate">Check your standing</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-[#888888] group-hover:text-white shrink-0 transition-colors" />
+                        </Link>
                     </div>
 
-                    {/* Leaderboard Banner — compact on mobile */}
-                    <Link href="/leaderboard" className="flex items-center justify-between p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/10 bg-[#0a0a0a] hover:border-white/20 transition-colors group">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-xl md:text-2xl">🏆</span>
-                            <div className="min-w-0">
-                                <h3 className="text-white text-sm md:text-xl font-bold tracking-tight truncate">Campus Leaderboards are live!</h3>
-                                <p className="text-[#888888] text-xs md:text-sm hidden md:block">Check out where you stand among your peers.</p>
-                            </div>
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-[#888888] group-hover:text-white shrink-0 transition-colors" />
-                    </Link>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                        {/* Timer Card — less padding on mobile */}
-                        <div className="col-span-1 lg:col-span-2 rounded-2xl border border-white/10 bg-[#0d0d0d] p-4 md:p-8 flex flex-col gap-4 md:gap-6" data-tour="solo-timer">
-                            <SoloTimer />
-                        </div>
-
-                        {/* Right Column Cards — hidden on mobile (shown as compact row above) */}
-                        <div className="hidden md:flex col-span-1 flex-col gap-6">
-                            <div onClick={() => router.push('/buddies')} className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between cursor-pointer group hover:border-white/40 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Buddies</h3>
-                                    <Users className="w-6 h-6 text-[#888888]" />
-                                </div>
-                                <div className="flex flex-col gap-1 mt-4">
-                                    <span className="text-white text-4xl font-black">{profile ? profile.study_buddies : '0'}</span>
-                                    <span className="text-[#888888] text-sm">Study Buddies</span>
-                                </div>
-                                <button className="mt-6 w-full py-2.5 rounded-lg border border-white/20 text-white text-sm font-bold hover:bg-white/10 transition-colors">
-                                    Find Buddies
-                                </button>
-                            </div>
-                            <div className="flex-1 rounded-2xl border border-white/20 bg-[#0d0d0d] p-6 flex flex-col justify-between">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-white text-lg font-bold uppercase tracking-wider">Focus Score</h3>
-                                    <Trophy className="w-6 h-6 text-amber-400" />
-                                </div>
-                                <div className="flex flex-col gap-1 mt-4">
-                                    <span className="text-white text-4xl font-black">{profile ? profile.focus_score || 0 : '0'}</span>
-                                    <span className="text-[#888888] text-sm">Total points earned</span>
-                                </div>
-                                <div className="flex gap-1.5 mt-6 h-2">
-                                    {[...Array(5)].map((_, i) => (
-                                        <div key={i} className={`flex-1 rounded-full ${i < ((profile?.focus_score || 0) / 10) % 5 ? 'bg-amber-400' : 'bg-white/10'}`}></div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Room Browser */}
+                    {/* Room Browser Controls */}
                     <div className="flex flex-col gap-4 md:gap-6" data-tour="room-tabs">
-                        <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-4 gap-4">
-                            <div className="flex items-center gap-4 md:gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto scrollbar-hide bg-[#0a0a0a] border border-white/10 p-1.5 rounded-xl">
                                 {['all', 'study', 'skill', 'my_rooms', 'upcoming'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab as any)}
-                                        className={`text-xs md:text-sm font-bold pb-4 -mb-[18px] transition-colors whitespace-nowrap ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-[#888888] hover:text-white'}`}
+                                        className={`px-4 py-2 text-xs md:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white/10 text-white shadow-sm' : 'text-[#888888] hover:text-white hover:bg-white/5'}`}
                                     >
                                         {tab === 'my_rooms' ? 'My Rooms' : tab === 'upcoming' ? 'Upcoming' : tab === 'all' ? 'All Rooms' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
                                 ))}
                             </div>
-                            <div className="relative w-full md:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
+                            <div className="relative w-full md:w-64 group">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888] group-focus-within:text-white transition-colors" />
                                 <input
                                     type="text"
                                     placeholder="Search rooms..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full h-10 pl-9 pr-4 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder-[#888888] transition-colors"
+                                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#0a0a0a] border border-white/10 text-white text-sm focus:outline-none focus:border-white/30 focus:bg-white/5 placeholder-[#888888] transition-all"
                                 />
                             </div>
                         </div>
