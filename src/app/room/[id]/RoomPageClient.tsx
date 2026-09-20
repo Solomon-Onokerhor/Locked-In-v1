@@ -29,7 +29,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    // Must be at the top level Ã¢â‚¬â€ cannot be after an early return (Rules of Hooks)
+    // Must be at the top level ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â cannot be after an early return (Rules of Hooks)
     const [now, setNow] = useState(new Date());
 
     // Removal of mandatory redirect to allow preview mode
@@ -206,7 +206,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     };
 
     const handleShare = () => {
-        const text = `Ã°Å¸Å¡Â¨ I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\nÃ°Å¸â€™Â¡ ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\nÃ°Å¸â€”â€œÃ¯Â¸Â ${new Date(room?.date_time || '').toLocaleString()}\\n\\nÃ¢Å¡Â¡ Spots are limited Ã¢â‚¬â€ lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
+        const text = `ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â¨ I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\nÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\nÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Å“ÃƒÂ¯Ã‚Â¸Ã‚Â ${new Date(room?.date_time || '').toLocaleString()}\\n\\nÃƒÂ¢Ã…Â¡Ã‚Â¡ Spots are limited ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
@@ -336,7 +336,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
 
                             {membership && room.session_mode === 'virtual' && room.meeting_link && canAccessLink && (
                                 <a
-                                    href={room.meeting_link}
+                                    href={room.meeting_link + '#config.disableDeepLinking=true'}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full py-4 px-8 rounded-full bg-brand-accent text-brand-primary text-lg font-black tracking-wide hover:scale-105 active:scale-95 transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
