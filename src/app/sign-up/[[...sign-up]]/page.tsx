@@ -11,7 +11,6 @@ type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searchin
 
 export default function SignUpPage() {
   const { signUp } = useSignUp()
-  const { isLoaded: authLoaded } = useAuth()
   const router = useRouter()
 
   const [firstName, setFirstName] = useState('')
@@ -25,7 +24,7 @@ export default function SignUpPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [verifying, setVerifying] = useState(false)
 
-  const isLoading = !authLoaded
+  const isLoading = false
 
   // OTP input refs
   const inputRefs = [
