@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { useSignIn } from '@clerk/nextjs'
+import { useSignIn, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -10,6 +10,7 @@ import { GrokBot } from '@/components/grok-bot'
 type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'excited' | 'angry' | 'suspicious'
 
 export default function SignInPage() {
+  const clerk = useClerk()
   const { signIn, errors, fetchStatus } = useSignIn()
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -26,30 +27,39 @@ export default function SignInPage() {
       setGlobalError('Clerk is still loading or failed to load. Please refresh.')
       return
     }
-    setAvatarAnimation('thinking')
     
     try {
-      if ((signIn as any).authenticateWithRedirect) {
-        setAvatarAnimation('thinking')
-        await (signIn as any).authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: '/sso-callback',
-          redirectUrlComplete: '/'
-        })
-        return
-      }
-
       const result = await signIn.sso({
         strategy: 'oauth_google',
         redirectUrl: '/',
         redirectCallbackUrl: '/sso-callback'
       }) as any
+      
       if (result && result.error) {
         setAvatarAnimation('angry')
         setGlobalError(result.error.longMessage || result.error.message || 'SSO Failed')
+        return
+      }
+
+      // If we reach here, sso() didn't throw and didn't redirect.
+      // This means the user is either already signed in, or the browser blocked the redirect.
+      // Let's force a redirect or finalize the session.
+      if (signIn.status === 'complete') {
+        setAvatarAnimation('excited')
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/')
+            if (url.startsWith('http')) {
+              window.location.href = url
+            } else {
+              router.push(url)
+            }
+          }
+        })
       } else {
+        // If it's not complete, and didn't redirect... something is very wrong.
         setAvatarAnimation('angry')
-        setGlobalError('No error but no redirect? Result: ' + JSON.stringify(result) + ' (authWithRedirect=' + typeof (signIn as any).authenticateWithRedirect + ')')
+        setGlobalError('SSO initiated but no redirect occurred. Status: ' + signIn.status)
       }
     } catch (err: any) {
       setAvatarAnimation('angry')
