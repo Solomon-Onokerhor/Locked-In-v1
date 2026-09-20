@@ -161,23 +161,26 @@ export default function SignInPage() {
 
     try {
       // 1. Create a sign in context with the email
-      await signIn.create({ 
-        strategy: 'reset_password_email_code',
-        identifier: email 
-      })
+      const { error: createError } = await signIn.create({ identifier: email })
 
-      // If create() was successful, the code is sent automatically via the strategy.
-      // We don't need to call sendCode() again.
-      
+      if (createError) {
+        if (createError.code === 'form_identifier_not_found') {
+          setGlobalError("We couldn't find an account with that email address.")
+        } else {
+          setGlobalError(createError.message || 'An error occurred.')
+        }
+        setAvatarAnimation('thinking')
+        return
+      }
+
+      // 2. Send the password reset code
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode()
+      if (sendError) throw sendError
+
       setStep('resetPassword')
       setCode(['', '', '', '', '', '']) // reset code
     } catch (err: any) {
-      if (err.errors && err.errors[0]?.code === 'form_identifier_not_found') {
-        setGlobalError("We couldn't find an account with that email address.")
-        setAvatarAnimation('thinking')
-      } else {
-        handleError(err)
-      }
+      handleError(err)
     } finally {
       setIsLoading(false)
     }
