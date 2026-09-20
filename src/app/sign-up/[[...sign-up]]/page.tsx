@@ -50,14 +50,38 @@ export default function SignUpPage() {
     setAvatarAnimation('thinking')
     
     try {
-      const { error } = await signUp.sso({
+      const result = await signUp.sso({
         strategy: 'oauth_google',
         redirectUrl: '/',
         redirectCallbackUrl: '/sso-callback'
-      })
-      if (error) {
+      }) as any
+      
+      if (result && result.error) {
         setAvatarAnimation('sad')
-        setErrorMsg(error.longMessage || error.message || 'SSO Failed')
+        setErrorMsg(result.error.longMessage || result.error.message || 'SSO Failed')
+        return
+      }
+
+      if (signUp.status === 'complete') {
+        setAvatarAnimation('excited')
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/')
+            if (url.startsWith('http')) {
+              window.location.href = url
+            } else {
+              router.push(url)
+            }
+          }
+        })
+      } else if (signUp.status === 'missing_requirements') {
+        const redirectUrl = signUp.verifications?.externalAccount?.externalVerificationRedirectURL?.href
+        if (redirectUrl) {
+          window.location.href = redirectUrl
+        } else {
+          setAvatarAnimation('sad')
+          setErrorMsg('SSO initiated but no redirect URL was returned by Clerk.')
+        }
       }
     } catch (err) {
       setAvatarAnimation('sad')

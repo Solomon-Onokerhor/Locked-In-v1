@@ -56,10 +56,21 @@ export default function SignInPage() {
             }
           }
         })
+      } else if (signIn.status === 'needs_first_factor') {
+        // Force manual redirect to Google if Clerk's automatic redirect failed
+        const redirectUrl = signIn.firstFactorVerification?.externalVerificationRedirectURL?.href
+        if (redirectUrl) {
+          window.location.href = redirectUrl
+        } else {
+          setAvatarAnimation('angry')
+          setGlobalError('SSO initiated but no redirect URL was returned by Clerk.')
+        }
       } else {
-        // If it's not complete, and didn't redirect... something is very wrong.
+        // If it's not complete or needs_first_factor, something is very wrong.
         setAvatarAnimation('angry')
-        setGlobalError('SSO initiated but no redirect occurred. Status: ' + signIn.status)
+        const keys = result ? Object.keys(result).join(',') : 'none'
+        const proto = result && result.__proto__ ? Object.keys(result.__proto__).join(',') : 'none'
+        setGlobalError(`SSO initiated but no redirect. Status: ${signIn.status}. Keys: ${keys}. Proto: ${proto}`)
       }
     } catch (err: any) {
       setAvatarAnimation('angry')
