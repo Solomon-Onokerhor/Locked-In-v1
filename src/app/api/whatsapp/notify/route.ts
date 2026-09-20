@@ -50,12 +50,22 @@ export async function POST(req: NextRequest) {
     }
 
     const { Resend } = await import('resend');
+    const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
         from: 'Locked In <hello@contact.lockedinumat.tech>',
         to: [emailAddress],
         subject,
-        text: message
+        react: NotificationEmail({
+            previewText: subject,
+            title: 'LOCKED IN',
+            heading: subject,
+            bodyParagraphs: [message],
+            primaryAction: event_type === 'ROOM_JOINED' ? undefined : {
+                text: 'View Dashboard',
+                url: 'https://lockedinumat.tech/'
+            }
+        }) as React.ReactElement
     });
     
     return NextResponse.json({ success: true, result });

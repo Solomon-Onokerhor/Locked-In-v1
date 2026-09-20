@@ -58,14 +58,26 @@ export async function POST(req: NextRequest) {
             // 4. Send Email Notification to the person who ORIGINALLY sent the request
             if (senderEmail) {
                 const { Resend } = await import('resend');
+                const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
                 const resend = new Resend(process.env.RESEND_API_KEY);
-                const message = `Great news! ${receiverName} accepted your Study Buddy request on Locked-In!`;
                 // Fire and forget so we don't block
                 resend.emails.send({
                     from: 'Locked In <hello@contact.lockedinumat.tech>',
                     to: [senderEmail],
                     subject: `✅ ${receiverName} accepted your buddy request!`,
-                    text: message
+                    react: NotificationEmail({
+                        previewText: `${receiverName} is now your study buddy!`,
+                        title: 'LOCKED IN',
+                        heading: 'Request Accepted! ✅',
+                        bodyParagraphs: [
+                            `Great news! ${receiverName} accepted your Study Buddy request on Locked-In!`,
+                            `You can now see their focus sessions and hold each other accountable.`
+                        ],
+                        primaryAction: {
+                            text: 'View Buddies',
+                            url: 'https://lockedinumat.tech/buddies'
+                        }
+                    }) as React.ReactElement
                 }).catch(console.error);
             }
         }

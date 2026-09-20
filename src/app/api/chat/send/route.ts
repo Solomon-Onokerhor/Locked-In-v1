@@ -58,9 +58,8 @@ export async function POST(req: NextRequest) {
           .eq('room_id', roomId)
           .neq('user_id', userId);
 
-        const emailMsg = `Host just posted:\n\n"${announcementBody}"\n\nView room: https://lockedinumat.tech/room/${roomId}`;
-        
         const { Resend } = await import('resend');
+        const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         for (const member of members || []) {
@@ -71,7 +70,19 @@ export async function POST(req: NextRequest) {
             from: 'Locked In <hello@contact.lockedinumat.tech>',
             to: [email],
             subject: `📢 Announcement from ${room.title}`,
-            text: emailMsg
+            react: NotificationEmail({
+                previewText: `New announcement in ${room.title}`,
+                title: 'LOCKED IN',
+                heading: `Announcement from ${room.title} 📢`,
+                bodyParagraphs: [
+                    'The room host just posted a new announcement:',
+                    `"${announcementBody}"`
+                ],
+                primaryAction: {
+                    text: 'View Room',
+                    url: `https://lockedinumat.tech/room/${roomId}`
+                }
+            }) as React.ReactElement
           }).catch(e =>
             console.error(`[Chat/Announce] Failed to email ${email}:`, e)
           );

@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
     let successCount = 0;
     let failCount = 0;
     const { Resend } = await import('resend');
+    const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Send messages sequentially to avoid rate limits
@@ -58,7 +59,12 @@ export async function POST(req: NextRequest) {
                     from: 'Locked In <hello@contact.lockedinumat.tech>',
                     to: [user.email],
                     subject: `Locked In Admin Broadcast`,
-                    text: message
+                    react: NotificationEmail({
+                        previewText: 'New announcement from Locked In admins',
+                        title: 'LOCKED IN',
+                        heading: 'Admin Announcement 📢',
+                        bodyParagraphs: [message]
+                    }) as React.ReactElement
                 });
                 successCount++;
             } catch (err) {

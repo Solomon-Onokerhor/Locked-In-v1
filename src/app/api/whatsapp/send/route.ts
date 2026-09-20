@@ -62,12 +62,29 @@ export async function POST(req: NextRequest) {
     }
 
     const { Resend } = await import('resend');
+    const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
         from: 'Locked In <hello@contact.lockedinumat.tech>',
         to: [emailAddress],
         subject,
-        text: message
+        react: NotificationEmail({
+            previewText: 'Session Complete!',
+            title: 'LOCKED IN',
+            heading: 'Locked In! 🔥',
+            bodyParagraphs: [
+                `Awesome job completing ${payload.duration} minutes of focus.`,
+                'Keep up the momentum and log back in to maintain your streak!'
+            ],
+            metadata: [
+                { label: 'Session Goal', value: payload.goal },
+                { label: 'Duration', value: `${payload.duration} minutes` }
+            ],
+            primaryAction: {
+                text: 'View Leaderboard',
+                url: 'https://lockedinumat.tech/leaderboard'
+            }
+        }) as React.ReactElement
     });
     
     return NextResponse.json({ success: true, result });

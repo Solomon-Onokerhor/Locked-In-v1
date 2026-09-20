@@ -69,13 +69,26 @@ export async function POST(req: NextRequest) {
         // 4. Send Email Notification (if available)
         if (receiverEmail) {
             const { Resend } = await import('resend');
+            const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
             const resend = new Resend(process.env.RESEND_API_KEY);
-            const message = `Hey ${receiverName}! ${senderName} just sent you a Nudge! Lock in and keep up the great work!`;
             await resend.emails.send({
                 from: 'Locked In <hello@contact.lockedinumat.tech>',
                 to: [receiverEmail],
                 subject: `👀 ${senderName} just nudged you!`,
-                text: message
+                react: NotificationEmail({
+                    previewText: `${senderName} nudged you to lock in!`,
+                    title: 'LOCKED IN',
+                    heading: 'You got a Nudge! 👀',
+                    bodyParagraphs: [
+                        `Hey ${receiverName}!`,
+                        `${senderName} just sent you a Nudge!`,
+                        `Lock in and keep up the great work!`
+                    ],
+                    primaryAction: {
+                        text: 'Start a Session',
+                        url: 'https://lockedinumat.tech/'
+                    }
+                }) as React.ReactElement
             });
         }
 

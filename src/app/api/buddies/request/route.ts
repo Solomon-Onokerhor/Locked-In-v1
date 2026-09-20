@@ -82,14 +82,27 @@ export async function POST(req: NextRequest) {
         // 5. Send Email safely
         if (receiverEmail) {
             const { Resend } = await import('resend');
+            const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
             const resend = new Resend(process.env.RESEND_API_KEY);
-            const message = `Hey ${receiverName}! ${senderName} just sent you a Study Buddy request on Locked-In!\n\nLog in now to accept their request so you can start tracking each other's progress.`;
             
             await resend.emails.send({
                 from: 'Locked In <hello@contact.lockedinumat.tech>',
                 to: [receiverEmail],
                 subject: `🫂 New Study Buddy Request from ${senderName}`,
-                text: message
+                react: NotificationEmail({
+                    previewText: `${senderName} wants to be your study buddy!`,
+                    title: 'LOCKED IN',
+                    heading: 'New Buddy Request! 🫂',
+                    bodyParagraphs: [
+                        `Hey ${receiverName}!`,
+                        `${senderName} just sent you a Study Buddy request on Locked-In.`,
+                        `Accepting their request will allow you both to track each other's progress and stay accountable.`
+                    ],
+                    primaryAction: {
+                        text: 'View Request',
+                        url: 'https://lockedinumat.tech/buddies'
+                    }
+                }) as React.ReactElement
             });
         }
 

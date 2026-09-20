@@ -36,7 +36,8 @@ export const POST = verifySignatureAppRouter(async (req) => {
         if (type === '15m') {
             const isVirtual = room.session_mode === 'virtual';
             const locationStr = isVirtual ? `Join here: ${room.meeting_link || 'Link on dashboard'}` : `Location: ${room.physical_location || 'See dashboard for details'}`;
-            const message = `⏳ Reminder: '${room.title}' starts in 15 minutes!\n\n${locationStr}\n\nLock in: https://lockedinumat.tech/room/${room.room_id}`;
+            const message = `Reminder: '${room.title}' starts in 15 minutes!\n\n${locationStr}\n\nLock in: https://lockedinumat.tech/room/${room.room_id}`;
+            const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
 
             for (const member of members || []) {
                 const email = (member.profiles as any)?.email;
@@ -46,7 +47,23 @@ export const POST = verifySignatureAppRouter(async (req) => {
                         from: 'Locked In <hello@contact.lockedinumat.tech>',
                         to: [email],
                         subject: `🚨 Starting in 15 mins: ${room.title}`,
-                        text: message
+                        react: NotificationEmail({
+                            previewText: `Your room "${room.title}" starts in 15 minutes!`,
+                            title: 'LOCKED IN',
+                            heading: 'Time to Lock In! ⏳',
+                            bodyParagraphs: [
+                                `Your study session "${room.title}" is starting in exactly 15 minutes.`,
+                                'Get your setup ready, grab some water, and prepare for deep work.'
+                            ],
+                            metadata: [
+                                { label: 'Session Mode', value: room.session_mode === 'virtual' ? 'Virtual' : 'In-Person' },
+                                { label: 'Location/Link', value: room.session_mode === 'virtual' ? (room.meeting_link || 'Link on dashboard') : (room.physical_location || 'See dashboard for details') }
+                            ],
+                            primaryAction: {
+                                text: 'Enter Room',
+                                url: `https://lockedinumat.tech/room/${room.room_id}`
+                            }
+                        }) as React.ReactElement
                     });
                     sentCount++;
                 } catch (e) {
@@ -58,6 +75,7 @@ export const POST = verifySignatureAppRouter(async (req) => {
             const humanDate = startDate.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Accra' });
             const durationStr = room.duration_minutes >= 60 ? `${Math.floor(room.duration_minutes / 60)}h${room.duration_minutes % 60 > 0 ? ` ${room.duration_minutes % 60}m` : ''}` : `${room.duration_minutes} minutes`;
             const locationStr = room.session_mode === 'virtual' ? `Virtual - ${room.meeting_link ?? 'Link on room page'}` : `In-Person - ${room.physical_location ?? 'See room for details'}`;
+            const { NotificationEmail } = await import('@/components/emails/NotificationEmail');
 
             for (const member of members || []) {
                 const email = (member.profiles as any)?.email;
@@ -68,7 +86,24 @@ export const POST = verifySignatureAppRouter(async (req) => {
                         from: 'Locked In <hello@contact.lockedinumat.tech>', 
                         to: [email], 
                         subject: `⏳ Reminder: "${room.title}" is tomorrow!`, 
-                        react: SessionReminderEmail({ attendeeName: name, roomTitle: room.title, dateTime: humanDate, duration: durationStr, location: locationStr, roomUrl: `https://lockedinumat.tech/room/${room.room_id}` }) as React.ReactElement 
+                        react: NotificationEmail({
+                            previewText: `Your room "${room.title}" is happening tomorrow!`,
+                            title: 'LOCKED IN',
+                            heading: `Hey ${name}, ready for tomorrow? 📅`,
+                            bodyParagraphs: [
+                                `This is a reminder that your study session "${room.title}" is scheduled for tomorrow.`,
+                                'Make sure you are well rested and ready to tackle your goals!'
+                            ],
+                            metadata: [
+                                { label: 'Date & Time', value: humanDate },
+                                { label: 'Duration', value: durationStr },
+                                { label: 'Location', value: locationStr }
+                            ],
+                            primaryAction: {
+                                text: 'View Room Details',
+                                url: `https://lockedinumat.tech/room/${room.room_id}`
+                            }
+                        }) as React.ReactElement
                     });
                     sentCount++;
                 } catch (e) {

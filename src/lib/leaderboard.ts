@@ -8,7 +8,7 @@ export async function updateLeaderboardScore(userId: string, focusScore: number,
     await redis.zadd('leaderboard:global', { score, member: userId });
 
     if (faculty) {
-        await redis.zadd("leaderboard:faculty:\", { score, member: userId });
+        await redis.zadd(`leaderboard:faculty:${faculty}`, { score, member: userId });
     }
 }
 
@@ -17,9 +17,7 @@ export async function getGlobalLeaderboard(limit: number = 50) {
     return result;
 }
 
-
 export async function getFacultyLeaderboard(faculty: string, limit: number = 50) {
-    const result = await redis.zrange("leaderboard:faculty:\", 0, limit - 1, { rev: true, withScores: true }) as {member: string, score: number}[];
+    const result = await redis.zrange(`leaderboard:faculty:${faculty}`, 0, limit - 1, { rev: true, withScores: true }) as {member: string, score: number}[];
     return result;
 }
-
