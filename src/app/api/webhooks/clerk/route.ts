@@ -194,12 +194,12 @@ async function handleEmailCreated(data: any) {
     
     let type: any = null;
 
-    if (subjectLower.includes('verification code') || subjectLower.includes('verify')) type = 'verification';
-    else if (subjectLower.includes('reset password') || subjectLower.includes('forgot password')) type = 'reset';
-    else if (subjectLower.includes('account locked')) type = 'locked';
+    if (subjectLower.includes('verification') || subjectLower.includes('verify')) type = 'verification';
+    else if ((subjectLower.includes('reset') || subjectLower.includes('forgot')) && subjectLower.includes('password')) type = 'reset';
+    else if (subjectLower.includes('locked')) type = 'locked';
     else if (subjectLower.includes('password changed')) type = 'password_changed';
     else if (subjectLower.includes('password removed')) type = 'password_removed';
-    else if (subjectLower.includes('email address changed') || subjectLower.includes('primary email')) type = 'email_changed';
+    else if (subjectLower.includes('email') && (subjectLower.includes('changed') || subjectLower.includes('primary'))) type = 'email_changed';
     else if (subjectLower.includes('new device') || subjectLower.includes('sign in from')) type = 'new_device';
     else if (subjectLower.includes('invitation') || subjectLower.includes('invited')) type = 'invitation';
 
