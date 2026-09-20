@@ -1,5 +1,4 @@
-import { Webhook } from 'svix';
-import { headers } from 'next/headers';
+import { verifyWebhook } from '@clerk/nextjs/webhooks';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { resend } from '@/lib/resend';
@@ -19,33 +18,10 @@ import * as React from 'react';
  *   - SUPABASE_SERVICE_ROLE_KEY
  */
 export async function POST(req: Request) {
-    const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-
-    if (!webhookSecret) {
-        console.error('[clerk-webhook] CLERK_WEBHOOK_SECRET is not set');
-        return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
-    }
-
     // --- 1. Verify Svix signature ---
-    const headerPayload = await headers();
-    const svixId = headerPayload.get('svix-id');
-    const svixTimestamp = headerPayload.get('svix-timestamp');
-    const svixSignature = headerPayload.get('svix-signature');
-
-    if (!svixId || !svixTimestamp || !svixSignature) {
-        return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 });
-    }
-
-    const body = await req.text();
-
     let event: any;
     try {
-        const wh = new Webhook(webhookSecret);
-        event = wh.verify(body, {
-            'svix-id': svixId,
-            'svix-timestamp': svixTimestamp,
-            'svix-signature': svixSignature,
-        });
+        event = await verifyWebhook(req); // uses CLERK_WEBHOOK_SECRET env var automatically
     } catch (err) {
         console.error('[clerk-webhook] Signature verification failed:', err);
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -62,6 +38,8 @@ export async function POST(req: Request) {
             await handleUserUpdated(data);
         } else if (type === 'user.deleted') {
             await handleUserDeleted(data);
+        } else if (type === 'email.created') {
+            await handleEmailCreated(data);
         }
     } catch (err) {
         console.error(`[clerk-webhook] Error handling event ${type}:`, err);
@@ -188,4 +166,37 @@ async function handleUserDeleted(data: any) {
     }
 
     console.log(`[clerk-webhook] Profile soft-deleted for user: ${userId}`);
+}
+
+async function handleEmailCreated(data: any) {
+    const toEmailAddress = data.to_email_address;
+    const subject = data.subject;
+    const body = data.body;
+    const bodyPlain = data.body_plain;
+    const fromEmailName = data.from_email_name || 'Locked In';
+
+    if (!toEmailAddress) {
+        console.error('[clerk-webhook] email.created → missing to_email_address');
+        return;
+    }
+
+    try {
+        const { error } = await resend.emails.send({
+            from: `${fromEmailName} <hello@contact.lockedinumat.tech>`,
+            to: [toEmailAddress],
+            subject: subject,
+            html: body,
+            text: bodyPlain,
+        });
+
+        if (error) {
+            console.error('[clerk-webhook] email.created → Resend failed:', error);
+            throw error;
+        }
+
+        console.log(`[clerk-webhook] email.created → sent email to ${toEmailAddress}`);
+    } catch (err) {
+        console.error('[clerk-webhook] email.created → error sending email:', err);
+        throw err;
+    }
 }

@@ -1,5 +1,6 @@
 import { createServerClient as createSSRClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { auth } from '@clerk/nextjs/server';
 
 // Server-side Supabase client for use in Server Components/Actions
 export const createServerClient = async () => {
@@ -8,7 +9,20 @@ export const createServerClient = async () => {
     // In Next.js 15+, cookies() is async and must be awaited
     const cookieStore = await cookies();
 
+    // Get Clerk token for Supabase
+    let token: string | null = null;
+    try {
+        const { getToken } = await auth();
+        token = await getToken({ template: 'supabase' });
+    } catch (error) {
+        // Handle gracefully if auth() fails (e.g. static generation)
+        console.warn('Failed to get Clerk auth token for Supabase', error);
+    }
+
     return createSSRClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        },
         cookies: {
             get(name: string) {
                 return cookieStore.get(name)?.value;
