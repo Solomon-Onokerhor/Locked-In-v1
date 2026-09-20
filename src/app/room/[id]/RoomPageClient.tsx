@@ -11,6 +11,8 @@ import {
     AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, CreditCard, Lock, MapPin, Share2, Trash2, Users, Video, Check, Zap, Edit, UserCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import { verifyAndJoinPaidRoom } from '@/actions/payments';
+import { usePaystackPayment } from 'react-paystack';
 import { Chat } from '@/components/Chat';
 import { UserProfileModal } from '@/components/UserProfileModal';
 import type { Profile } from '@/types';
@@ -29,8 +31,18 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [confirmingAttendance, setConfirmingAttendance] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    // Must be at the top level ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â cannot be after an early return (Rules of Hooks)
-    const [now, setNow] = useState(new Date());
+    // Must be at the top level ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â cannot be after an early return (Rules of Hooks)
+        const [now, setNow] = useState(new Date());
+
+    const paystackConfig = {
+        reference: (new Date()).getTime().toString(),
+        email: session?.user?.email || profile?.email || 'user@example.com',
+        amount: room?.price ? room.price * 100 : 0, // pesewas
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    };
+    
+    // @ts-ignore
+    const initializePayment = usePaystackPayment(paystackConfig);
 
     // Removal of mandatory redirect to allow preview mode
     // useEffect(() => {
@@ -96,6 +108,36 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         if (!session || !room) return;
         setLockingIn(true);
         setError(null);
+
+        if (room.is_paid && room.price && room.price > 0) {
+            initializePayment({
+                onSuccess: (response) => {
+                    toast.loading("Verifying payment...");
+                    verifyAndJoinPaidRoom(room.room_id, response.reference, session.user.id)
+                        .then((res) => {
+                            toast.dismiss();
+                            if (res.success) {
+                                toast.success("Payment verified! You are now locked in.");
+                                checkMembership();
+                                fetchMembers();
+                                refreshProfile();
+                            } else {
+                                toast.error(res.error || "Payment verification failed.");
+                            }
+                        })
+                        .catch((e) => {
+                            toast.dismiss();
+                            toast.error("Error verifying payment");
+                        })
+                        .finally(() => setLockingIn(false));
+                },
+                onClose: () => {
+                    toast.error("Payment cancelled.");
+                    setLockingIn(false);
+                }
+            });
+            return;
+        }
 
         try {
             const { data, error: rpcError } = await supabase.rpc('join_room_atomic', {
@@ -206,7 +248,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     };
 
     const handleShare = () => {
-        const text = `ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â¨ I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\nÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\nÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Å“ÃƒÂ¯Ã‚Â¸Ã‚Â ${new Date(room?.date_time || '').toLocaleString()}\\n\\nÃƒÂ¢Ã…Â¡Ã‚Â¡ Spots are limited ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
+        const text = `ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ I just locked in to a ${room?.room_type === 'Skill' ? 'skill-building' : 'study'} session and you need to join!\\n\\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ ${room?.title}${room?.course_code ? ` (${room.course_code})` : ''}\\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${new Date(room?.date_time || '').toLocaleString()}\\n\\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Spots are limited ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â lock in now: ${window.location.protocol}//${window.location.host}/room/${roomId}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
