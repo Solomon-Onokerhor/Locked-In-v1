@@ -29,49 +29,11 @@ export default function SignInPage() {
     }
     
     try {
-      const result = await signIn.sso({
+      await clerk.client.signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: window.location.origin + '/',
-        redirectCallbackUrl: window.location.origin + '/sso-callback'
-      }) as any
-      
-      if (result && result.error) {
-        setAvatarAnimation('angry')
-        setGlobalError(result.error.longMessage || result.error.message || 'SSO Failed')
-        return
-      }
-
-      // If we reach here, sso() didn't throw and didn't redirect.
-      // This means the user is either already signed in, or the browser blocked the redirect.
-      // Let's force a redirect or finalize the session.
-      if (signIn.status === 'complete') {
-        setAvatarAnimation('excited')
-        await signIn.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl('/')
-            if (url.startsWith('http')) {
-              window.location.href = url
-            } else {
-              router.push(url)
-            }
-          }
-        })
-      } else if (signIn.status === 'needs_first_factor') {
-        // Force manual redirect to Google if Clerk's automatic redirect failed
-        const redirectUrl = signIn.firstFactorVerification?.externalVerificationRedirectURL?.href
-        if (redirectUrl) {
-          window.location.href = redirectUrl
-        } else {
-          setAvatarAnimation('angry')
-          setGlobalError('SSO initiated but no redirect URL was returned by Clerk.')
-        }
-      } else {
-        // If it's not complete or needs_first_factor, something is very wrong.
-        setAvatarAnimation('angry')
-        const keys = result ? Object.keys(result).join(',') : 'none'
-        const proto = result && result.__proto__ ? Object.keys(result.__proto__).join(',') : 'none'
-        setGlobalError(`SSO initiated but no redirect. Status: ${signIn.status}. Keys: ${keys}. Proto: ${proto}`)
-      }
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/'
+      })
     } catch (err: any) {
       setAvatarAnimation('angry')
       setGlobalError('Unexpected error: ' + (err.message || JSON.stringify(err)))

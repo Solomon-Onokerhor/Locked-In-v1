@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, type FormEvent } from 'react'
-import { useSignUp } from '@clerk/nextjs'
+import { useSignUp, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GrokBot } from '@/components/grok-bot'
@@ -10,6 +10,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, User } from 'lucide-react'
 type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searching' | 'excited' | 'sad'
 
 export default function SignUpPage() {
+  const clerk = useClerk()
   const { signUp, errors } = useSignUp()
   const router = useRouter()
 
@@ -50,39 +51,11 @@ export default function SignUpPage() {
     setAvatarAnimation('thinking')
     
     try {
-      const result = await signUp.sso({
+      await clerk.client.signUp.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: window.location.origin + '/',
-        redirectCallbackUrl: window.location.origin + '/sso-callback'
-      }) as any
-      
-      if (result && result.error) {
-        setAvatarAnimation('sad')
-        setErrorMsg(result.error.longMessage || result.error.message || 'SSO Failed')
-        return
-      }
-
-      if (signUp.status === 'complete') {
-        setAvatarAnimation('excited')
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl('/')
-            if (url.startsWith('http')) {
-              window.location.href = url
-            } else {
-              router.push(url)
-            }
-          }
-        })
-      } else if (signUp.status === 'missing_requirements') {
-        const redirectUrl = signUp.verifications?.externalAccount?.externalVerificationRedirectURL?.href
-        if (redirectUrl) {
-          window.location.href = redirectUrl
-        } else {
-          setAvatarAnimation('sad')
-          setErrorMsg('SSO initiated but no redirect URL was returned by Clerk.')
-        }
-      }
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/'
+      })
     } catch (err) {
       setAvatarAnimation('sad')
       setErrorMsg('An unexpected error occurred.')
