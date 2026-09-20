@@ -1,5 +1,5 @@
 import { verifyWebhook } from '@clerk/nextjs/webhooks';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { resend } from '@/lib/resend';
 import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
@@ -8,17 +8,15 @@ import { render } from '@react-email/render';
 import * as React from 'react';
 
 /**
- * POST /api/webhooks/clerk
- *
- * Listens for Clerk user lifecycle events and keeps the Supabase `profiles`
- * table in sync. This route is public (listed in middleware) but protected
- * by Svix webhook signature verification.
- *
- * Required env vars:
- *   - CLERK_WEBHOOK_SECRET  (from Clerk Dashboard → Webhooks → Signing Secret)
+ * Webhook handler for Clerk events.
+ * Listens for user.created, user.updated, user.deleted, email.created
+ * 
+ * Required ENV vars:
+ *   - CLERK_WEBHOOK_SECRET
+ *   - NEXT_PUBLIC_SUPABASE_URL
  *   - SUPABASE_SERVICE_ROLE_KEY
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     // --- 1. Verify Svix signature ---
     let event: any;
     try {

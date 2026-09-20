@@ -101,9 +101,10 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
-      const { status } = await signIn.create({ identifier: email, password })
+      const { error } = await signIn.password({ identifier: email, password })
+      if (error) throw error
 
-      if (status === 'complete') {
+      if (signIn.status === 'complete') {
         setAvatarAnimation('excited')
         await signIn.finalize({
           navigate: ({ decorateUrl }) => {
@@ -111,7 +112,7 @@ export default function SignInPage() {
             router.push(url.startsWith('http') ? url : url)
           }
         })
-      } else if (status === 'needs_second_factor') {
+      } else if (signIn.status === 'needs_second_factor') {
         // Handle MFA
         setStep('mfa')
         setAvatarAnimation('searching')
@@ -132,10 +133,10 @@ export default function SignInPage() {
 
     try {
       const codeStr = code.join('')
-      // Usually strategy is totp or phone_code
-      const { status } = await signIn.attemptSecondFactor({ strategy: 'totp', code: codeStr })
+      const { error } = await signIn.mfa.verifyTOTP({ code: codeStr })
+      if (error) throw error
       
-      if (status === 'complete') {
+      if (signIn.status === 'complete') {
         setAvatarAnimation('excited')
         await signIn.finalize({
           navigate: ({ decorateUrl }) => router.push(decorateUrl('/'))
@@ -159,10 +160,15 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
-      await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: email,
-      })
+      // Setup the sign in context with the email
+      const { error: createError } = await signIn.create({ identifier: email })
+      if (createError && createError.code !== 'form_identifier_not_found') {
+         // ignore identifier not found or other non-fatal errors here, let sendCode handle it
+      }
+
+      const { error } = await signIn.resetPasswordEmailCode.sendCode()
+      if (error) throw error
+
       setStep('resetPassword')
       setCode(['', '', '', '', '', '']) // reset code
     } catch (err: any) {
@@ -181,18 +187,19 @@ export default function SignInPage() {
 
     try {
       const codeStr = code.join('')
-      const { status } = await signIn.attemptFirstFactor({
-        strategy: 'reset_password_email_code',
-        code: codeStr,
-        password: newPassword,
-      })
+      
+      const { error: verifyErr } = await signIn.resetPasswordEmailCode.verifyCode({ code: codeStr })
+      if (verifyErr) throw verifyErr
 
-      if (status === 'complete') {
+      const { error: submitErr } = await signIn.resetPasswordEmailCode.submitPassword({ password: newPassword })
+      if (submitErr) throw submitErr
+
+      if (signIn.status === 'complete') {
         setAvatarAnimation('excited')
         await signIn.finalize({
           navigate: ({ decorateUrl }) => router.push(decorateUrl('/'))
         })
-      } else if (status === 'needs_second_factor') {
+      } else if (signIn.status === 'needs_second_factor') {
         setStep('mfa')
         setCode(['', '', '', '', '', ''])
       }
