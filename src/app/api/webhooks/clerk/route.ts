@@ -174,7 +174,9 @@ async function handleEmailCreated(data: any) {
     const subject = data.subject || '';
     let body = data.body;
     let bodyPlain = data.body_plain || '';
-    const fromEmailName = data.from_email_name || 'Locked In';
+    
+    // Always use 'Locked In' instead of Clerk's default which is often 'noreply'
+    const fromEmailName = 'Locked In';
 
     if (!toEmailAddress) {
         console.error('[clerk-webhook] email.created → missing to_email_address');
