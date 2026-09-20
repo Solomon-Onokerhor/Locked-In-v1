@@ -10,7 +10,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, User } from 'lucide-react'
 type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searching' | 'excited' | 'sad'
 
 export default function SignUpPage() {
-  const { signUp, isLoaded } = useSignUp()
+  const { signUp } = useSignUp()
   const { isLoaded: authLoaded } = useAuth()
   const router = useRouter()
 
@@ -25,7 +25,7 @@ export default function SignUpPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [verifying, setVerifying] = useState(false)
 
-  const isLoading = !isLoaded || !authLoaded
+  const isLoading = !authLoaded
 
   // OTP input refs
   const inputRefs = [
