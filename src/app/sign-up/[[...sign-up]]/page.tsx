@@ -49,7 +49,6 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (!signUp) return
-    setAvatarAnimation('thinking')
     setIsGoogleLoading(true)
     
     try {
@@ -237,6 +236,7 @@ export default function SignUpPage() {
 
                 {/* Google OAuth */}
                 <button
+                  type="button"
                   onClick={handleGoogleSignUp}
                   disabled={isGoogleLoading || isLoading}
                   className="w-full flex items-center justify-center gap-3 bg-white text-black rounded-xl py-3 px-4 font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
