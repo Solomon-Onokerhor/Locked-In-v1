@@ -10,9 +10,9 @@ export async function verifyAndJoinPaidRoom(roomId: string, reference: string, u
 
     try {
         // 1. Verify with Paystack API
-        const paystackRes = await fetch(https://api.paystack.co/transaction/verify/ + reference, {
+        const paystackRes = await fetch('https://api.paystack.co/transaction/verify/' + reference, {
             headers: {
-                Authorization: Bearer 
+                Authorization: 'Bearer ' + process.env.PAYSTACK_SECRET_KEY
             }
         });
         const paystackData = await paystackRes.json();
@@ -38,7 +38,7 @@ export async function verifyAndJoinPaidRoom(roomId: string, reference: string, u
             return { success: false, error: 'Insufficient payment amount.' };
         }
 
-        // 3. Record Transaction (Requires the schema update eference text UNIQUE)
+        // 3. Record Transaction (Requires the schema update `reference text UNIQUE`)
         const { error: txError } = await supabase
             .from('transactions')
             .insert({
@@ -70,7 +70,7 @@ export async function verifyAndJoinPaidRoom(roomId: string, reference: string, u
             return { success: false, error: joinData?.error || 'Failed to join room after payment.' };
         }
 
-        revalidatePath(/room/ + roomId);
+        revalidatePath('/room/' + roomId);
         return { success: true };
 
     } catch (error: any) {
