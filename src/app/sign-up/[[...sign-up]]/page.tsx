@@ -52,8 +52,8 @@ export default function SignUpPage() {
     try {
       const result = await signUp.sso({
         strategy: 'oauth_google',
-        redirectUrl: '/',
-        redirectCallbackUrl: '/sso-callback'
+        redirectUrl: window.location.origin + '/',
+        redirectCallbackUrl: window.location.origin + '/sso-callback'
       }) as any
       
       if (result && result.error) {

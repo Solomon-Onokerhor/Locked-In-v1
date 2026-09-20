@@ -31,8 +31,8 @@ export default function SignInPage() {
     try {
       const result = await signIn.sso({
         strategy: 'oauth_google',
-        redirectUrl: '/',
-        redirectCallbackUrl: '/sso-callback'
+        redirectUrl: window.location.origin + '/',
+        redirectCallbackUrl: window.location.origin + '/sso-callback'
       }) as any
       
       if (result && result.error) {
