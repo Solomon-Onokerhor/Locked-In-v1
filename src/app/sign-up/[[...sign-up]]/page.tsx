@@ -55,12 +55,12 @@ export default function SignUpPage() {
     // heavy captcha/bot-protection script blocks the main thread
     setTimeout(async () => {
       try {
-        await clerk.client.signUp.authenticateWithRedirect({
+        await signUp.authenticateWithRedirect({
           strategy: 'oauth_google',
           redirectUrl: '/sso-callback',
           redirectUrlComplete: '/'
         })
-      } catch (err) {
+      } catch (err: any) {
         setIsGoogleLoading(false)
         setAvatarAnimation('sad')
         setErrorMsg('An unexpected error occurred.')

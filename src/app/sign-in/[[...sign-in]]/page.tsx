@@ -80,7 +80,7 @@ export default function SignInPage() {
     setIsGoogleLoading(true)
     setTimeout(async () => {
       try {
-        await clerk.client.signIn.authenticateWithRedirect({
+        await signIn.authenticateWithRedirect({
           strategy: 'oauth_google',
           redirectUrl: '/sso-callback',
           redirectUrlComplete: '/'
