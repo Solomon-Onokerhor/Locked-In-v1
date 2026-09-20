@@ -30,17 +30,19 @@ export default function SignInPage() {
     }
     
     setIsGoogleLoading(true)
-    try {
-      await clerk.client.signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/'
-      })
-    } catch (err: any) {
-      setIsGoogleLoading(false)
-      setAvatarAnimation('angry')
-      setGlobalError('Unexpected error: ' + (err.message || JSON.stringify(err)))
-    }
+    setTimeout(async () => {
+      try {
+        await clerk.client.signIn.authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl: '/sso-callback',
+          redirectUrlComplete: '/'
+        })
+      } catch (err: any) {
+        setIsGoogleLoading(false)
+        setAvatarAnimation('angry')
+        setGlobalError('Unexpected error: ' + (err.message || JSON.stringify(err)))
+      }
+    }, 10)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -51,17 +51,21 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsGoogleLoading(true)
     
-    try {
-      await clerk.client.signUp.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/'
-      })
-    } catch (err) {
-      setIsGoogleLoading(false)
-      setAvatarAnimation('sad')
-      setErrorMsg('An unexpected error occurred.')
-    }
+    // Yield to the browser so the loading spinner paints before Clerk's
+    // heavy captcha/bot-protection script blocks the main thread
+    setTimeout(async () => {
+      try {
+        await clerk.client.signUp.authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl: '/sso-callback',
+          redirectUrlComplete: '/'
+        })
+      } catch (err) {
+        setIsGoogleLoading(false)
+        setAvatarAnimation('sad')
+        setErrorMsg('An unexpected error occurred.')
+      }
+    }, 10)
   }
 
   const handleSubmit = async (e: FormEvent) => {
