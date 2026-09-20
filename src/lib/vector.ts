@@ -2,13 +2,6 @@ import { Index } from '@upstash/vector';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { GoogleGenAI } from '@google/genai';
 
-const index = new Index({
-    url: process.env.UPSTASH_VECTOR_REST_URL!,
-    token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
-});
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export async function upsertProfileVector(userId: string) {
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -22,6 +15,7 @@ export async function upsertProfileVector(userId: string) {
     const text = `${profile.name} is a student in the faculty of ${profile.faculty || 'unknown'}, studying ${profile.programme || 'general'} at level ${profile.level || 'unknown'}. ${profile.courses && profile.courses.length > 0 ? `They are taking courses: ${profile.courses.join(', ')}.` : ''}`;
 
     // Generate embeddings using Gemini
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.embedContent({
         model: 'text-embedding-004',
         contents: text,
@@ -32,6 +26,10 @@ export async function upsertProfileVector(userId: string) {
     }
 
     const vector = response.embeddings[0].values as number[];
+    const index = new Index({
+        url: process.env.UPSTASH_VECTOR_REST_URL!,
+        token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
+    });
 
     await index.upsert({
         id: profile.id,

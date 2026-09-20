@@ -3,19 +3,13 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Index } from '@upstash/vector';
 import { GoogleGenAI } from '@google/genai';
 
-const index = new Index({
-    url: process.env.UPSTASH_VECTOR_REST_URL!,
-    token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
-});
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export async function POST(req: Request) {
     try {
         const { query } = await req.json();
         if (!query) return NextResponse.json({ error: 'Missing query' }, { status: 400 });
 
         // Generate embeddings using Gemini
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const response = await ai.models.embedContent({
             model: 'text-embedding-004',
             contents: query,
@@ -26,6 +20,11 @@ export async function POST(req: Request) {
         }
 
         const vector = response.embeddings[0].values as number[];
+        
+        const index = new Index({
+            url: process.env.UPSTASH_VECTOR_REST_URL!,
+            token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
+        });
 
         // Query Upstash Vector
         const results = await index.query({
