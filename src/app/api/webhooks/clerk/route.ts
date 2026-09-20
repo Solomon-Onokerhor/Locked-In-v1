@@ -6,6 +6,9 @@ import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
 import { ImpeccableEmail } from '@/components/emails/ImpeccableEmail';
 import { render } from '@react-email/render';
 import * as React from 'react';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 /**
  * Webhook handler for Clerk events.
@@ -29,9 +32,20 @@ export async function POST(req: NextRequest) {
     }
 
     const { type, data } = event;
-    console.log(`[clerk-webhook] Received event: ${type}`);
+    const eventId = event.data.id || event.id; // Usually event.id for Svix events
+    console.log(`[clerk-webhook] Received event: ${type} (ID: ${eventId})`);
 
-    // --- 2. Handle events ---
+    // --- 2. Idempotency Check with Redis ---
+    // Webhooks guarantee "at least once" delivery, so we might receive the same event twice.
+    if (eventId) {
+        const isDuplicate = await redis.set(`webhook:clerk:${eventId}`, 'processed', { nx: true, ex: 60 * 60 * 24 * 3 }); // 3 days
+        if (!isDuplicate) {
+            console.log(`[clerk-webhook] Duplicate event ${eventId} detected. Skipping.`);
+            return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+        }
+    }
+
+    // --- 3. Handle events ---
     try {
         if (type === 'user.created') {
             await handleUserCreated(data);

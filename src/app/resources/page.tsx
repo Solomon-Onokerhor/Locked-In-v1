@@ -3,6 +3,9 @@ import { supabase } from '@/lib/supabase';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import ResourcesClient from './ResourcesClient';
 import type { Resource } from '@/types';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 type Props = {
     searchParams: Promise<{ id?: string }>;
@@ -15,22 +18,27 @@ export async function generateMetadata(
     const { id } = await searchParams;
     if (!id) {
         return {
-            title: 'Study Resources — UMaT Notes & Materials | Locked In',
+            title: 'Study Resources - UMaT Notes & Materials | Locked In',
             description: 'Download high-quality study materials, past questions, and resources shared by UMaT engineering and science students in Tarkwa.',
             keywords: ['UMaT study materials', 'UMaT past questions', 'Tarkwa study resources', 'engineering notes Ghana'],
         };
     }
 
-    // Server-side fetching in generateMetadata doesn't currently use getSupabaseServer()
-    // It's using client supabase exported from lib, but since it's SSR context, it works for public data.
-    // For RLS protected data, it should be changed. Let's change it.
     const supabaseServer = await getSupabaseServer();
 
-    const { data: resource } = await supabaseServer
-        .from('resources')
-        .select('*')
-        .eq('resource_id', id)
-        .single();
+    // Cache metadata for 1 hour to save hits for shared links
+    let resource: any = await redis.get(`cache:resource_meta:${id}`);
+    if (!resource) {
+        const { data } = await supabaseServer
+            .from('resources')
+            .select('*')
+            .eq('resource_id', id)
+            .single();
+        resource = data;
+        if (resource) {
+            await redis.set(`cache:resource_meta:${id}`, resource, { ex: 60 * 60 });
+        }
+    }
 
     if (!resource) {
         return {
@@ -59,14 +67,29 @@ export async function generateMetadata(
 }
 
 export default async function ResourcesPage() {
-    const supabaseServer = await getSupabaseServer();
-    // Pre-fetch resources on the server
-    const { data } = await supabaseServer
-        .from('resources')
-        .select('*')
-        .order('created_at', { ascending: false });
+    let initialResources: Resource[] = [];
+    try {
+        const cachedResources = await redis.get<Resource[]>('cache:resources:all');
+        if (cachedResources) {
+            initialResources = cachedResources;
+        } else {
+            const supabaseServer = await getSupabaseServer();
+            // Pre-fetch resources on the server
+            const { data } = await supabaseServer
+                .from('resources')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-    const initialResources = (data as Resource[]) || [];
+            initialResources = (data as Resource[]) || [];
+            
+            if (initialResources.length > 0) {
+                // Cache for 5 minutes
+                await redis.set('cache:resources:all', initialResources, { ex: 300 });
+            }
+        }
+    } catch (e) {
+        console.error('[ResourcesPage] fetch error:', e);
+    }
 
     return <ResourcesClient initialResources={initialResources} />;
 }

@@ -4,9 +4,12 @@ import type { Room } from '@/types';
 import { auth } from '@clerk/nextjs/server';
 import { DashboardClient } from '@/components/DashboardClient';
 import { LandingPage } from '@/components/LandingPage';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export const metadata: Metadata = {
-    title: 'Locked In — Study Together, Level Up Together | UMaT',
+    title: 'Locked In - Study Together, Level Up Together | UMaT',
     description: 'Locked In is the #1 study app for UMaT students in Tarkwa. Form study groups, use Pomodoro timers to track focus time, and stay accountable with your classmates at the University of Mines and Technology.',
     keywords: ['study app for UMaT students', 'UMaT Tarkwa study groups', 'pomodoro timer for engineering students Ghana', 'UMaT study rooms', 'Tarkwa campus study app'],
 };
@@ -19,23 +22,36 @@ export default async function Page() {
         const authResult = await auth();
         userId = authResult.userId;
     } catch (e) {
-        console.error('[page] Clerk auth() failed — rendering as guest:', e);
+        console.error('[page] Clerk auth() failed - rendering as guest:', e);
     }
 
     try {
-        const supabaseServer = await getSupabaseServer();
-        const { data: roomsData } = await supabaseServer
-            .from('rooms')
-            .select(`
-                room_id, room_type, session_mode, title, description, image_url,
-                created_by, date_time, duration_minutes, physical_location, 
-                location_note, max_members, is_paid, price, commission_rate, 
-                status, tags, course_code, created_at
-            `)
-            .eq('status', 'active')
-            .order('created_at', { ascending: false });
+        // 1. Try to get cached rooms from Redis
+        const cachedRooms = await redis.get<Room[]>('cache:rooms:active');
+        
+        if (cachedRooms) {
+            initialRooms = cachedRooms;
+        } else {
+            // 2. Cache miss, fetch from Supabase
+            const supabaseServer = await getSupabaseServer();
+            const { data: roomsData } = await supabaseServer
+                .from('rooms')
+                .select(`
+                    room_id, room_type, session_mode, title, description, image_url,
+                    created_by, date_time, duration_minutes, physical_location, 
+                    location_note, max_members, is_paid, price, commission_rate, 
+                    status, tags, course_code, created_at
+                `)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
 
-        initialRooms = (roomsData as Room[]) || [];
+            initialRooms = (roomsData as Room[]) || [];
+            
+            // 3. Save to Redis with a 1 minute expiration (so it stays fresh)
+            if (initialRooms.length > 0) {
+                await redis.set('cache:rooms:active', initialRooms, { ex: 60 }); 
+            }
+        }
     } catch (e) {
         console.error('[page] Supabase rooms fetch failed:', e);
     }
