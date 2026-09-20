@@ -55,10 +55,10 @@ export default function SignUpPage() {
     // heavy captcha/bot-protection script blocks the main thread
     setTimeout(async () => {
       try {
-        await signUp.authenticateWithRedirect({
+        await signUp.sso({
           strategy: 'oauth_google',
-          redirectUrl: '/sso-callback',
-          redirectUrlComplete: '/'
+          redirectUrl: '/',
+          redirectCallbackUrl: '/sso-callback'
         })
       } catch (err: any) {
         setIsGoogleLoading(false)

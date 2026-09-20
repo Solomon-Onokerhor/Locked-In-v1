@@ -80,10 +80,10 @@ export default function SignInPage() {
     setIsGoogleLoading(true)
     setTimeout(async () => {
       try {
-        await signIn.authenticateWithRedirect({
+        await signIn.sso({
           strategy: 'oauth_google',
-          redirectUrl: '/sso-callback',
-          redirectUrlComplete: '/'
+          redirectUrl: '/',
+          redirectCallbackUrl: '/sso-callback'
         })
       } catch (err: any) {
         setIsGoogleLoading(false)
