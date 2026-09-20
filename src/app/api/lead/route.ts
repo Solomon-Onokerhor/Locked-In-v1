@@ -31,7 +31,7 @@ function normalizeGhanaianNumber(raw: string): string {
 export async function POST(request: NextRequest) {
     try {
         // Rate limit by IP for public endpoint
-        const ip = request.headers.get('x-forwarded-for') ?? request.ip ?? 'anonymous';
+        const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'anonymous';
         const { success } = await leadRateLimit.limit(`lead_${ip}`);
         if (!success) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });

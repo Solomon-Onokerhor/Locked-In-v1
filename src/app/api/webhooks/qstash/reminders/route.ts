@@ -8,7 +8,7 @@ import React from 'react';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const POST = verifySignatureAppRouter(async (req) => {
+export const POST = verifySignatureAppRouter(async (req: Request) => {
     try {
         const body = await req.json();
         const { roomId, type } = body;
