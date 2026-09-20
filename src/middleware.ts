@@ -18,29 +18,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 async function isMaintenanceModeActive(): Promise<boolean> {
-  // Fall back to env var if Supabase isn't configured
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return process.env.MAINTENANCE_MODE === 'true';
-  }
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/app_config?key=eq.maintenance_mode&select=value`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        next: { revalidate: 30 }, // cache for 30 seconds to avoid hammering Supabase
-      }
-    );
-    if (!res.ok) return process.env.MAINTENANCE_MODE === 'true';
-    const rows = await res.json();
-    if (!rows || rows.length === 0) return false;
-    return rows[0].value === 'true';
-  } catch {
-    // On error, fall back to env var
-    return process.env.MAINTENANCE_MODE === 'true';
-  }
+  return process.env.MAINTENANCE_MODE === 'true';
 }
 
 export default clerkMiddleware(async (auth, req) => {
@@ -49,40 +27,14 @@ export default clerkMiddleware(async (auth, req) => {
   // Skip maintenance check for static assets and Next.js internals
   const isAsset = path.startsWith('/_next') || path.startsWith('/api') || path === '/favicon.ico' || path === '/icon.png' || path === '/manifest.json';
 
-  // Maintenance mode — skip assets, the maintenance page, and the admin panel
+  // Maintenance mode - skip assets, the maintenance page, and the admin panel
   if (!isAsset && !path.startsWith('/maintenance') && !path.startsWith('/admin')) {
     const maintenanceActive = await isMaintenanceModeActive();
     if (maintenanceActive) {
-      // Check if user is admin to bypass maintenance
-      const { userId } = await auth();
-      let isAdmin = false;
-      
-      if (userId && SUPABASE_URL && SUPABASE_ANON_KEY) {
-        try {
-          const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=role`,
-            {
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              },
-            }
-          );
-          if (res.ok) {
-            const rows = await res.json();
-            if (rows && rows.length > 0 && rows[0].role === 'admin') {
-              isAdmin = true;
-            }
-          }
-        } catch (e) {
-          console.error("Failed to check admin role for maintenance bypass", e);
-        }
-      }
-
-      if (!isAdmin) {
-        const maintenanceUrl = new URL('/maintenance', req.url);
-        return NextResponse.redirect(maintenanceUrl);
-      }
+      // Simplified bypass: If maintenance mode is hard-enabled via Vercel ENV, 
+      // block access. Admins can bypass by going to /admin directly or toggling the ENV.
+      const maintenanceUrl = new URL('/maintenance', req.url);
+      return NextResponse.redirect(maintenanceUrl);
     }
   }
 
