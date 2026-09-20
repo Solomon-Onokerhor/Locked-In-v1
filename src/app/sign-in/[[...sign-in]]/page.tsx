@@ -1,26 +1,74 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { useSignIn, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'
 import { GrokBot } from '@/components/grok-bot'
 
-type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'excited' | 'angry' | 'suspicious'
+type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'excited' | 'angry' | 'suspicious' | 'searching'
+type Step = 'signIn' | 'forgotPassword' | 'resetPassword' | 'mfa'
 
 export default function SignInPage() {
   const clerk = useClerk()
-  const { signIn, errors, fetchStatus } = useSignIn()
+  const { signIn, errors } = useSignIn()
   const router = useRouter()
+  
+  const [step, setStep] = useState<Step>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [code, setCode] = useState(['', '', '', '', '', ''])
+  
   const [showPassword, setShowPassword] = useState(false)
   const [avatarAnimation, setAvatarAnimation] = useState<AvatarAnimation>('idle')
   const [globalError, setGlobalError] = useState<string | null>(null)
+  const [isLocked, setIsLocked] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+
+  // OTP input refs
+  const inputRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ]
+
+  useEffect(() => {
+    if (step === 'resetPassword' || step === 'mfa') {
+      setAvatarAnimation('searching')
+      // Small timeout to allow DOM to render
+      setTimeout(() => inputRefs[0]?.current?.focus(), 50)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
+
+  const handleError = (err: any) => {
+    setAvatarAnimation('angry')
+    if (err.errors && err.errors.length > 0) {
+      const errorData = err.errors[0]
+      if (errorData.code === 'strategy_for_user_invalid') {
+        setGlobalError("You created this account using Google. Please click 'Continue with Google' above.")
+      } else if (errorData.code?.includes('locked') || errorData.message?.toLowerCase().includes('locked')) {
+        setGlobalError("Your account has been locked due to too many failed attempts. Please reset your password to unlock it.")
+        setIsLocked(true)
+      } else {
+        setGlobalError(errorData.longMessage || errorData.message)
+      }
+    } else if (err instanceof Error) {
+      setGlobalError(err.message)
+    } else {
+      setGlobalError("An unknown error occurred")
+    }
+    setTimeout(() => {
+      setAvatarAnimation('idle')
+    }, 3000)
+  }
 
   const handleGoogleSignIn = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -39,16 +87,71 @@ export default function SignInPage() {
         })
       } catch (err: any) {
         setIsGoogleLoading(false)
-        setAvatarAnimation('angry')
-        setGlobalError('Unexpected error: ' + (err.message || JSON.stringify(err)))
+        handleError(err)
       }
     }, 10)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!signIn) {
-      setGlobalError('Clerk is still loading or failed to load. Please refresh.')
+    if (!signIn) return
+    setGlobalError(null)
+    setIsLocked(false)
+    setAvatarAnimation('thinking')
+    setIsLoading(true)
+
+    try {
+      const { status } = await signIn.create({ identifier: email, password })
+
+      if (status === 'complete') {
+        setAvatarAnimation('excited')
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/')
+            router.push(url.startsWith('http') ? url : url)
+          }
+        })
+      } else if (status === 'needs_second_factor') {
+        // Handle MFA
+        setStep('mfa')
+        setAvatarAnimation('searching')
+      }
+    } catch (err: any) {
+      handleError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signIn) return
+    setGlobalError(null)
+    setAvatarAnimation('thinking')
+    setIsLoading(true)
+
+    try {
+      const codeStr = code.join('')
+      // Usually strategy is totp or phone_code
+      const { status } = await signIn.attemptSecondFactor({ strategy: 'totp', code: codeStr })
+      
+      if (status === 'complete') {
+        setAvatarAnimation('excited')
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => router.push(decorateUrl('/'))
+        })
+      }
+    } catch (err: any) {
+      handleError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signIn || !email) {
+      setGlobalError('Please enter your email address first.')
       return
     }
     setGlobalError(null)
@@ -56,43 +159,92 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await signIn.password({ identifier: email, password })
-      if (error) throw error
-
-      if (signIn.status === 'complete') {
-        setAvatarAnimation('excited')
-        await signIn.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl('/')
-            if (url.startsWith('http')) {
-              window.location.href = url
-            } else {
-              router.push(url)
-            }
-          }
-        })
-      }
+      await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: email,
+      })
+      setStep('resetPassword')
+      setCode(['', '', '', '', '', '']) // reset code
     } catch (err: any) {
-      setAvatarAnimation('angry')
-      if (err.errors && err.errors.length > 0) {
-        const errorData = err.errors[0]
-        if (errorData.code === 'strategy_for_user_invalid') {
-          setGlobalError("You created this account using Google. Please click 'Continue with Google' above.")
-        } else {
-          setGlobalError(errorData.longMessage || errorData.message)
-        }
-      } else if (err instanceof Error) {
-        setGlobalError(err.message)
-      } else {
-        setGlobalError("An unknown error occurred")
-      }
-      setTimeout(() => {
-        setAvatarAnimation('idle')
-      }, 3000)
+      handleError(err)
     } finally {
       setIsLoading(false)
     }
   }
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signIn) return
+    setGlobalError(null)
+    setAvatarAnimation('thinking')
+    setIsLoading(true)
+
+    try {
+      const codeStr = code.join('')
+      const { status } = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code: codeStr,
+        password: newPassword,
+      })
+
+      if (status === 'complete') {
+        setAvatarAnimation('excited')
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => router.push(decorateUrl('/'))
+        })
+      } else if (status === 'needs_second_factor') {
+        setStep('mfa')
+        setCode(['', '', '', '', '', ''])
+      }
+    } catch (err: any) {
+      handleError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Code input handlers
+  const handleCodeChange = (index: number, value: string) => {
+    if (!/^[0-9]?$/.test(value)) return
+    const newCode = [...code]
+    newCode[index] = value
+    setCode(newCode)
+    if (value && index < 5) {
+      inputRefs[index + 1]?.current?.focus()
+    }
+  }
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs[index - 1]?.current?.focus()
+    }
+  }
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pasted.length === 6) {
+      setCode(pasted.split(''))
+      inputRefs[5]?.current?.focus()
+    }
+  }
+
+  // Renders the 6-digit block
+  const renderCodeBlocks = () => (
+    <div className="flex justify-center gap-2" onPaste={handleCodePaste}>
+      {code.map((digit, index) => (
+        <input
+          key={index}
+          ref={inputRefs[index]}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digit}
+          onChange={(e) => handleCodeChange(index, e.target.value)}
+          onKeyDown={(e) => handleCodeKeyDown(index, e)}
+          className="w-12 h-14 text-xl text-center rounded-xl border border-white/20 bg-white/5 text-white focus:border-blue-500 focus:outline-none transition-colors"
+        />
+      ))}
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#F6FAFD] flex flex-col md:flex-row">
@@ -115,122 +267,256 @@ export default function SignInPage() {
 
         <div className="max-w-md w-full mx-auto relative my-auto">
           <div className="bg-[rgba(15,15,15,0.6)] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
-            <div className="mb-6 md:mb-8">
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Welcome back</h1>
-              <p className="text-gray-400 text-sm">Sign in to continue your study session</p>
-            </div>
+            
+            {/* --- BACK BUTTON --- */}
+            {step !== 'signIn' && (
+              <button 
+                onClick={() => {
+                  setStep('signIn')
+                  setGlobalError(null)
+                  setIsLocked(false)
+                }}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to sign in
+              </button>
+            )}
 
-            {/* Google OAuth */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading || isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white text-black rounded-xl py-3 px-4 font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
-            >
-              {isGoogleLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-              )}
-              Continue with Google
-            </button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4 my-6">
-              <div className="h-px bg-white/10 flex-1" />
-              <span className="text-gray-500 text-sm">or</span>
-              <div className="h-px bg-white/10 flex-1" />
-            </div>
-
-            {/* Error banner */}
+            {/* --- ERROR BANNER --- */}
             {globalError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
                 {globalError}
+                {isLocked && step === 'signIn' && (
+                  <button 
+                    onClick={() => setStep('forgotPassword')}
+                    className="block mt-2 font-bold underline"
+                  >
+                    Reset password now
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <div className="relative flex items-center">
-                  <Mail className="absolute left-4 w-5 h-5 text-gray-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      if (avatarAnimation !== 'working') setAvatarAnimation('working')
-                    }}
-                    onFocus={() => setAvatarAnimation('listening')}
-                    onBlur={() => setAvatarAnimation('idle')}
-                    placeholder="Email address"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
+            {/* =======================
+                STEP: SIGN IN
+               ======================= */}
+            {step === 'signIn' && (
+              <>
+                <div className="mb-6 md:mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Welcome back</h1>
+                  <p className="text-gray-400 text-sm">Sign in to continue your study session</p>
                 </div>
-                {errors?.fields?.identifier && (
-                  <p className="text-red-400 text-sm pl-1">{errors.fields.identifier.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-1">
-                <div className="relative flex items-center">
-                  <Lock className="absolute left-4 w-5 h-5 text-gray-500" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (avatarAnimation !== 'suspicious') setAvatarAnimation('suspicious')
-                    }}
-                    onFocus={() => setAvatarAnimation('suspicious')}
-                    onBlur={() => setAvatarAnimation('idle')}
-                    placeholder="Password"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading || isLoading}
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black rounded-xl py-3 px-4 font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  )}
+                  Continue with Google
+                </button>
+
+                <div className="flex items-center gap-4 my-6">
+                  <div className="h-px bg-white/10 flex-1" />
+                  <span className="text-gray-500 text-sm">or</span>
+                  <div className="h-px bg-white/10 flex-1" />
+                </div>
+
+                <form onSubmit={handleSignInSubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="relative flex items-center">
+                      <Mail className="absolute left-4 w-5 h-5 text-gray-500" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (avatarAnimation !== 'working') setAvatarAnimation('working')
+                        }}
+                        onFocus={() => setAvatarAnimation('listening')}
+                        onBlur={() => setAvatarAnimation('idle')}
+                        placeholder="Email address"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="relative flex items-center">
+                      <Lock className="absolute left-4 w-5 h-5 text-gray-500" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value)
+                          if (avatarAnimation !== 'suspicious') setAvatarAnimation('suspicious')
+                        }}
+                        onFocus={() => setAvatarAnimation('suspicious')}
+                        onBlur={() => setAvatarAnimation('idle')}
+                        placeholder="Password"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 text-gray-500 hover:text-gray-300"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button 
+                      type="button"
+                      onClick={() => setStep('forgotPassword')}
+                      className="text-sm text-blue-500 hover:text-blue-400 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 text-gray-500 hover:text-gray-300"
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50 mt-2"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
                   </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <span className="text-gray-400 text-sm">
+                    Don&apos;t have an account?{' '}
+                    <Link href="/sign-up" className="text-blue-500 hover:text-blue-400 transition-colors">
+                      Sign up
+                    </Link>
+                  </span>
                 </div>
-                {errors?.fields?.password && (
-                  <p className="text-red-400 text-sm pl-1">{errors.fields.password.message}</p>
-                )}
+              </>
+            )}
+
+            {/* =======================
+                STEP: FORGOT PASSWORD
+               ======================= */}
+            {step === 'forgotPassword' && (
+              <>
+                <div className="mb-6 md:mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Reset password</h1>
+                  <p className="text-gray-400 text-sm">Enter your email and we&apos;ll send you a 6-digit code to reset your password.</p>
+                </div>
+                
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="relative flex items-center">
+                    <Mail className="absolute left-4 w-5 h-5 text-gray-500" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email address"
+                      required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Reset Code'}
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* =======================
+                STEP: RESET PASSWORD
+               ======================= */}
+            {step === 'resetPassword' && (
+              <>
+                <div className="mb-6 md:mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Check your email</h1>
+                  <p className="text-gray-400 text-sm">We sent a 6-digit code to {email}. Enter it below along with your new password.</p>
+                </div>
+                
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
+                  {renderCodeBlocks()}
+
+                  <div className="relative flex items-center">
+                    <Lock className="absolute left-4 w-5 h-5 text-gray-500" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="New password"
+                      required
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 text-gray-500 hover:text-gray-300"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading || code.join('').length !== 6 || !newPassword}
+                    className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset Password & Sign In'}
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* =======================
+                STEP: MFA (2FA)
+               ======================= */}
+            {step === 'mfa' && (
+              <>
+                <div className="mb-6 md:mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Two-step verification</h1>
+                  <p className="text-gray-400 text-sm">Enter the authentication code generated by your authenticator app.</p>
+                </div>
+                
+                <form onSubmit={handleMfaSubmit} className="space-y-6">
+                  {renderCodeBlocks()}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading || code.join('').length !== 6}
+                    className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify & Sign In'}
+                  </button>
+                </form>
+              </>
+            )}
+
+          </div>
+
+          {/* Badge - Only show on main sign in screen */}
+          {step === 'signIn' && (
+            <div className="mt-6 md:mt-8 flex justify-center">
+              <div className="bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                76+ students already locked in
               </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50 mt-6"
-              >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <span className="text-gray-400 text-sm">
-                Don&apos;t have an account?{' '}
-                <Link href="/sign-up" className="text-blue-500 hover:text-blue-400 transition-colors">
-                  Sign up
-                </Link>
-              </span>
             </div>
-          </div>
-
-          {/* Badge */}
-          <div className="mt-6 md:mt-8 flex justify-center">
-            <div className="bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              76+ students already locked in
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -246,7 +532,3 @@ export default function SignInPage() {
     </div>
   )
 }
-
-
-
-

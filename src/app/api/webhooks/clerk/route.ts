@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { resend } from '@/lib/resend';
 import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
+import { ImpeccableEmail } from '@/components/emails/ImpeccableEmail';
 import { render } from '@react-email/render';
 import * as React from 'react';
 
@@ -21,7 +22,9 @@ export async function POST(req: Request) {
     // --- 1. Verify Svix signature ---
     let event: any;
     try {
-        event = await verifyWebhook(req); // uses CLERK_WEBHOOK_SECRET env var automatically
+        event = await verifyWebhook(req, {
+            signingSecret: process.env.CLERK_WEBHOOK_SECRET
+        }); // pass explicitly because env var name differs
     } catch (err) {
         console.error('[clerk-webhook] Signature verification failed:', err);
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -56,7 +59,7 @@ export async function POST(req: Request) {
 
 async function handleUserCreated(data: any) {
     const userId: string = data.id;
-    const email: string = data.email_addresses?.[0]?.email_address ?? '';
+    const email: string = data.email_addresses?.[0]?.email_address || `${userId}@dummy.lockedin.local`;
     const firstName: string = data.first_name ?? '';
     const lastName: string = data.last_name ?? '';
     const name = [firstName, lastName].filter(Boolean).join(' ') || data.username || 'Scholar';
@@ -117,7 +120,7 @@ async function handleUserCreated(data: any) {
 
 async function handleUserUpdated(data: any) {
     const userId: string = data.id;
-    const email: string = data.email_addresses?.[0]?.email_address ?? '';
+    const email: string = data.email_addresses?.[0]?.email_address || `${userId}@dummy.lockedin.local`;
     const firstName: string = data.first_name ?? '';
     const lastName: string = data.last_name ?? '';
     const name = [firstName, lastName].filter(Boolean).join(' ') || data.username || undefined;
@@ -152,7 +155,7 @@ async function handleUserDeleted(data: any) {
     // This preserves referential integrity with rooms, sessions, etc.
     const { error } = await supabaseAdmin
         .from('profiles')
-        .update({ email: '[deleted]', name: '[deleted]', avatar_url: null })
+        .update({ email: `[deleted-${userId}]`, name: '[deleted]', avatar_url: null })
         .eq('id', userId);
 
     if (error) {
@@ -170,14 +173,45 @@ async function handleUserDeleted(data: any) {
 
 async function handleEmailCreated(data: any) {
     const toEmailAddress = data.to_email_address;
-    const subject = data.subject;
-    const body = data.body;
-    const bodyPlain = data.body_plain;
+    const subject = data.subject || '';
+    let body = data.body;
+    let bodyPlain = data.body_plain || '';
     const fromEmailName = data.from_email_name || 'Locked In';
 
     if (!toEmailAddress) {
         console.error('[clerk-webhook] email.created → missing to_email_address');
         return;
+    }
+
+    // --- Custom Template Overrides ---
+    const subjectLower = subject.toLowerCase();
+    
+    // Extract a 6-digit code if it exists
+    const codeMatch = bodyPlain.match(/\b\d{6}\b/);
+    const code = codeMatch ? codeMatch[0] : undefined;
+
+    // Extract a URL if it exists (for magic links or reset links)
+    const urlMatch = bodyPlain.match(/(https?:\/\/[^\s]+)/);
+    const linkUrl = urlMatch ? urlMatch[0] : undefined;
+    
+    let type: any = null;
+
+    if (subjectLower.includes('verification code') || subjectLower.includes('verify')) type = 'verification';
+    else if (subjectLower.includes('reset password') || subjectLower.includes('forgot password')) type = 'reset';
+    else if (subjectLower.includes('account locked')) type = 'locked';
+    else if (subjectLower.includes('password changed')) type = 'password_changed';
+    else if (subjectLower.includes('password removed')) type = 'password_removed';
+    else if (subjectLower.includes('email address changed') || subjectLower.includes('primary email')) type = 'email_changed';
+    else if (subjectLower.includes('new device') || subjectLower.includes('sign in from')) type = 'new_device';
+    else if (subjectLower.includes('invitation') || subjectLower.includes('invited')) type = 'invitation';
+
+    if (type) {
+        console.log(`[clerk-webhook] email.created → Intercepted '${type}', rendering custom ImpeccableEmail template.`);
+        try {
+            body = await render(React.createElement(ImpeccableEmail, { type, code, linkUrl }));
+        } catch (renderErr) {
+            console.error('[clerk-webhook] email.created → Failed to render custom template, falling back to Clerk HTML', renderErr);
+        }
     }
 
     try {
