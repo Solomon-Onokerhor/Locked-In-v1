@@ -74,6 +74,15 @@ export const completeOnboarding = async (formData: FormData) => {
         return { error: 'Database error. Please try again.' }
     }
 
+    // --- 3. Upsert Semantic Search Vector ---
+    try {
+        const { upsertProfileVector } = await import('@/lib/vector')
+        await upsertProfileVector(userId)
+    } catch (err) {
+        console.error('[completeOnboarding] Vector upsert failed:', err)
+        // Non-fatal, don't return error
+    }
+
     return { message: { onboardingComplete: true, faculty, programme, level } }
 }
 

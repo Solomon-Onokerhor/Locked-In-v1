@@ -18,13 +18,13 @@ type WeeklyStudent = {
     current_streak: number | null;
 };
 
-export function LeaderboardClient() {
+export function LeaderboardClient({ initialTopStudents }: { initialTopStudents: (Profile & { combined_score: number })[] }) {
     const { session, loading } = useAuth();
     const router = useRouter();
 
     const [activeTab, setActiveTab] = useState<'students' | 'faculties'>('students');
     const [leaderboardMode, setLeaderboardMode] = useState<LeaderboardMode>('weekly');
-    const [topStudents, setTopStudents] = useState<Profile[]>([]);
+    const [topStudents, setTopStudents] = useState<(Profile & { combined_score: number })[]>(initialTopStudents);
     const [weeklyStudents, setWeeklyStudents] = useState<WeeklyStudent[]>([]);
     const [topFaculties, setTopFaculties] = useState<{ faculty: string; total_streak: number; active_students: number }[]>([]);
     const [weeklyFaculties, setWeeklyFaculties] = useState<{ faculty: string; total_streak: number; active_students: number }[]>([]);
@@ -45,19 +45,10 @@ export function LeaderboardClient() {
     const fetchLeaderboards = async () => {
         setIsLoadingData(true);
         try {
-            // --- ALL-TIME: Fetch from profiles table ---
-            const { data: studentsData, error: studentsError } = await supabase
-                .from('profiles')
-                .select('*')
-                .limit(100);
-
-            if (studentsError) throw studentsError;
-
-            const sorted = (studentsData as Profile[]).sort((a, b) => {
-                return getCombinedScore(b.focus_score, b.current_streak) - getCombinedScore(a.focus_score, a.current_streak);
-            }).slice(0, 50);
-            setTopStudents(sorted);
-
+            // All-time top students are already passed as props via initialTopStudents!
+            // We just need to fetch the all-time faculties if we didn't compute it in Redis,
+            // but we can still compute it here for now until we fully move faculties to Redis.
+            
             const { data: allProfiles, error: allProfilesError } = await supabase
                 .from('profiles')
                 .select('faculty, focus_score, current_streak')
@@ -120,7 +111,7 @@ export function LeaderboardClient() {
             id: s.id,
             name: s.name,
             faculty: s.faculty ?? null,
-            focus_score: getCombinedScore(s.focus_score, s.current_streak),
+            focus_score: s.combined_score, // Use precomputed combined score from Redis/Server
             current_streak: s.current_streak ?? null,
         }));
 

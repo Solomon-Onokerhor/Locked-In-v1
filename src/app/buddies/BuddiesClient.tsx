@@ -210,18 +210,21 @@ export function BuddiesClient() {
 
         setIsSearching(true);
         try {
+            const res = await fetch('/api/buddies/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: searchQuery })
+            });
+            const data = await res.json();
+            
+            if (!res.ok) throw new Error(data.error || 'Search failed');
+            
             const existingBuddyIds = myBuddies.map(b => b.id);
-            const excludedIds = [...existingBuddyIds, session.user.id];
-
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .not('id', 'in', `(${excludedIds.join(',')})`)
-                .or(`name.ilike.%${searchQuery}%,courses.cs.{${searchQuery}}`)
-                .limit(20);
-
-            if (error) throw error;
-            setSearchResults((data as Profile[]) || []);
+            const excludedIds = new Set([...existingBuddyIds, session.user.id]);
+            
+            // Filter out self and existing buddies
+            const filtered = (data.profiles || []).filter((p: Profile) => !excludedIds.has(p.id));
+            setSearchResults(filtered);
         } catch (err) {
             console.error('Error searching users:', err);
         } finally {

@@ -215,6 +215,13 @@ export default function AdminPage() {
             fetchRooms();
             fetchStats();
             
+            // Schedule QStash reminders for the room
+            fetch('/api/rooms/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ room_id: roomId })
+            }).catch(console.error);
+
             // Notify the room creator via WhatsApp
             if (room.created_by) {
                 try {

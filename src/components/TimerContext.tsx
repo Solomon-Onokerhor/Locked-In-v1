@@ -386,6 +386,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
                 quit_early: true
             });
             await supabase.rpc('update_focus_score', { score_delta: -5, user_uuid: session!.user.id });
+            await fetch('/api/leaderboard/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: session!.user.id }) });
             await refreshProfile();
         } catch (error) {
             console.error('Error quitting early:', error);
@@ -427,6 +428,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
                 .eq('id', session!.user.id);
 
             await supabase.rpc('update_user_activity');
+            await fetch('/api/leaderboard/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: session!.user.id }) });
             await refreshProfile();
 
             setTimerState('STATS');
