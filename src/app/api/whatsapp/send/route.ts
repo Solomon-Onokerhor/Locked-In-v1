@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "event_type is required" }, { status: 400 });
     }
 
-    // Get user's phone number
+    // Get user's email
     let { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
-        .select('whatsapp_number')
+        .select('email')
         .eq('id', userId)
         .single();
         
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         if (email) {
             const { data: profileByEmail } = await supabaseAdmin
                 .from('profiles')
-                .select('whatsapp_number')
+                .select('email')
                 .eq('email', email)
                 .single();
             if (profileByEmail) {
@@ -41,25 +41,35 @@ export async function POST(req: NextRequest) {
         }
     }
     
-    if (profileError || !profile?.whatsapp_number) {
-        return NextResponse.json({ error: "User has no verified WhatsApp number" }, { status: 400 });
+    if (profileError || !profile?.email) {
+        return NextResponse.json({ error: "User has no verified email" }, { status: 400 });
     }
 
-    const phone_number = profile.whatsapp_number;
+    const emailAddress = profile.email;
     let message = '';
+    let subject = '';
 
     switch (event_type) {
         case 'SOLO_SESSION_COMPLETE':
-            message = `🔒 Locked In! Awesome job completing ${payload.duration} minutes working on: ${payload.goal}. Keep up the momentum!`;
+            subject = '🔥 Locked In Complete!';
+            message = `Awesome job completing ${payload.duration} minutes working on: ${payload.goal}. Keep up the momentum!`;
             break;
         case 'ROOM_CREATED':
-            message = `📅 Room Submitted! Your study room '${payload.title}' is pending admin approval. We'll notify you when it's live.`;
-            break;
+            // Room creation emails are already handled directly in create-room via /api/send-email/room-submitted
+            return NextResponse.json({ success: true, skipped: true });
         default:
             return NextResponse.json({ error: "Invalid event_type" }, { status: 400 });
     }
 
-    const result = await sendWhatsAppMessage(phone_number, message);
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const result = await resend.emails.send({
+        from: 'Locked In <hello@contact.lockedinumat.tech>',
+        to: [emailAddress],
+        subject,
+        text: message
+    });
+    
     return NextResponse.json({ success: true, result });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

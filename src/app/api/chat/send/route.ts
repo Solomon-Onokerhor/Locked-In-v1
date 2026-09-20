@@ -51,21 +51,29 @@ export async function POST(req: NextRequest) {
         // Strip the prefix for the WhatsApp message
         const announcementBody = text.trim().replace(/^ANNOUNCEMENT:/i, '').trim();
 
-        // Fetch all members with WhatsApp numbers (excluding the creator)
+        // Fetch all members with Emails (excluding the creator)
         const { data: members } = await supabaseAdmin
           .from('room_members')
-          .select('user_id, profiles(whatsapp_number)')
+          .select('user_id, profiles(email)')
           .eq('room_id', roomId)
           .neq('user_id', userId);
 
-        const whatsappMsg = `📢 *${room.title}* — Host just posted:\n\n"${announcementBody}"\n\nView room: https://lockedinumat.tech/room/${roomId}`;
+        const emailMsg = `Host just posted:\n\n"${announcementBody}"\n\nView room: https://lockedinumat.tech/room/${roomId}`;
+        
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
         for (const member of members || []) {
           // @ts-ignore
-          const phone = member.profiles?.whatsapp_number;
-          if (!phone) continue;
-          sendWhatsAppMessage(phone, whatsappMsg).catch(e =>
-            console.error(`[Chat/Announce] Failed to WhatsApp ${phone}:`, e)
+          const email = member.profiles?.email;
+          if (!email) continue;
+          resend.emails.send({
+            from: 'Locked In <hello@contact.lockedinumat.tech>',
+            to: [email],
+            subject: `📢 Announcement from ${room.title}`,
+            text: emailMsg
+          }).catch(e =>
+            console.error(`[Chat/Announce] Failed to email ${email}:`, e)
           );
         }
       }

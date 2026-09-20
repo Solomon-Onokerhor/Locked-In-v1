@@ -39,13 +39,18 @@ export const POST = verifySignatureAppRouter(async (req) => {
             const message = `⏳ Reminder: '${room.title}' starts in 15 minutes!\n\n${locationStr}\n\nLock in: https://lockedinumat.tech/room/${room.room_id}`;
 
             for (const member of members || []) {
-                const phone = (member.profiles as any)?.whatsapp_number;
-                if (!phone) continue;
+                const email = (member.profiles as any)?.email;
+                if (!email) continue;
                 try {
-                    await sendWhatsAppMessage(phone, message);
+                    await resend.emails.send({
+                        from: 'Locked In <hello@contact.lockedinumat.tech>',
+                        to: [email],
+                        subject: `🚨 Starting in 15 mins: ${room.title}`,
+                        text: message
+                    });
                     sentCount++;
                 } catch (e) {
-                    console.error(`[QStash/15m] Failed WhatsApp ${phone}:`, e);
+                    console.error(`[QStash/15m] Failed email ${email}:`, e);
                 }
             }
         } else if (type === '24h') {

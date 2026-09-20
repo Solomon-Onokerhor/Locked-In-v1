@@ -49,17 +49,24 @@ export async function POST(req: NextRequest) {
             }
         }
         
-        const senderRes = await supabaseAdmin.from('profiles').select('name, whatsapp_number').eq('id', sender_id).single();
+        const senderRes = await supabaseAdmin.from('profiles').select('name, email').eq('id', sender_id).single();
 
         if (senderRes.data && receiverRes.data) {
-            const senderPhone = senderRes.data.whatsapp_number;
+            const senderEmail = senderRes.data.email;
             const receiverName = receiverRes.data.name;
 
-            // 4. Send WhatsApp Notification to the person who ORIGINALLY sent the request
-            if (senderPhone) {
-                const message = `🎉 Great news! ${receiverName} accepted your Study Buddy request on Locked-In!`;
+            // 4. Send Email Notification to the person who ORIGINALLY sent the request
+            if (senderEmail) {
+                const { Resend } = await import('resend');
+                const resend = new Resend(process.env.RESEND_API_KEY);
+                const message = `Great news! ${receiverName} accepted your Study Buddy request on Locked-In!`;
                 // Fire and forget so we don't block
-                sendWhatsAppMessage(senderPhone, message).catch(console.error);
+                resend.emails.send({
+                    from: 'Locked In <hello@contact.lockedinumat.tech>',
+                    to: [senderEmail],
+                    subject: `✅ ${receiverName} accepted your buddy request!`,
+                    text: message
+                }).catch(console.error);
             }
         }
 

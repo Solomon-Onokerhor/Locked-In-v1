@@ -58,27 +58,39 @@ export async function POST(req: NextRequest) {
 
         // 3. Fetch receiver profile and sender Clerk data
         const currentUserData = await currentUser();
-        const receiverRes = await supabaseAdmin.from('profiles').select('name, whatsapp_number').eq('id', receiver_id).single();
+        const receiverRes = await supabaseAdmin.from('profiles').select('name, email').eq('id', receiver_id).single();
 
         if (receiverRes.error || !receiverRes.data) throw new Error('Receiver not found');
 
         const senderName = currentUserData 
             ? [currentUserData.firstName, currentUserData.lastName].filter(Boolean).join(" ") || currentUserData.username || 'Someone' 
             : 'Someone';
-        const receiverPhone = receiverRes.data.whatsapp_number;
+        const receiverEmail = receiverRes.data.email;
         const receiverName = receiverRes.data.name;
 
         // 4. Insert the request
         const { error: insertError } = await supabaseAdmin
             .from('buddy_connections')
-            .insert([{ user_id: userId, buddy_id: receiver_id, status: 'pending' }]);
+            .insert({
+                user_id: userId,
+                buddy_id: receiver_id,
+                status: 'pending'
+            });
 
         if (insertError) throw insertError;
 
-        // 5. Send WhatsApp safely
-        if (receiverPhone) {
-            const message = `🤝 Hey ${receiverName}! ${senderName} just sent you a Study Buddy request on Locked-In!\n\nLog in now to accept their request so you can start tracking each other's progress.`;
-            await sendWhatsAppMessage(receiverPhone, message);
+        // 5. Send Email safely
+        if (receiverEmail) {
+            const { Resend } = await import('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            const message = `Hey ${receiverName}! ${senderName} just sent you a Study Buddy request on Locked-In!\n\nLog in now to accept their request so you can start tracking each other's progress.`;
+            
+            await resend.emails.send({
+                from: 'Locked In <hello@contact.lockedinumat.tech>',
+                to: [receiverEmail],
+                subject: `🫂 New Study Buddy Request from ${senderName}`,
+                text: message
+            });
         }
 
         return NextResponse.json({ success: true });

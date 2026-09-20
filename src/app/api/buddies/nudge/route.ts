@@ -49,27 +49,34 @@ export async function POST(req: NextRequest) {
 
         // 2. Fetch sender and receiver profiles for notification
         const currentUserData = await currentUser();
-        const receiverRes = await supabaseAdmin.from('profiles').select('name, whatsapp_number').eq('id', receiver_id).single();
+        const receiverRes = await supabaseAdmin.from('profiles').select('name, email').eq('id', receiver_id).single();
 
         if (receiverRes.error || !receiverRes.data) throw new Error('Receiver not found');
 
         const senderName = currentUserData 
             ? [currentUserData.firstName, currentUserData.lastName].filter(Boolean).join(" ") || currentUserData.username || 'Someone' 
             : 'Someone';
-        const receiverPhone = receiverRes.data.whatsapp_number;
+        const receiverEmail = receiverRes.data.email;
         const receiverName = receiverRes.data.name;
 
         // 3. Insert the new poke record
         const { error: insertError } = await supabaseAdmin
             .from('buddy_pokes')
-            .insert([{ sender_id: userId, receiver_id }]);
+            .insert({ sender_id: userId, receiver_id });
 
         if (insertError) throw insertError;
 
-        // 4. Send WhatsApp Notification (if available)
-        if (receiverPhone) {
-            const message = `🔥 Hey ${receiverName}! ${senderName} just sent you a Nudge! Lock in and keep up the great work!`;
-            await sendWhatsAppMessage(receiverPhone, message);
+        // 4. Send Email Notification (if available)
+        if (receiverEmail) {
+            const { Resend } = await import('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            const message = `Hey ${receiverName}! ${senderName} just sent you a Nudge! Lock in and keep up the great work!`;
+            await resend.emails.send({
+                from: 'Locked In <hello@contact.lockedinumat.tech>',
+                to: [receiverEmail],
+                subject: `👀 ${senderName} just nudged you!`,
+                text: message
+            });
         }
 
         return NextResponse.json({ success: true });

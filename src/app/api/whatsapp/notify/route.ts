@@ -17,35 +17,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "event_type and target_user_id are required" }, { status: 400 });
     }
 
-    // Get target user's phone number
+    // Get target user's email
     const { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
-        .select('whatsapp_number')
+        .select('email')
         .eq('id', target_user_id)
         .single();
     
-    if (profileError || !profile?.whatsapp_number) {
-        return NextResponse.json({ error: "Target user has no verified WhatsApp number" }, { status: 400 });
+    if (profileError || !profile?.email) {
+        return NextResponse.json({ error: "Target user has no verified email" }, { status: 400 });
     }
 
-    const phone_number = profile.whatsapp_number;
+    const emailAddress = profile.email;
     let message = '';
+    let subject = '';
 
     switch (event_type) {
         case 'ROOM_APPROVED':
-            message = `✅ Good news! Your room '${payload.title}' has been approved and is now live on the dashboard.`;
+            subject = '✅ Room Approved';
+            message = `Good news! Your room '${payload.title}' has been approved and is now live on the dashboard.`;
             break;
         case 'ROOM_JOINED':
-            message = `👋 Heads up! ${payload.joiner_name} just locked in to your session '${payload.title}'!`;
+            subject = '👥 New Room Member';
+            message = `Heads up! ${payload.joiner_name} just locked in to your session '${payload.title}'!`;
             break;
         case 'JOINER_CONFIRMATION':
-            message = `🔥 You're officially locked into '${payload.title}'! We'll ping you here 15 mins before the session starts.`;
+            subject = '📅 You are Locked In!';
+            message = `You're officially locked into '${payload.title}'! We'll email you 15 mins before the session starts.`;
             break;
         default:
             return NextResponse.json({ error: "Invalid event_type" }, { status: 400 });
     }
 
-    const result = await sendWhatsAppMessage(phone_number, message);
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const result = await resend.emails.send({
+        from: 'Locked In <hello@contact.lockedinumat.tech>',
+        to: [emailAddress],
+        subject,
+        text: message
+    });
+    
     return NextResponse.json({ success: true, result });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

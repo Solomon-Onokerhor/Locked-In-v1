@@ -30,9 +30,9 @@ export async function POST(req: NextRequest) {
 
     let query = supabaseAdmin
         .from('profiles')
-        .select('id, whatsapp_number')
-        .not('whatsapp_number', 'is', null)
-        .neq('whatsapp_number', '');
+        .select('id, email')
+        .not('email', 'is', null)
+        .neq('email', '');
 
     // If specific user IDs are provided, filter to only those users
     if (target_user_ids && Array.isArray(target_user_ids) && target_user_ids.length > 0) {
@@ -47,15 +47,22 @@ export async function POST(req: NextRequest) {
 
     let successCount = 0;
     let failCount = 0;
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Send messages sequentially to avoid rate limits
     for (const user of users) {
-        if (user.whatsapp_number) {
+        if (user.email) {
             try {
-                await sendWhatsAppMessage(user.whatsapp_number, message);
+                await resend.emails.send({
+                    from: 'Locked In <hello@contact.lockedinumat.tech>',
+                    to: [user.email],
+                    subject: `Locked In Admin Broadcast`,
+                    text: message
+                });
                 successCount++;
             } catch (err) {
-                console.error(`Failed to broadcast to ${user.whatsapp_number}:`, err);
+                console.error(`Failed to broadcast to ${user.email}:`, err);
                 failCount++;
             }
         }
