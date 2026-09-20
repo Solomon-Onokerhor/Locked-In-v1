@@ -2,12 +2,19 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { auth } from '@clerk/nextjs/server';
 import { normalizePhoneNumber } from '@/lib/whatsapp';
+import { otpRateLimit } from '@/lib/ratelimit';
 
 export async function POST(req: Request) {
     try {
         const { userId } = await auth();
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit the OTP sending based on user ID
+        const { success } = await otpRateLimit.limit(`otp_${userId}`);
+        if (!success) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
         const { phoneNumber } = await req.json();

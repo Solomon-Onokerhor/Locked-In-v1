@@ -2,12 +2,19 @@ import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { chatRateLimit } from '@/lib/ratelimit';
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit the chat messages
+    const { success } = await chatRateLimit.limit(`chat_${userId}`);
+    if (!success) {
+      return NextResponse.json({ error: 'You are sending messages too fast.' }, { status: 429 });
     }
 
     const { roomId, text } = await req.json();

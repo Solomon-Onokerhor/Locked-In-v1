@@ -17,6 +17,8 @@
     "@sentry/nextjs": "^10.45.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@upstash/ratelimit": "^2.1.0",
+    "@upstash/redis": "^1.38.4",
     "canvas-confetti": "^1.9.4",
     "ics": "^3.12.0",
     "lucide-react": "^0.575.0",

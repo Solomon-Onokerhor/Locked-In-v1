@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 // Use the service role key so we can upsert into profiles without RLS blocking us
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+const leadRateLimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(5, '1 h'), // Max 5 leads per hour per IP
+  analytics: true,
+});
 
 // Helper: normalize a raw Ghanaian phone number to international format (233XXXXXXXXX)
 function normalizeGhanaianNumber(raw: string): string {
@@ -22,6 +30,13 @@ function normalizeGhanaianNumber(raw: string): string {
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit by IP for public endpoint
+        const ip = request.headers.get('x-forwarded-for') ?? request.ip ?? 'anonymous';
+        const { success } = await leadRateLimit.limit(`lead_${ip}`);
+        if (!success) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
+
         const { name, phone } = await request.json();
 
         if (!name || !phone) {
