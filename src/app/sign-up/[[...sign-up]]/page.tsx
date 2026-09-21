@@ -109,7 +109,7 @@ export default function SignUpPage() {
       })
       if (createError) throw createError
 
-      const { error: verifyError } = await signUp.verifications.sendEmailCode()
+      const { error: verifyError } = await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       if (verifyError) throw verifyError
       setVerifying(true)
     } catch (err: any) {
@@ -145,7 +145,7 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      const { error } = await signUp.verifications.verifyEmailCode({ code: codeStr })
+      const { error } = await signUp.attemptEmailAddressVerification({ code: codeStr })
       
       if (error) {
          throw error
@@ -197,7 +197,7 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsLoading(true)
     try {
-      const { error } = await signUp.verifications.sendEmailCode()
+      const { error } = await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       if (error) throw error
       setErrorMsg('')
     } catch (err: any) {
