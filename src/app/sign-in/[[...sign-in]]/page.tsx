@@ -1,7 +1,6 @@
-'use client'
-
+'use client';
 import { useState, useRef, useEffect, type FormEvent } from 'react'
-import { useSignIn, useClerk } from '@clerk/nextjs'
+import { useSignIn, useClerk } from "@clerk/nextjs";
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'

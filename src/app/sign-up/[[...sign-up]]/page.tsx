@@ -1,7 +1,6 @@
-'use client'
-
+'use client';
 import { useState, useRef, useEffect, type FormEvent } from 'react'
-import { useSignUp, useClerk } from '@clerk/nextjs'
+import { useSignUp, useClerk } from "@clerk/nextjs";
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GrokBot } from '@/components/grok-bot'
@@ -100,17 +99,15 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      const { error: createError } = await signUp.create({
+      const { error: passwordError } = await signUp.password({
         firstName,
         lastName,
         username: `user_${Date.now()}`,
         emailAddress: email,
         password
       })
-      if (createError) throw createError
+      if (passwordError) throw passwordError
 
-      const { error: verifyError } = await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-      if (verifyError) throw verifyError
       setVerifying(true)
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -145,7 +142,7 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      const { error } = await signUp.attemptEmailAddressVerification({ code: codeStr })
+      const { error } = await signUp.verifications.verifyEmailCode({ code: codeStr })
       
       if (error) {
          throw error
@@ -197,7 +194,7 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsLoading(true)
     try {
-      const { error } = await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      const { error } = await signUp.verifications.sendEmailCode()
       if (error) throw error
       setErrorMsg('')
     } catch (err: any) {
