@@ -115,8 +115,13 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
         setError(null);
 
         if (room.is_paid && room.price && room.price > 0) {
-            initializePayment({
-                onSuccess: (response) => {
+            const PaystackPop: any = await loadPaystack();
+            const handler = PaystackPop.setup({
+                key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+                email: session?.user?.email || profile?.email || 'student@umat.edu.gh',
+                amount: room.price * 100, // in pesewas
+                ref: 	x__,
+                callback: (response: any) => {
                     toast.loading("Verifying payment...");
                     verifyAndJoinPaidRoom(room.room_id, response.reference, session.user.id)
                         .then((res) => {
@@ -141,6 +146,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                     setLockingIn(false);
                 }
             });
+            handler.openIframe();
             return;
         }
 
