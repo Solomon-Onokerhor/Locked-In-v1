@@ -11,7 +11,7 @@ type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searchin
 
 export default function SignUpPage() {
   const clerk = useClerk()
-  const { isLoaded, signUp, setActive, errors } = useSignUp() as any
+  const { isLoaded, signUp, errors } = useSignUp() as any
   const router = useRouter()
 
   const [firstName, setFirstName] = useState('')
@@ -41,11 +41,13 @@ export default function SignUpPage() {
   useEffect(() => {
     if (!isLoaded || !signUp) return;
     if (signUp.status === 'complete') {
-      setActive({ session: signUp.createdSessionId }).then(() => {
-        router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding');
+      signUp.finalize({
+        navigate: ({ decorateUrl }: any) => {
+          router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding');
+        }
       });
     }
-  }, [signUp?.status, isLoaded, setActive, router]);
+  }, [signUp?.status, isLoaded, signUp, router]);
 
   useEffect(() => {
     if (verifying) {
@@ -86,15 +88,17 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      await signUp.create({
+      const { error: createError } = await signUp.create({
         firstName,
         lastName,
         username: `user_${Date.now()}`,
         emailAddress: email,
         password
       })
+      if (createError) throw createError
 
-      await signUp.prepareVerification({ strategy: 'email_code' })
+      const { error: verifyError } = await signUp.verifications.sendEmailCode()
+      if (verifyError) throw verifyError
       setVerifying(true)
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -129,15 +133,20 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      const verifyAttempt = await signUp.attemptVerification({ strategy: 'email_code', code: codeStr })
+      const { error } = await signUp.verifications.verifyEmailCode({ code: codeStr })
+      
+      if (error) {
+         throw error
+      }
 
-      if (verifyAttempt.status === 'complete') {
+      if (signUp.status === 'complete') {
         console.log("STATUS IS COMPLETE! REDIRECTING...")
         setAvatarAnimation('excited')
-        await setActive({ session: verifyAttempt.createdSessionId })
-        router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
-      } else {
-        console.log(verifyAttempt)
+        await signUp.finalize({
+           navigate: ({ decorateUrl }) => {
+             router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
+           }
+        })
       }
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -145,8 +154,11 @@ export default function SignUpPage() {
         const errorData = err.errors[0]
         if (errorData.code === 'verification_already_verified' || errorData.message?.toLowerCase().includes('already verified')) {
           if (signUp.status === 'complete') {
-             await setActive({ session: signUp.createdSessionId })
-             router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
+             await signUp.finalize({
+                navigate: ({ decorateUrl }) => {
+                  router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
+                }
+             })
              return;
           } else {
              setErrorMsg("Verification already complete, but account requires further action.")
@@ -173,7 +185,8 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsLoading(true)
     try {
-      await signUp.prepareVerification({ strategy: 'email_code' })
+      const { error } = await signUp.verifications.sendEmailCode()
+      if (error) throw error
       setErrorMsg('')
     } catch (err: any) {
       if (err.errors && err.errors.length > 0) {
