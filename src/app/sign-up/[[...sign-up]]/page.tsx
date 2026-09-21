@@ -11,7 +11,7 @@ type AvatarAnimation = 'idle' | 'listening' | 'working' | 'thinking' | 'searchin
 
 export default function SignUpPage() {
   const clerk = useClerk()
-  const { signUp, errors } = useSignUp()
+  const { isLoaded, signUp, setActive, errors } = useSignUp() as any
   const router = useRouter()
 
   const [firstName, setFirstName] = useState('')
@@ -37,6 +37,15 @@ export default function SignUpPage() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ]
+
+  useEffect(() => {
+    if (!isLoaded || !signUp) return;
+    if (signUp.status === 'complete') {
+      setActive({ session: signUp.createdSessionId }).then(() => {
+        router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding');
+      });
+    }
+  }, [signUp?.status, isLoaded, setActive, router]);
 
   useEffect(() => {
     if (verifying) {
@@ -77,16 +86,15 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      const { error: pwdError } = await signUp.password({
+      await signUp.create({
         firstName,
         lastName,
+        username: `user_${Date.now()}`,
         emailAddress: email,
         password
       })
-      if (pwdError) throw pwdError
 
-      const { error: verifyError } = await signUp.verifications.sendEmailCode()
-      if (verifyError) throw verifyError
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       setVerifying(true)
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -121,27 +129,29 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      const { error } = await signUp.verifications.verifyEmailCode({ code: codeStr })
-      if (error) throw error
+      const verifyAttempt = await signUp.attemptEmailAddressVerification({ code: codeStr })
 
-      if (signUp.status === 'complete') {
+      if (verifyAttempt.status === 'complete') {
+        console.log("STATUS IS COMPLETE! REDIRECTING...")
         setAvatarAnimation('excited')
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl('/')
-            if (url.startsWith('http')) {
-              window.location.href = url
-            } else {
-              router.push(url)
-            }
-          }
-        })
+        await setActive({ session: verifyAttempt.createdSessionId })
+        router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
+      } else {
+        console.log(verifyAttempt)
       }
     } catch (err: any) {
       setAvatarAnimation('sad')
       if (err.errors && err.errors.length > 0) {
         const errorData = err.errors[0]
-        if (errorData.code === 'strategy_for_user_invalid') {
+        if (errorData.code === 'verification_already_verified' || errorData.message?.toLowerCase().includes('already verified')) {
+          if (signUp.status === 'complete') {
+             await setActive({ session: signUp.createdSessionId })
+             router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
+             return;
+          } else {
+             setErrorMsg("Verification already complete, but account requires further action.")
+          }
+        } else if (errorData.code === 'strategy_for_user_invalid') {
           setErrorMsg("This account uses a different sign-in method. Try Google.")
         } else {
           setErrorMsg(errorData.longMessage || errorData.message)
@@ -163,8 +173,7 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsLoading(true)
     try {
-      const { error } = await signUp.verifications.sendEmailCode()
-      if (error) throw error
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       setErrorMsg('')
     } catch (err: any) {
       if (err.errors && err.errors.length > 0) {
