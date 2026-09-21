@@ -120,7 +120,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
                 key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
                 email: session?.user?.email || profile?.email || 'student@umat.edu.gh',
                 amount: room.price * 100, // in pesewas
-                ref: 	x__,
+                ref: `tx_${roomId}_${(new Date()).getTime()}`,
                 callback: (response: any) => {
                     toast.loading("Verifying payment...");
                     verifyAndJoinPaidRoom(room.room_id, response.reference, session.user.id)
