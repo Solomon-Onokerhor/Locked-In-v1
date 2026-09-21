@@ -25,6 +25,7 @@ export default function SignUpPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [verifying, setVerifying] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [hasCaptcha, setHasCaptcha] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -38,6 +39,17 @@ export default function SignUpPage() {
     useRef<HTMLInputElement>(null),
   ]
 
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const captchaDiv = document.getElementById('clerk-captcha')
+      setHasCaptcha(!!captchaDiv && captchaDiv.childNodes.length > 0)
+    })
+    const captchaDiv = document.getElementById('clerk-captcha')
+    if (captchaDiv) {
+      observer.observe(captchaDiv, { childList: true })
+    }
+    return () => observer.disconnect()
+  }, [])
   useEffect(() => {
     if (!isLoaded || !signUp) return;
     if (signUp.status === 'complete') {
@@ -387,10 +399,10 @@ export default function SignUpPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading && !hasCaptcha}
                     className="w-full flex items-center justify-center bg-white text-black rounded-xl py-3 px-4 font-bold hover:bg-gray-200 active:scale-[0.98] transition-all duration-150 ease-out disabled:opacity-50 mt-6"
                   >
-                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
+                    {hasCaptcha ? 'Please complete CAPTCHA below' : isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
                   </button>
                 </form>
 
