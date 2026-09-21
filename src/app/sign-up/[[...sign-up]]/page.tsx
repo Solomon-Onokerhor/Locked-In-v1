@@ -42,7 +42,7 @@ export default function SignUpPage() {
     if (!isLoaded || !signUp) return;
     if (signUp.status === 'complete') {
       signUp.finalize({
-        navigate: ({ decorateUrl }: any) => {
+        navigate: () => {
           router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding');
         }
       });
@@ -143,7 +143,7 @@ export default function SignUpPage() {
         console.log("STATUS IS COMPLETE! REDIRECTING...")
         setAvatarAnimation('excited')
         await signUp.finalize({
-           navigate: ({ decorateUrl }) => {
+           navigate: () => {
              router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
            }
         })
@@ -155,7 +155,7 @@ export default function SignUpPage() {
         if (errorData.code === 'verification_already_verified' || errorData.message?.toLowerCase().includes('already verified')) {
           if (signUp.status === 'complete') {
              await signUp.finalize({
-                navigate: ({ decorateUrl }) => {
+                navigate: () => {
                   router.push(process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/onboarding')
                 }
              })
