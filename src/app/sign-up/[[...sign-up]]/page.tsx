@@ -94,7 +94,7 @@ export default function SignUpPage() {
         password
       })
 
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      await signUp.prepareVerification({ strategy: 'email_code' })
       setVerifying(true)
     } catch (err: any) {
       setAvatarAnimation('sad')
@@ -129,7 +129,7 @@ export default function SignUpPage() {
     const codeStr = code.join('')
 
     try {
-      const verifyAttempt = await signUp.attemptEmailAddressVerification({ code: codeStr })
+      const verifyAttempt = await signUp.attemptVerification({ strategy: 'email_code', code: codeStr })
 
       if (verifyAttempt.status === 'complete') {
         console.log("STATUS IS COMPLETE! REDIRECTING...")
@@ -173,7 +173,7 @@ export default function SignUpPage() {
     if (!signUp) return
     setIsLoading(true)
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      await signUp.prepareVerification({ strategy: 'email_code' })
       setErrorMsg('')
     } catch (err: any) {
       if (err.errors && err.errors.length > 0) {
