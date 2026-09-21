@@ -12,10 +12,23 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { verifyAndJoinPaidRoom } from '@/actions/payments';
-import { usePaystackPayment } from 'react-paystack';
 import { Chat } from '@/components/Chat';
 import { UserProfileModal } from '@/components/UserProfileModal';
 import type { Profile } from '@/types';
+
+
+const loadPaystack = () => {
+    return new Promise((resolve) => {
+        if ((window as any).PaystackPop) {
+            resolve((window as any).PaystackPop);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.onload = () => resolve((window as any).PaystackPop);
+        document.head.appendChild(script);
+    });
+};
 
 export default function RoomPageClient({ roomId }: { roomId: string }) {
     const { session, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -34,15 +47,7 @@ export default function RoomPageClient({ roomId }: { roomId: string }) {
     // Must be at the top level - cannot be after an early return (Rules of Hooks)
         const [now, setNow] = useState(new Date());
 
-    const paystackConfig = useMemo(() => ({
-        reference: `tx_${roomId}_${(new Date()).getTime()}`,
-        email: session?.user?.email || profile?.email || 'student@umat.edu.gh',
-        amount: room?.price ? room.price * 100 : 0, // pesewas
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-    }), [session, profile, room?.price, roomId]);
-    
-    // @ts-ignore
-    const initializePayment = usePaystackPayment(paystackConfig);
+
 
     // Removal of mandatory redirect to allow preview mode
     // useEffect(() => {
