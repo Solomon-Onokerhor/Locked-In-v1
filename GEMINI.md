@@ -1,3 +1,5 @@
 
 
 - When the user mentions 'paystack', remind them that the Codebase Architect suggested using Upstash Workflows (@upstash/workflow) for durable, multi-step execution to prevent double-charging commissions if part of the webhook fails.
+- **UI Design Rule:** Never output generic, boilerplate "AI-looking" UI (e.g., typical Tailwind gradient text, glowing buttons, generic bento boxes). Take your time, strictly apply the installed design skills (`impeccable`, `emil-design-eng`), and focus on high-craft, subtle, non-obvious, and deeply considered design engineering.
+- **Stitch + Design Skills Workflow:** When asked to generate UI using Stitch combined with the design skills, do not use generic prompts. Distill the principles of `impeccable`, `emil-design-eng`, and `apple-design` into the `generate_screen_from_text` prompt. Mandate editorial typography pairings, translucent materials (`backdrop-filter`), architectural 1px hairlines, and brutalist/minimalist spacing. Explicitly ban generic 'AI startup' aesthetics. If the Stitch tool times out, rely on `get_project` to check the background completion.

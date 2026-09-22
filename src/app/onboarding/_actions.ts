@@ -61,6 +61,20 @@ export const completeOnboarding = async (formData: FormData) => {
         }
         if (whatsappNumber) updatePayload.whatsapp_number = whatsappNumber
 
+        // Handle account migration: if a profile with this email exists under an old ID,
+        // update its ID first so the upsert doesn't fail a unique constraint.
+        if (email) {
+            const { data: existing } = await supabaseAdmin
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .maybeSingle()
+                
+            if (existing && existing.id !== userId) {
+                await supabaseAdmin.from('profiles').update({ id: userId }).eq('email', email)
+            }
+        }
+
         const { error: dbError } = await supabaseAdmin
             .from('profiles')
             .upsert(updatePayload, { onConflict: 'id', ignoreDuplicates: false })

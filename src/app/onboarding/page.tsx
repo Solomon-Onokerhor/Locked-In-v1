@@ -245,41 +245,6 @@ export default function OnboardingPage() {
     // Whether the academic fields are already filled (old account — only needs WhatsApp)
     const [academicProfileComplete, setAcademicProfileComplete] = useState(false);
 
-    // OTP States
-    const [otp, setOtp] = useState("");
-    const [isOtpSent, setIsOtpSent] = useState(false);
-    const [isOtpVerified, setIsOtpVerified] = useState(false);
-    const [otpLoading, setOtpLoading] = useState(false);
-    const [otpError, setOtpError] = useState("");
-    
-    // Timer State
-    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
-
-    useEffect(() => {
-        if (!isOtpSent || isOtpVerified) return;
-
-        setTimeLeft(600); // Reset on each new OTP send
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    setOtpError("OTP expired. Please request a new one.");
-                    setIsOtpSent(false);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [isOtpSent, isOtpVerified]); // ← no timeLeft dep; countdown managed inside callback
-
-    const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m}:${s.toString().padStart(2, "0")}`;
-    };
-
     useEffect(() => {
         const checkUser = async () => {
             try {
@@ -313,7 +278,6 @@ export default function OnboardingPage() {
                     }
                     if (profile.whatsapp_number) {
                         setWhatsappNumber(profile.whatsapp_number);
-                        setIsOtpVerified(true);
                     }
 
                     // If all academic fields are already filled, only show WhatsApp step
@@ -331,65 +295,10 @@ export default function OnboardingPage() {
         checkUser();
     }, [user]);
 
-    const handleSendOtp = async () => {
-        if (!whatsappNumber.trim()) {
-            setOtpError("Please enter a WhatsApp number first.");
-            return;
-        }
-        const fullNumber = getNormalizedFullNumber(dialCode, whatsappNumber);
-        setOtpLoading(true);
-        setOtpError("");
-        try {
-            const res = await fetch("/api/whatsapp/send-otp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phoneNumber: fullNumber }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-            setIsOtpSent(true);
-            setTimeLeft(600);
-        } catch (err: any) {
-            setOtpError(err.message);
-        } finally {
-            setOtpLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        if (!otp.trim()) {
-            setOtpError("Please enter the OTP.");
-            return;
-        }
-        const fullNumber = getNormalizedFullNumber(dialCode, whatsappNumber);
-        setOtpLoading(true);
-        setOtpError("");
-        try {
-            const res = await fetch("/api/whatsapp/verify-otp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phoneNumber: fullNumber, otp }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to verify OTP");
-            setIsOtpVerified(true);
-            setOtpError("");
-        } catch (err: any) {
-            setOtpError(err.message);
-        } finally {
-            setOtpLoading(false);
-        }
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!faculty.trim() || !programme.trim() || !level.trim() || !whatsappNumber.trim()) {
             setError("Please fill out all fields to continue.");
-            return;
-        }
-
-        if (!isOtpVerified) {
-            setError("Please verify your WhatsApp number to continue.");
             return;
         }
 
@@ -454,7 +363,7 @@ export default function OnboardingPage() {
                     {academicProfileComplete ? (
                         <>
                             <h1 className="text-white text-[28px] md:text-[32px] font-bold leading-tight mb-2 tracking-tight">One Last Step</h1>
-                            <p className="text-[#888888] text-sm font-normal">Verify your WhatsApp number to receive study room notifications</p>
+                            <p className="text-[#888888] text-sm font-normal">Add your WhatsApp number to receive study room notifications</p>
                         </>
                     ) : (
                         <>
@@ -526,84 +435,35 @@ export default function OnboardingPage() {
 
                     <div className="flex flex-col gap-2">
                         <label className="text-white text-base font-medium" htmlFor="whatsapp">WhatsApp Number</label>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <div className="flex gap-2 w-full">
-                                <div className="relative shrink-0 w-[110px] sm:w-auto">
-                                    <select
-                                        value={dialCode}
-                                        onChange={(e) => {
-                                            setDialCode(e.target.value);
-                                            setIsOtpVerified(false);
-                                            setIsOtpSent(false);
-                                            setOtpError("");
-                                        }}
-                                        disabled={isOtpVerified}
-                                        className="w-full h-14 pl-3 pr-8 bg-[#111111] border border-white/20 rounded-lg text-white appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors disabled:opacity-60 cursor-pointer"
-                                    >
-                                        {COUNTRY_CODES.map((c) => (
-                                            <option key={c.code + c.dial} value={c.dial}>
-                                                {c.flag} {c.dial}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none text-xs">▼</span>
-                                </div>
-                                <input
-                                    id="whatsapp"
-                                    type="tel"
-                                    value={whatsappNumber}
-                                    onChange={(e) => {
-                                        // Auto-strip leading zeros as they type
-                                        const val = e.target.value.replace(/^0+/, '');
-                                        setWhatsappNumber(val);
-                                        setIsOtpVerified(false);
-                                        setIsOtpSent(false);
-                                        setOtpError("");
-                                    }}
-                                    placeholder="531 423 911 (no leading 0)"
-                                    className={`flex-1 min-w-0 h-14 bg-[#111111] border ${isOtpVerified ? 'border-green-500/50' : 'border-white/20'} rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors`}
-                                    required
-                                    disabled={isOtpVerified}
-                                />
-                            </div>
-                            {!isOtpVerified && (
-                                <button
-                                    type="button"
-                                    onClick={handleSendOtp}
-                                    disabled={otpLoading || !whatsappNumber.trim()}
-                                    className="w-full sm:w-auto h-14 px-6 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
+                        <div className="flex gap-2 w-full">
+                            <div className="relative shrink-0 w-[110px] sm:w-auto">
+                                <select
+                                    value={dialCode}
+                                    onChange={(e) => setDialCode(e.target.value)}
+                                    className="w-full h-14 pl-3 pr-8 bg-[#111111] border border-white/20 rounded-lg text-white appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors cursor-pointer"
                                 >
-                                    {otpLoading && !isOtpSent ? "Sending..." : (isOtpSent ? "Resend" : "Send OTP")}
-                                </button>
-                            )}
-                        </div>
-                        {isOtpSent && !isOtpVerified && (
-                            <div className="flex flex-col gap-2 mt-2">
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                    <input
-                                        type="text"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        placeholder="Enter 6-digit OTP"
-                                        className="w-full h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
-                                        maxLength={6}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleVerifyOtp}
-                                        disabled={otpLoading || !otp.trim() || timeLeft === 0}
-                                        className="w-full sm:w-auto shrink-0 h-14 px-8 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 whitespace-nowrap"
-                                    >
-                                        {otpLoading && isOtpSent ? "Verifying..." : "Verify"}
-                                    </button>
-                                </div>
-                                <div className="text-right text-sm text-[#888888]">
-                                    Expires in <span className="font-medium text-white">{formatTime(timeLeft)}</span>
-                                </div>
+                                    {COUNTRY_CODES.map((c) => (
+                                        <option key={c.code + c.dial} value={c.dial}>
+                                            {c.flag} {c.dial}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none text-xs">▼</span>
                             </div>
-                        )}
-                        {otpError && <p className="text-red-400 text-sm mt-1">{otpError}</p>}
-                        {isOtpVerified && <p className="text-green-400 text-sm mt-1">✓ Number verified</p>}
+                            <input
+                                id="whatsapp"
+                                type="tel"
+                                value={whatsappNumber}
+                                onChange={(e) => {
+                                    // Auto-strip leading zeros as they type
+                                    const val = e.target.value.replace(/^0+/, '');
+                                    setWhatsappNumber(val);
+                                }}
+                                placeholder="531 423 911 (no leading 0)"
+                                className="flex-1 min-w-0 h-14 bg-[#111111] border border-white/20 rounded-lg text-white px-4 focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder:text-[#888888] transition-colors"
+                                required
+                            />
+                        </div>
                     </div>
 
                     {error && (

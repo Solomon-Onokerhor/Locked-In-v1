@@ -77,8 +77,21 @@ async function handleUserCreated(data: any) {
     const name = [firstName, lastName].filter(Boolean).join(' ') || data.username || 'Scholar';
     const avatarUrl: string = data.image_url ?? data.profile_image_url ?? '';
 
-    // Public metadata may already have onboarding info if set before the webhook fires
     const meta = data.public_metadata ?? {};
+
+    // Handle account migration: if a profile with this email already exists under an old ID, update its ID first
+    if (email) {
+        const { data: existing } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (existing && existing.id !== userId) {
+            console.log(`[clerk-webhook] Migrating old profile ${existing.id} to new Clerk ID ${userId}`);
+            await supabaseAdmin.from('profiles').update({ id: userId }).eq('email', email);
+        }
+    }
 
     const { error } = await supabaseAdmin
         .from('profiles')
